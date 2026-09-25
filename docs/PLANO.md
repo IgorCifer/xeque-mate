@@ -122,7 +122,7 @@ Refs: plan 3.3
   `chore(db): add docker compose for local postgres`
 - [x] **0.4** Criar `.env.example` com as 4 variáveis, sem valores reais. O usuário cria o `.env` a partir dele. Confirmar que `.env` está no `.gitignore`.
   `chore(config): add env example`
-- [ ] **0.5** Trocar o script `lint` para `eslint .`.
+- [x] **0.5** Trocar o script `lint` para `eslint .`.
   `chore(config): replace next lint with eslint cli`
 - [ ] **0.6** Rodar `npx prisma generate` e `npx tsc --noEmit`; registrar os erros reais que sobrarem. *(sem commit)*
 - [ ] **0.7** Recriar as migrations como baseline única: remover as 7 antigas com `git rm` (o histórico as preserva), gerar `prisma/migrations/0_init/migration.sql` com `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` e aplicar com `npx prisma migrate deploy`. Elimina também o drift de FKs.
