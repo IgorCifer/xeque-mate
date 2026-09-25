@@ -118,7 +118,7 @@ Refs: plan 3.3
   `docs: add restructuring plan and working rules`
 - [x] **0.2** Remover o `package-lock.json` vazio da raiz e mover o app da subpasta para a raiz do repositório (com `git mv`, para preservar o histórico). Apagar as sobras não versionadas (`node_modules`, `.next`) e rodar `npm install` na raiz. *(feito manualmente; o CLAUDE.md já descreve o app na raiz)*
   `chore: move app to repository root`
-- [ ] **0.3** Criar `docker-compose.yml` com um serviço `postgres:16` (porta 5432, volume nomeado).
+- [x] **0.3** Criar `docker-compose.yml` com um serviço `postgres:16` (porta 5432, volume nomeado).
   `chore(db): add docker compose for local postgres`
 - [ ] **0.4** Criar `.env.example` com as 4 variáveis, sem valores reais. O usuário cria o `.env` a partir dele. Confirmar que `.env` está no `.gitignore`.
   `chore(config): add env example`
