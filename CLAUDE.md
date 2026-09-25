@@ -49,7 +49,7 @@ npx eslint .                 # `npm run lint` calls `next lint`, removed in Next
 
 npx prisma migrate deploy    # apply migrations (current ones fail on an empty DB; plan 0.7)
 npm run db:seed              # seeds the Achievement rows (prisma/seed.ts)
-npx tsx prisma/seed/seed-puzzles.ts   # imports prisma/seed/lichess_db_puzzle.csv
+npx tsx prisma/seed/seed-puzzles.ts   # imports 12k puzzles from prisma/seed/lichess_db_puzzle.csv (rating 1200-2000, popularity >= 90, plays >= 1000); idempotent
 npx tsx prisma/seed/clear-puzzles.ts
 ```
 

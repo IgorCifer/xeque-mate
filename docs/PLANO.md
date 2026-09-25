@@ -126,13 +126,16 @@ Refs: plan 3.3
   `chore(config): replace next lint with eslint cli`
 - [x] **0.6** Rodar `npx prisma generate` e `npx tsc --noEmit`; registrar os erros reais que sobrarem. *(sem commit)*
   *Resultado: `tsc` sem nenhum erro após gerar o cliente (6.19.0). Os 46 erros eram todos do cliente ausente. O lint seguiu igual (11 erros, 13 warnings).*
-- [ ] **0.7** Recriar as migrations como baseline única: remover as 7 antigas com `git rm` (o histórico as preserva), gerar `prisma/migrations/0_init/migration.sql` com `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` e aplicar com `npx prisma migrate deploy`. Elimina também o drift de FKs.
+- [x] **0.7** Recriar as migrations como baseline única: remover as 7 antigas com `git rm` (o histórico as preserva), gerar `prisma/migrations/0_init/migration.sql` com `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` e aplicar com `npx prisma migrate deploy`. Elimina também o drift de FKs.
   `chore(db): replace migrations with single baseline`
-- [ ] **0.8** Rodar o seed de conquistas (`npm run db:seed`). *(sem commit)*
+- [x] **0.8** Rodar o seed de conquistas (`npm run db:seed`). *(sem commit)*
 - [x] **0.9** Adicionar `prisma/seed/*.csv` ao `.gitignore` **antes** de copiar o CSV para `prisma/seed/`.
   `chore: ignore lichess puzzle csv`
-- [ ] **0.10** Analisar `prisma/seed/seed-puzzles.ts` sem executar: lê em stream ou tudo na memória? Insere em lotes? Filtra por rating/popularidade? O parser bate com o cabeçalho do CSV atual do Lichess? Propor ajustes (ex.: importar só as faixas de rating usadas no diário e no semanal) e, se aprovados, aplicar. Depois rodar a importação.
-  `fix(puzzles): stream csv import and filter by rating` *(só se houver ajuste)*
+- [x] **0.10** Analisar `prisma/seed/seed-puzzles.ts` sem executar: lê em stream ou tudo na memória? Insere em lotes? Filtra por rating/popularidade? O parser bate com o cabeçalho do CSV atual do Lichess? Propor ajustes (ex.: importar só as faixas de rating usadas no diário e no semanal) e, se aprovados, aplicar. Depois rodar a importação.
+  `fix(puzzles): filter puzzle import by popularity and fail loudly`
+  *Análise: o script já lia em stream, inseria em lotes de 500 (`skipDuplicates`), filtrava pela faixa 1200–2000 (união do diário e do semanal) e o parser batia com o cabeçalho atual do CSV. Problemas: sem filtro de qualidade (~17% dos puzzles da faixa têm popularidade < 80), saía com código 0 em caso de erro, o log somava o lote em vez do que foi criado, e um rating vazio (`NaN`) passava pelo filtro.*
+  *Ajustes aplicados: filtro `popularity >= 90` e `nbPlays >= 1000`; código de saída 1 em erro; log com processados/novos pelo retorno do `createMany`; linhas com número inválido são puladas. O limite de 12.000 conta os processados, não os novos, para a reexecução continuar idempotente (não avança para os próximos 12.000 do arquivo).*
+  *Resultado: 12.000 puzzles importados em ~8 s (8.237 na faixa do diário, 8.237 ÷ 365 ≈ 22 anos; 3.763 na do semanal). Reexecução: 0 novos.*
 - [ ] **0.11** Subir com `npx next dev` e percorrer as telas com 2 usuários. Registrar o resultado na seção "Linha de base" abaixo.
   `docs: record baseline manual test results`
 
