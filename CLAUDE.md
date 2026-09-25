@@ -13,7 +13,7 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 - Work on one item of `docs/PLANO.md` at a time. Do not refactor beyond the item.
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
-- Until item 1.1 is done, start the dev server with `npx next dev` (localhost only), never `npm run dev` (it binds to 0.0.0.0 while Next has critical CVEs).
+- Until item 1.1 is done, start the dev server with `npx next dev -H 127.0.0.1`, never `npm run dev` or a bare `npx next dev` (both listen on every interface while Next has critical CVEs).
 - Never stage `.env` or `prisma/seed/*.csv`.
 
 ## Git workflow
@@ -42,18 +42,19 @@ Refs: plan 3.3
 ```bash
 npm install
 npx prisma generate          # required before tsc/dev/build; output is gitignored
-npx next dev                 # dev server (see working rules)
+npx next dev -H 127.0.0.1    # dev server, localhost only (see working rules)
 npm run build
 npx tsc --noEmit             # type check
-npx eslint .                 # `npm run lint` calls `next lint`, removed in Next 16 (plan 0.5)
+npm run lint                 # eslint . (11 errors / 13 warnings known; plan 5.5)
 
-npx prisma migrate deploy    # apply migrations (current ones fail on an empty DB; plan 0.7)
+docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
+npx prisma migrate deploy    # apply migrations (single 0_init baseline)
 npm run db:seed              # seeds the Achievement rows (prisma/seed.ts)
 npx tsx prisma/seed/seed-puzzles.ts   # imports 12k puzzles from prisma/seed/lichess_db_puzzle.csv (rating 1200-2000, popularity >= 90, plays >= 1000); idempotent
 npx tsx prisma/seed/clear-puzzles.ts
 ```
 
-Required env vars (`.env`, not committed): `DATABASE_URL`, `NEXT_PUBLIC_AUTH_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. There is no test runner yet (Vitest arrives in plan phase 2).
+Required env vars (`.env`, not committed; copy from `.env.example`): `DATABASE_URL`, `NEXT_PUBLIC_AUTH_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. There is no test runner yet (Vitest arrives in plan phase 2).
 
 ## Architecture
 

@@ -19,7 +19,7 @@ Este arquivo é a fonte de verdade do trabalho. Cada item é uma mudança isolad
 - Work on one item of `docs/PLANO.md` at a time. Do not refactor beyond the item.
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
-- Until item 1.1 is done, start the dev server with `npx next dev` (localhost only), never `npm run dev` (it binds to 0.0.0.0 while Next has critical CVEs).
+- Until item 1.1 is done, start the dev server with `npx next dev -H 127.0.0.1`, never `npm run dev` or a bare `npx next dev` (both listen on every interface while Next has critical CVEs).
 - Never stage `.env` or `prisma/seed/*.csv`.
 
 ### Git workflow
@@ -80,6 +80,7 @@ Refs: plan 3.3
 - `/ranking`, `/practice`, `/practice/daily-challenge` e `/practice/weekly-challenge` são pré-renderizadas no build: em produção ficariam congeladas na data do deploy (e o build exige banco).
 - `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis.
 - `/api/achievements/check-login` nunca é chamado.
+- *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`).
 - O perfil mostra "Sequência de X dias" fixo. `getWeeklyPosition` calcula a posição de todos os tempos e carrega todos os usuários.
 - `NavBar` duplicado na home (`LayoutWrapper` e `app/home/page.tsx`).
 - O limite de 5 torneios (criados e participando) conta os finalizados: o usuário fica bloqueado para sempre depois do quinto.
@@ -136,7 +137,7 @@ Refs: plan 3.3
   *Análise: o script já lia em stream, inseria em lotes de 500 (`skipDuplicates`), filtrava pela faixa 1200–2000 (união do diário e do semanal) e o parser batia com o cabeçalho atual do CSV. Problemas: sem filtro de qualidade (~17% dos puzzles da faixa têm popularidade < 80), saía com código 0 em caso de erro, o log somava o lote em vez do que foi criado, e um rating vazio (`NaN`) passava pelo filtro.*
   *Ajustes aplicados: filtro `popularity >= 90` e `nbPlays >= 1000`; código de saída 1 em erro; log com processados/novos pelo retorno do `createMany`; linhas com número inválido são puladas. O limite de 12.000 conta os processados, não os novos, para a reexecução continuar idempotente (não avança para os próximos 12.000 do arquivo).*
   *Resultado: 12.000 puzzles importados em ~8 s (8.237 na faixa do diário, 8.237 ÷ 365 ≈ 22 anos; 3.763 na do semanal). Reexecução: 0 novos.*
-- [ ] **0.11** Subir com `npx next dev` e percorrer as telas com 2 usuários. Registrar o resultado na seção "Linha de base" abaixo.
+- [x] **0.11** Subir com `npx next dev -H 127.0.0.1` e percorrer as telas com 2 usuários. Registrar o resultado na seção "Linha de base" abaixo.
   `docs: record baseline manual test results`
 
 Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5.3.
@@ -251,16 +252,20 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Linha de base (preencher no item 0.11)
 
+Executado em 25/09/2026 com 2 usuários de teste (A cria, B é convidado), percorrendo os fluxos via HTTP com sessões reais do better-auth (`fetch` com cookies) e conferindo os efeitos no banco. Cobre API, renderização no servidor (todas as páginas respondem 200, sem erro no log) e dados; **a interface no navegador (tabuleiro, toasts, layout) não foi conferida visualmente**.
+
 | Fluxo | Funciona? | Observação |
 |---|---|---|
-| Cadastro e login | | |
-| Criar torneio | | |
-| Convidar e aceitar | | |
-| Gerar rodadas | | |
-| Lançar / editar resultado | | |
-| Finalizar torneio | | |
-| Ranking | | |
-| Conquistas no perfil | | |
-| Puzzle diário | | |
-| Puzzle semanal | | |
-| Modo treino | | |
+| Cadastro e login | Sim | Cadastro, login e recusa de senha errada (401) ok. |
+| Criar torneio | Sim | Cria, aparece na lista; páginas do torneio e de edição renderizam. |
+| Convidar e aceitar | Sim | Link gerado e aceite ok; aceitar duas vezes é recusado. Falhas de C confirmadas por leitura (sem checagem de criador/token). |
+| Gerar rodadas | Sim | 1 rodada, 1 partida A×B; não criador recebe 403. |
+| Lançar / editar resultado | Sim | Vitória → empate → vitória do outro lado recalcula certo (sem resíduo); não criador recebe 403. |
+| Finalizar torneio | Parcial | Pontos certos (1º 100, 2º 60 em `points_history`). Mas `User.wins` fica 0 e nenhuma conquista é checada (ver D). Dupla concessão (C) não testada. |
+| Ranking | Sim | Página renderiza. Também abre sem login (C). |
+| Conquistas no perfil | Parcial | Página renderiza. Só B ganhou "Primeiro Torneio" (ao aceitar o convite); o criador não, e o vencedor não ganhou "Campeão Estreante" (ver D). Sem login dá 404 (C). |
+| Puzzle diário | Sim | Puzzle exibido; completar dá 15 pontos, repetir é recusado. |
+| Puzzle semanal | Sim | Puzzle exibido; completar dá 50 pontos, repetir é recusado. |
+| Modo treino | Sim (servidor) | Página renderiza; o jogo em si roda no navegador e não foi testado. |
+
+Extras: trocar e-mail (400 `CHANGE_EMAIL_IS_DISABLED`) e excluir conta (404, "Delete user is disabled") falham como previsto em C. `/torneios`, `/practice` e `/ranking` abrem sem login (200).
