@@ -124,7 +124,8 @@ Refs: plan 3.3
   `chore(config): add env example`
 - [x] **0.5** Trocar o script `lint` para `eslint .`.
   `chore(config): replace next lint with eslint cli`
-- [ ] **0.6** Rodar `npx prisma generate` e `npx tsc --noEmit`; registrar os erros reais que sobrarem. *(sem commit)*
+- [x] **0.6** Rodar `npx prisma generate` e `npx tsc --noEmit`; registrar os erros reais que sobrarem. *(sem commit)*
+  *Resultado: `tsc` sem nenhum erro após gerar o cliente (6.19.0). Os 46 erros eram todos do cliente ausente. O lint seguiu igual (11 erros, 13 warnings).*
 - [ ] **0.7** Recriar as migrations como baseline única: remover as 7 antigas com `git rm` (o histórico as preserva), gerar `prisma/migrations/0_init/migration.sql` com `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` e aplicar com `npx prisma migrate deploy`. Elimina também o drift de FKs.
   `chore(db): replace migrations with single baseline`
 - [ ] **0.8** Rodar o seed de conquistas (`npm run db:seed`). *(sem commit)*
