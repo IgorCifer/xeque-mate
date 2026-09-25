@@ -42,3 +42,6 @@ next-env.d.ts
 
 /app/generated/prisma
 /app/generated/prisma2
+
+# Lichess puzzle database (~1 GB, download from database.lichess.org)
+prisma/seed/*.csv
