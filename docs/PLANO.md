@@ -19,7 +19,6 @@ Este arquivo é a fonte de verdade do trabalho. Cada item é uma mudança isolad
 - Work on one item of `docs/PLANO.md` at a time. Do not refactor beyond the item.
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
-- Until item 1.1 is done, start the dev server with `npx next dev -H 127.0.0.1`, never `npm run dev` or a bare `npx next dev` (both listen on every interface while Next has critical CVEs).
 - Never stage `.env` or `prisma/seed/*.csv`.
 
 ### Git workflow
@@ -146,7 +145,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 1: dependências (sem major) — branch `phase-1-deps`
 
-- [ ] **1.1** Atualizar `next` e `eslint-config-next` para 16.3.x. Remover do CLAUDE.md a regra temporária do `npx next dev`.
+- [x] **1.1** Atualizar `next` e `eslint-config-next` para 16.3.x. Remover do CLAUDE.md a regra temporária do `npx next dev`.
   `chore(deps): bump next to 16.3`
 - [ ] **1.2** Declarar `chess.js` e `react-chessboard` nas versões já instaladas.
   `chore(deps): declare chess.js and react-chessboard`
