@@ -80,7 +80,7 @@ Refs: plan 3.3
 - `/ranking`, `/practice`, `/practice/daily-challenge` e `/practice/weekly-challenge` são pré-renderizadas no build: em produção ficariam congeladas na data do deploy (e o build exige banco).
 - `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis.
 - `/api/achievements/check-login` nunca é chamado.
-- *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`).
+- *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`). Itens 4.8 e 4.9.
 - O perfil mostra "Sequência de X dias" fixo. `getWeeklyPosition` calcula a posição de todos os tempos e carrega todos os usuários.
 - `NavBar` duplicado na home (`LayoutWrapper` e `app/home/page.tsx`).
 - O limite de 5 torneios (criados e participando) conta os finalizados: o usuário fica bloqueado para sempre depois do quinto.
@@ -141,6 +141,8 @@ Refs: plan 3.3
   `docs: record baseline manual test results`
 
 Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5.3.
+
+*Fim da fase (25/09/2026): `npm run build` sem erros; `/ranking` e `/practice/*` saem estáticas (○), como previsto no item 4.1. Roteiro manual: ver "Linha de base".*
 
 ## Fase 1: dependências (sem major) — branch `phase-1-deps`
 
@@ -207,6 +209,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(profile): compute weekly ranking position`
 - [ ] **4.7** Remover o `NavBar` duplicado da home.
   `fix(ui): remove duplicate navbar on home`
+- [ ] **4.8** Checar conquistas nos eventos que as disparam: criador ao criar o torneio (`recordTournamentJoined`), vitória de partida no `PATCH` de resultado (`recordMatchWin`, depende de 4.2) e vencedor ao finalizar (`recordTournamentWin`). Devolver as conquistas desbloqueadas na resposta, como o aceite de convite já faz.
+  `fix(achievements): check achievements after tournament events`
+- [ ] **4.9** `calculateUserProgress` decide o vencedor do torneio só por `pontos`; usar a ordenação de desempate extraída em 2.3.
+  `fix(achievements): use tie-breaks to decide tournament winner`
 
 ## Fase 5: limpeza — branch `phase-5-cleanup`
 
@@ -261,7 +267,7 @@ Executado em 25/09/2026 com 2 usuários de teste (A cria, B é convidado), perco
 | Convidar e aceitar | Sim | Link gerado e aceite ok; aceitar duas vezes é recusado. Falhas de C confirmadas por leitura (sem checagem de criador/token). |
 | Gerar rodadas | Sim | 1 rodada, 1 partida A×B; não criador recebe 403. |
 | Lançar / editar resultado | Sim | Vitória → empate → vitória do outro lado recalcula certo (sem resíduo); não criador recebe 403. |
-| Finalizar torneio | Parcial | Pontos certos (1º 100, 2º 60 em `points_history`). Mas `User.wins` fica 0 e nenhuma conquista é checada (ver D). Dupla concessão (C) não testada. |
+| Finalizar torneio | Parcial | Pontos certos (1º 100, 2º 60 em `points_history`). Mas `User.wins` fica 0 e nenhuma conquista é checada (ver D; itens 4.2, 4.8). Dupla concessão (C) não testada. |
 | Ranking | Sim | Página renderiza. Também abre sem login (C). |
 | Conquistas no perfil | Parcial | Página renderiza. Só B ganhou "Primeiro Torneio" (ao aceitar o convite); o criador não, e o vencedor não ganhou "Campeão Estreante" (ver D). Sem login dá 404 (C). |
 | Puzzle diário | Sim | Puzzle exibido; completar dá 15 pontos, repetir é recusado. |
