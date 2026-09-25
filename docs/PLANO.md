@@ -120,7 +120,7 @@ Refs: plan 3.3
   `chore: move app to repository root`
 - [x] **0.3** Criar `docker-compose.yml` com um serviço `postgres:16` (porta 5432, volume nomeado).
   `chore(db): add docker compose for local postgres`
-- [ ] **0.4** Criar `.env.example` com as 4 variáveis, sem valores reais. O usuário cria o `.env` a partir dele. Confirmar que `.env` está no `.gitignore`.
+- [x] **0.4** Criar `.env.example` com as 4 variáveis, sem valores reais. O usuário cria o `.env` a partir dele. Confirmar que `.env` está no `.gitignore`.
   `chore(config): add env example`
 - [ ] **0.5** Trocar o script `lint` para `eslint .`.
   `chore(config): replace next lint with eslint cli`
