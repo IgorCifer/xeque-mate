@@ -7,7 +7,6 @@ import Link from "next/link";
 interface UserMini {
   id?: string;
   name?: string | null;
-  email?: string;
   image?: string | null;
 }
 

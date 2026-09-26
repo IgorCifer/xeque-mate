@@ -75,9 +75,11 @@ export function ChangeEmailClient() {
     setIsLoading(true);
 
     try {
-        const { error } = await authClient.changeEmail({
-        newEmail: formData.newEmail,
-        callbackURL: "/home",
+        // A senha é conferida no servidor (hook em lib/auth.ts); o método
+        // tipado changeEmail não tem esse campo, por isso o $fetch.
+        const { error } = await authClient.$fetch("/change-email", {
+        method: "POST",
+        body: { newEmail: formData.newEmail, password: formData.password },
         });
 
         if (error) {

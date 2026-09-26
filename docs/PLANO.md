@@ -80,6 +80,7 @@ Refs: plan 3.3
 - `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis.
 - `/api/achievements/check-login` nunca é chamado.
 - *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`). Itens 4.8 e 4.9.
+- *(achado no 3.9)* Excluir a conta apaga em cascata os torneios que a pessoa criou (com as partidas de todos) e as partidas que ela jogou em torneios de outros. Os placares desnormalizados dos adversários em `Participante` continuam contando essas partidas, e em torneio aberto as rodadas ficam com buracos. Não testado a fundo; deduzido do schema (todas as relações são `Cascade`). Ver "Depois".
 - O perfil mostra "Sequência de X dias" fixo. `getWeeklyPosition` calcula a posição de todos os tempos e carrega todos os usuários.
 - `NavBar` duplicado na home (`LayoutWrapper` e `app/home/page.tsx`).
 - O limite de 5 torneios (criados e participando) conta os finalizados: o usuário fica bloqueado para sempre depois do quinto.
@@ -103,6 +104,7 @@ Refs: plan 3.3
 - Banco novo, local, via Docker (Docker 29 instalado, sem psql local). Nunca houve banco hospedado, então a baseline de migrations é segura.
 - Commits em inglês, Conventional Commits, conforme a seção Convenções.
 - Mover o app para a raiz do repositório (item 0.2).
+- Trocar e-mail e excluir conta exigem a senha atual, conferida no servidor por um hook do better-auth (item 3.9, 26/09/2026).
 - Convite é um link aberto pelo id do torneio (UUID): qualquer usuário logado com o link entra enquanto não houver confrontos. O modelo `Convite` foi removido (item 3.7, 26/09/2026).
 - Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
 
@@ -195,10 +197,13 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - [x] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`). Em qualquer caso, o `GET` do convite para de gravar no banco; com token, gerar o link vira uma ação só do criador (a parte "ser o criador" que saiu do 3.5). Corrigir também o link de convite, fixo em `http://192.168.0.7:3000` em `app/torneios/[id]/page.tsx` (usar `window.location.origin`).
   `feat(tournaments): validate invite token and expiration` *ou* `refactor(db): drop unused invite model`
   *Decisão: link aberto. Migration `20260926174234_drop_convite` apaga a tabela `convite` (só ela: o diff entre banco e schema não trouxe mais nada). O `GET` do convite não grava mais nada; o link usa `window.location.origin`. Efeito colateral bom: a FK `convite.criadoPorId` era `RESTRICT` e impediria excluir a conta de quem criou torneio (3.9). Conferido: `migrate deploy` num banco vazio aplica as duas migrations e bate com o schema. Commitado junto com o 3.6, a pedido.*
-- [ ] **3.8** Retirar `email` dos `select` de participantes.
+- [x] **3.8** Retirar `email` dos `select` de participantes.
   `fix(tournaments): stop exposing participant emails`
-- [ ] **3.9** Habilitar `changeEmail` e `deleteUser` em `lib/auth.ts`. Antes, verificar o que o better-auth exige (senha, sessão recente, verificação por e-mail), já que não há envio de e-mail configurado.
+  *5 `select` em `GET /api/torneios/[id]` e `/participando`, mais os tipos que citavam o campo; nenhuma tela exibia o e-mail. Commitado junto com o 3.9, a pedido.*
+- [x] **3.9** Habilitar `changeEmail` e `deleteUser` em `lib/auth.ts`. Antes, verificar o que o better-auth exige (senha, sessão recente, verificação por e-mail), já que não há envio de e-mail configurado.
   `fix(auth): enable email change and account deletion`
+  *O que o better-auth 1.7.6 exige: trocar e-mail sem envio de e-mail só funciona com `updateEmailWithoutVerification` (e só para e-mail não verificado, o caso de todos aqui) e não aceita senha; excluir conta aceita senha, mas sem ela exclui se a sessão tiver menos de 24 h (`freshAge`); trocar para um e-mail já usado responde sucesso sem mudar nada.*
+  *Decisão: senha obrigatória nas duas ações, conferida num hook `before` em `lib/auth.ts` (roda antes da validação do endpoint, com o corpo original); o hook também recusa e-mail já em uso com mensagem clara. A tela de trocar e-mail passou a enviar a senha que já pedia (via `authClient.$fetch`); a de excluir ganhou o campo. Testado: sem senha/senha errada → 400, sem login → 401, com senha → troca/exclui; excluir funciona para quem criou torneio e jogou partidas (efeito em cascata registrado no Diagnóstico D).*
 - [ ] **3.10** Proteger `/ranking`, `/profile` (trocar `notFound()` por `redirect`), `/practice` (layout existente) e `/torneios` (novo `app/torneios/layout.tsx` server-side). O layout é barreira de UX; a proteção real continua nas rotas de API, que não devem perder suas checagens.
   `fix(auth): require login on protected pages`
 - [ ] **3.11** Inserir o criador como participante na criação do torneio (`POST`) e deixar o `GET /api/torneios/[id]` somente leitura.
@@ -245,6 +250,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 ## Depois (fora deste plano)
 
 - Suíço rodada a rodada, considerando resultados (prioridade para uso real no clube).
+- O que a exclusão de conta deve fazer com torneios e partidas de outros (achado no 3.9): anonimizar o jogador em vez de apagar em cascata, ou bloquear a exclusão enquanto houver torneio aberto.
 - Testes de integração das rotas de API.
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
 - Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.

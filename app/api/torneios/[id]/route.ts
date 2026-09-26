@@ -9,7 +9,6 @@ type PlayerSnapshot = {
   user: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   } | null;
   pontos: number;
@@ -42,7 +41,7 @@ export async function GET(
         participantes: {
           include: {
             user: {
-              select: { id: true, name: true, email: true, image: true }
+              select: { id: true, name: true, image: true }
             }
           }
         },
@@ -52,14 +51,14 @@ export async function GET(
             white: {
               include: {
                 user: {
-                  select: { id: true, name: true, email: true, image: true }
+                  select: { id: true, name: true, image: true }
                 }
               }
             },
             black: {
               include: {
                 user: {
-                  select: { id: true, name: true, email: true, image: true }
+                  select: { id: true, name: true, image: true }
                 }
               }
             }
@@ -95,7 +94,7 @@ export async function GET(
         },
         include: {
           user: {
-            select: { id: true, name: true, email: true, image: true },
+            select: { id: true, name: true, image: true },
           },
         },
       });

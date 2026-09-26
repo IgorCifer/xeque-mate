@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 					participantes: {
 						include: {
 							user: {
-								select: { id: true, name: true, email: true, image: true }
+								select: { id: true, name: true, image: true }
 							}
 						}
 					}

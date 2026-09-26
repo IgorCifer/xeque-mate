@@ -68,7 +68,7 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 
 **Prisma.** The schema uses the new `prisma-client` generator with output `app/generated/prisma2`; import types/enums from `@/app/generated/prisma2/client` and the shared client as the default export of `lib/prisma.ts`. `prisma.config.ts` loads `.env` via dotenv. The `user`, `session`, `account` and `verification` models belong to better-auth's schema; do not rename their fields.
 
-**Auth.** `lib/auth.ts` (server, email/password only, mounted at `app/api/auth/[...all]`) and `lib/auth-client.ts` (browser `authClient`, uses `NEXT_PUBLIC_AUTH_URL`).
+**Auth.** `lib/auth.ts` (server, email/password only, mounted at `app/api/auth/[...all]`) and `lib/auth-client.ts` (browser `authClient`, uses `NEXT_PUBLIC_AUTH_URL`). No email is ever sent, so email change is immediate (`updateEmailWithoutVerification`). A `hooks.before` middleware requires and checks the current `password` in the body of `/change-email` and `/delete-user`, and rejects an email already in use; the client sends it (`authClient.$fetch` for change-email, whose typed method has no password field). Deleting a user cascades to everything they own, including tournaments they created and matches they played in others' tournaments.
 
 **Tournaments** (`Torneio`, `Participante`, `Partida`):
 - The invite is an open link by tournament id (`/torneios/[id]/convite`): any logged-in user who has it can view (`GET .../convite`) and join (`POST .../convite`) until rounds are generated; there is no invite model or token.
