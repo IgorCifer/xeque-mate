@@ -172,7 +172,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 3: segurança e regras de pontos — branch `phase-3-security`
 
-- [ ] **3.1** Extrair `getDailyPuzzle`/`getWeeklyPuzzle` para `app/data/`, reaproveitando a lógica das pages, sem mudar comportamento.
+- [x] **3.1** Extrair `getDailyPuzzle`/`getWeeklyPuzzle` para `app/data/`, reaproveitando a lógica das pages, sem mudar comportamento.
   `refactor(puzzles): extract daily and weekly puzzle selection`
 - [ ] **3.2** `POST /api/puzzles/complete` passa a aceitar só o `puzzleId` do dia/semana, calculado no servidor. Limitação aceita: a regra de dica/reinício continua confiando no cliente.
   `fix(puzzles): only accept current daily or weekly puzzle`
