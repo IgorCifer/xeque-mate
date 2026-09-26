@@ -83,6 +83,10 @@ export async function POST(req: Request, context: ContextParams) {
     return NextResponse.json({ error: "Somente o criador pode gerar confrontos" }, { status: 403 });
   }
 
+  if (torneio.finalizado) {
+    return NextResponse.json({ error: "Torneio finalizado: não é possível gerar confrontos" }, { status: 409 });
+  }
+
   if (torneio.participantes.length < 2) {
     return NextResponse.json({ error: "É necessário ao menos 2 participantes" }, { status: 400 });
   }
@@ -228,6 +232,10 @@ export async function DELETE(req: Request, context: ContextParams) {
 
   if (torneio.criadorId !== session.user.id) {
     return NextResponse.json({ error: "Somente o criador pode excluir confrontos" }, { status: 403 });
+  }
+
+  if (torneio.finalizado) {
+    return NextResponse.json({ error: "Torneio finalizado: não é possível excluir confrontos" }, { status: 409 });
   }
 
   await prisma.$transaction([

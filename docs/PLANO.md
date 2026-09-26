@@ -178,9 +178,11 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(puzzles): only accept current daily or weekly puzzle`
   *Outro `puzzleId` é recusado com 409 e a mensagem "Este não é o desafio atual. Recarregue a página." (o cliente já exibe o `message`). Quem abre a página antes da virada e resolve depois também é recusado, de propósito: trocar pelo id atual daria pontos por um puzzle não resolvido.*
   *Atenção: no build de produção as páginas dos desafios ainda são estáticas (até o 4.1), então mostrariam o puzzle do dia do build e a API recusaria a partir do dia seguinte. Em dev não acontece. Fazer o 4.1 antes de publicar.*
-- [ ] **3.3** Bloquear `POST`/`DELETE /rodadas` e `PATCH` de resultado quando `finalizado`.
+- [x] **3.3** Bloquear `POST`/`DELETE /rodadas` e `PATCH` de resultado quando `finalizado`.
   `fix(tournaments): block changes to finished tournaments`
-- [ ] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio.
+  *As três rotas respondem 409 depois da checagem de criador; o botão "Excluir Confrontos" também fica desativado em torneio finalizado (gerar e o seletor de resultado já ficavam). Com isso, o `finalizado: false` do `DELETE /rodadas` deixou de ter efeito.*
+  *Brecha que sobra para o 3.4: `PUT /api/torneios/[id]` aceita `{ finalizado: false }` e reabre o torneio (testado: depois disso o `PATCH` volta a funcionar e finalizar de novo concede pontos outra vez).*
+- [ ] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio: hoje o `PUT` aceita `finalizado: false` sem restrição (ver 3.3).
   `fix(points): award tournament points only once`
 - [ ] **3.5** `GET` do convite exige login e ser o criador.
   `fix(tournaments): restrict invite link to tournament creator`

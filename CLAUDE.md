@@ -74,7 +74,7 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 - `Partida.whiteId`/`blackId` reference `Participante.id`, not `User.id`. `blackId = null` is a bye, stored as `WHITE_WIN`.
 - Standings (`pontos` as float, `vitorias`, `derrotas`, `empates`, `partidas`) are denormalized on `Participante` and maintained incrementally: byes are credited when the round is created; `PATCH .../partidas/[partidaId]` applies the difference between the old and new result via `deltaFromResultado`; `DELETE .../rodadas` wipes matches and resets all stats.
 - `POST .../rodadas` builds Swiss pairings with `tournament-pairings`, generating up to 10 rounds in one call (shuffled in round 1, avoiding rematches and repeat byes).
-- Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) calls `awardTournamentPoints` in `lib/points.ts`.
+- Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) calls `awardTournamentPoints` in `lib/points.ts`. Once `finalizado`, `POST`/`DELETE .../rodadas` and the result `PATCH` answer 409.
 
 **Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`awardPoints`, `completePuzzle`). Tournament placement ranks by `pontos` desc, `vitorias` desc, `derrotas` asc. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
 

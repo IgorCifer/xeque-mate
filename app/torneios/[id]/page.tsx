@@ -439,7 +439,7 @@ export default function TorneioPage() {
           <button
             className="flex-1 bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] transition px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-white"
             onClick={excluirConfrontos}
-            disabled={excluindo || gerando || (torneio.rodadas?.length ?? 0) === 0}
+            disabled={excluindo || gerando || torneio.finalizado || (torneio.rodadas?.length ?? 0) === 0}
           >
             {excluindo ? "Excluindo..." : "Excluir Confrontos"}
           </button>

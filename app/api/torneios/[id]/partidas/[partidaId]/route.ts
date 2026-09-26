@@ -50,6 +50,10 @@ export async function PATCH(req: Request, context: ContextParams) {
     return NextResponse.json({ error: "Somente o criador pode registrar resultados" }, { status: 403 });
   }
 
+  if (partida.torneio.finalizado) {
+    return NextResponse.json({ error: "Torneio finalizado: não é possível alterar resultados" }, { status: 409 });
+  }
+
   const whiteDelta = resultadoChangeDelta(partida.resultado, resultado, "WHITE");
   const blackDelta = resultadoChangeDelta(partida.resultado, resultado, "BLACK");
 
