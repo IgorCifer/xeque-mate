@@ -19,7 +19,6 @@ Este arquivo é a fonte de verdade do trabalho. Cada item é uma mudança isolad
 - Work on one item of `docs/PLANO.md` at a time. Do not refactor beyond the item.
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
-- Until item 1.1 is done, start the dev server with `npx next dev -H 127.0.0.1`, never `npm run dev` or a bare `npx next dev` (both listen on every interface while Next has critical CVEs).
 - Never stage `.env` or `prisma/seed/*.csv`.
 
 ### Git workflow
@@ -88,7 +87,7 @@ Refs: plan 3.3
 
 ### E. Limpeza
 
-- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory` e `hasPuzzleCompletedToday` em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`.
+- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory` e `hasPuzzleCompletedToday` em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`. Dependência `pg` (ninguém importa; o Prisma 6 não precisa dela; veio com o adapter removido em 1.4).
 - `getAchievements` (`app/data/get-achievements.tsx`) duplica `AchievementService.getUserAchievements`.
 - `new PrismaClient()` avulso em `app/practice/{daily,weekly}-challenge/page.tsx` e `app/data/get-weekly-puzzle.ts`.
 - Rotas com o truque "params pode ou não ser Promise"; no Next 16 é sempre Promise.
@@ -146,16 +145,19 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 1: dependências (sem major) — branch `phase-1-deps`
 
-- [ ] **1.1** Atualizar `next` e `eslint-config-next` para 16.3.x. Remover do CLAUDE.md a regra temporária do `npx next dev`.
+- [x] **1.1** Atualizar `next` e `eslint-config-next` para 16.3.x. Remover do CLAUDE.md a regra temporária do `npx next dev`.
   `chore(deps): bump next to 16.3`
-- [ ] **1.2** Declarar `chess.js` e `react-chessboard` nas versões já instaladas.
+- [x] **1.2** Declarar `chess.js` e `react-chessboard` nas versões já instaladas.
   `chore(deps): declare chess.js and react-chessboard`
-- [ ] **1.3** Remover o import não usado de `nanoid`.
+- [x] **1.3** Remover o import não usado de `nanoid`.
   `refactor(tournaments): remove unused nanoid import`
-- [ ] **1.4** Remover a dependência `@prisma/adapter-pg`.
+- [x] **1.4** Remover a dependência `@prisma/adapter-pg`.
   `chore(deps): remove unused prisma pg adapter`
-- [ ] **1.5** `npm update` (patch/minor) e `npm audit fix` **sem** `--force`. Ignorar a sugestão de downgrade do Prisma. Conferir login e cadastro depois (better-auth muda entre minors).
+- [x] **1.5** `npm update` (patch/minor) e `npm audit fix` **sem** `--force`. Ignorar a sugestão de downgrade do Prisma. Conferir login e cadastro depois (better-auth muda entre minors).
   `chore(deps): update dependencies within current majors`
+  *Resultado: só o lockfile mudou (better-auth 1.4.1 → 1.7.6, Prisma 6.19.0 → 6.19.3, react-chessboard 5.8.6 → 5.12.1, entre outros). `react`/`react-dom` seguem fixados em 19.2.0. Audit: de 17 para 3 vulnerabilidades, todas altas e da cadeia `prisma` → `@prisma/config` → `deepmerge-ts` (só na CLI; a "correção" é o downgrade ignorado). Lint ganhou 1 erro por regra nova do `eslint-plugin-react-hooks` 7.1 (`components/ui/carousel.tsx`, fica para 5.5).*
+
+*Fim da fase (26/09/2026): `npm run build` sem erros; roteiro da linha de base sem falhas (48 passos); cadastro, login, logout e login de usuário antigo ok no better-auth 1.7.6.*
 
 ## Fase 2: testes do núcleo — branch `phase-2-tests`
 
@@ -236,7 +238,8 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - Suíço rodada a rodada, considerando resultados (prioridade para uso real no clube).
 - Testes de integração das rotas de API.
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
-- Majors (Prisma 7, etc.).
+- Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.
+  - **react-chess-puzzle 0.6.2 → 2.x** (primeiro da fila): a linha 0.6 não recebe mais correções (última versão em 11/2025). Na 2.x, `@react-chess-tools/react-chess-game` virou peer dependency (instalar direto) e a API provavelmente mudou; afeta `WeeklyPuzzleClient.tsx` (desafios diário e semanal). Fazer depois de 3.1/3.2, com o fluxo dos puzzles já corrigido. Levantado em 25/09/2026, com a 2.1.0 como a mais recente.
 - Deploy.
 
 ---

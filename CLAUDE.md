@@ -13,7 +13,6 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 - Work on one item of `docs/PLANO.md` at a time. Do not refactor beyond the item.
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
-- Until item 1.1 is done, start the dev server with `npx next dev -H 127.0.0.1`, never `npm run dev` or a bare `npx next dev` (both listen on every interface while Next has critical CVEs).
 - Never stage `.env` or `prisma/seed/*.csv`.
 
 ## Git workflow
@@ -42,10 +41,10 @@ Refs: plan 3.3
 ```bash
 npm install
 npx prisma generate          # required before tsc/dev/build; output is gitignored
-npx next dev -H 127.0.0.1    # dev server, localhost only (see working rules)
+npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `npx next dev -H 127.0.0.1` for localhost only
 npm run build
 npx tsc --noEmit             # type check
-npm run lint                 # eslint . (11 errors / 13 warnings known; plan 5.5)
+npm run lint                 # eslint . (12 errors / 13 warnings known; plan 5.5)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
 npx prisma migrate deploy    # apply migrations (single 0_init baseline)
@@ -79,3 +78,13 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 **Puzzles.** `Puzzle` rows come from the Lichess puzzle CSV (~1 GB, gitignored, placed in `prisma/seed/`). The daily and weekly puzzles are chosen deterministically in their page files (`app/practice/{daily,weekly}-challenge/page.tsx`): filter by rating band (daily 1200–1699, weekly 1700–2000), order by `externalId`, pick index `(year * 1000 + period) % count`. Both render `WeeklyPuzzleClient`, which posts to `/api/puzzles/complete`. The training game (`app/practice/training-game`) uses `chess.js` + `react-chessboard` directly.
 
 **Achievements.** `Achievement` rows are seeded with fixed UUIDs that must match `ACHIEVEMENT_IDS` in `lib/achievements.ts`. `AchievementService` recomputes progress from existing data (participations, `User.wins`, finished tournaments won, distinct days with a `Session` for login streaks) and unlocks what is due. Routes call its `record*` methods after relevant events and return the newly unlocked achievements for the client toast.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
