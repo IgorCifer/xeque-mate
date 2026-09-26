@@ -187,11 +187,12 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   *Decisão: finalizado é definitivo. O `PUT` recusa `finalizado: false` em torneio finalizado (409) e uma finalização repetida responde 409 "Torneio já finalizado". `awardTournamentPoints` recebe a transação; se a concessão falhar, a finalização é desfeita (antes o torneio ficava finalizado sem pontos). O `DELETE /rodadas` não mexe mais em `finalizado`.*
   *Teste: 5 `PUT finalizado: true` simultâneos → um 200 e quatro 409, 3 concessões para 3 participantes (repetido 7 vezes). A primeira corrida deu um 500 (P2028, a transação não conseguiu começar em 2 s) porque o `import()` dinâmico de `lib/points` compilava dentro da transação no dev; virou import estático.*
   *Sobra: o `PATCH` de resultado lê `finalizado` antes de gravar; se a finalização acontecer exatamente entre a leitura e a gravação, o resultado muda depois dos pontos. Janela de milissegundos, só o criador faz as duas coisas.*
-- [ ] **3.5** `GET` do convite exige login e ser o criador.
-  `fix(tournaments): restrict invite link to tournament creator`
+- [x] **3.5** `GET` do convite exige login e deixa de devolver o registro do convite (token). *(Reescrito em 26/09/2026: o texto original pedia "ser o criador", mas quem chama esse `GET` é a página que o convidado abre, `app/torneios/[id]/convite/page.tsx`; o criador monta o link no cliente e nunca chama a rota.)*
+  `fix(tournaments): require login to view invite`
+  *Sem login: 401 "Faça login para ver o convite". Logado (convidado ou criador): 200 com `{ torneio }`, sem `convite`. A página só usava `data.torneio`, então não mudou. O `GET` ainda cria o registro `Convite` na primeira visita; isso sai ou muda no 3.7.*
 - [ ] **3.6** Remover a rota duplicada e quebrada `convite/aceitar`.
   `refactor(tournaments): remove unused invite accept route`
-- [ ] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`).
+- [ ] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`). Em qualquer caso, o `GET` do convite para de gravar no banco; com token, gerar o link vira uma ação só do criador (a parte "ser o criador" que saiu do 3.5). Corrigir também o link de convite, fixo em `http://192.168.0.7:3000` em `app/torneios/[id]/page.tsx` (usar `window.location.origin`).
   `feat(tournaments): validate invite token and expiration` *ou* `refactor(db): drop unused invite model`
 - [ ] **3.8** Retirar `email` dos `select` de participantes.
   `fix(tournaments): stop exposing participant emails`

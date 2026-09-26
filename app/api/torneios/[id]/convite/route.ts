@@ -24,6 +24,14 @@ export async function GET(
     );
   }
 
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: "Faça login para ver o convite" },
+      { status: 401 }
+    );
+  }
+
   const torneio = await prisma.torneio.findUnique({
     where: { id },
     select: {
@@ -58,19 +66,20 @@ export async function GET(
     );
   }
 
-  // Buscar convite existente
+  // O registro do convite (token) não vai na resposta: quem abre o link
+  // só precisa dos dados do torneio. Criação e uso do token: item 3.7.
   const convite = await prisma.convite.findFirst({
     where: { torneioId: id },
   });
 
   if (convite) {
-    return NextResponse.json({ convite, torneio });
+    return NextResponse.json({ torneio });
   }
 
   // Criar novo convite
   const token = crypto.randomUUID();
 
-  const novoConvite = await prisma.convite.create({
+  await prisma.convite.create({
     data: {
       torneioId: id,
       token,
@@ -79,7 +88,7 @@ export async function GET(
     },
   });
 
-  return NextResponse.json({ convite: novoConvite, torneio });
+  return NextResponse.json({ torneio });
 }
 
 // Método POST para aceitar convite
