@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { nanoid } from "nanoid";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
 
 type PlayerSnapshot = {

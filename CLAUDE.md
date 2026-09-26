@@ -44,7 +44,7 @@ npx prisma generate          # required before tsc/dev/build; output is gitignor
 npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `npx next dev -H 127.0.0.1` for localhost only
 npm run build
 npx tsc --noEmit             # type check
-npm run lint                 # eslint . (11 errors / 14 warnings known; plan 5.5)
+npm run lint                 # eslint . (11 errors / 13 warnings known; plan 5.5)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
 npx prisma migrate deploy    # apply migrations (single 0_init baseline)
