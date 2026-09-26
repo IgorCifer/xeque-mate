@@ -151,7 +151,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `chore(deps): declare chess.js and react-chessboard`
 - [x] **1.3** Remover o import não usado de `nanoid`.
   `refactor(tournaments): remove unused nanoid import`
-- [ ] **1.4** Remover a dependência `@prisma/adapter-pg`.
+- [x] **1.4** Remover a dependência `@prisma/adapter-pg`.
   `chore(deps): remove unused prisma pg adapter`
 - [ ] **1.5** `npm update` (patch/minor) e `npm audit fix` **sem** `--force`. Ignorar a sugestão de downgrade do Prisma. Conferir login e cadastro depois (better-auth muda entre minors).
   `chore(deps): update dependencies within current majors`
