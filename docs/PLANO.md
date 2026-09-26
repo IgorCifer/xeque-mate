@@ -80,7 +80,7 @@ Refs: plan 3.3
 - `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis.
 - `/api/achievements/check-login` nunca é chamado.
 - *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`). Itens 4.8 e 4.9.
-- *(achado no 3.9)* Excluir a conta apaga em cascata os torneios que a pessoa criou (com as partidas de todos) e as partidas que ela jogou em torneios de outros. Os placares desnormalizados dos adversários em `Participante` continuam contando essas partidas, e em torneio aberto as rodadas ficam com buracos. Não testado a fundo; deduzido do schema (todas as relações são `Cascade`). Ver "Depois".
+- *(achado no 3.9)* Excluir a conta apaga em cascata os torneios que a pessoa criou (com as partidas de todos) e as partidas que ela jogou em torneios de outros. Os placares desnormalizados dos adversários em `Participante` continuam contando essas partidas, e em torneio aberto as rodadas ficam com buracos. Não testado a fundo; deduzido do schema (todas as relações são `Cascade`). O mesmo vale para "Sair"/"Excluir" de um torneio finalizado como participante (`DELETE .../participantes/[pid]` permite sair depois de finalizado e apaga as partidas da pessoa). Ver "Depois".
 - O perfil mostra "Sequência de X dias" fixo. `getWeeklyPosition` calcula a posição de todos os tempos e carrega todos os usuários.
 - `NavBar` duplicado na home (`LayoutWrapper` e `app/home/page.tsx`).
 - O limite de 5 torneios (criados e participando) conta os finalizados: o usuário fica bloqueado para sempre depois do quinto.
@@ -207,8 +207,9 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - [x] **3.10** Proteger `/ranking`, `/profile` (trocar `notFound()` por `redirect`), `/practice` (layout existente) e `/torneios` (novo `app/torneios/layout.tsx` server-side). O layout é barreira de UX; a proteção real continua nas rotas de API, que não devem perder suas checagens.
   `fix(auth): require login on protected pages`
   *Feito com `requireSession()` (`lib/session.ts`, com `cache` do React) chamado nas próprias páginas de servidor (`/ranking`, `/profile`, `/practice`, desafios), e não só no layout: o guia de autenticação do Next 16 avisa que o layout não impede a página de rodar nem de aparecer no payload, e essas páginas leem o banco direto. Os layouts de `/torneios` e `/practice` cobrem as páginas client (dados vêm da API). Testado: as 13 páginas protegidas dão 307 → `/login` sem sessão e 200 com; `/login` e `/registrar` seguem abertas. Efeito colateral: `/ranking` e `/practice/*` viraram dinâmicas (ver 4.1).*
-- [ ] **3.11** Inserir o criador como participante na criação do torneio (`POST`) e deixar o `GET /api/torneios/[id]` somente leitura.
+- [x] **3.11** Inserir o criador como participante na criação do torneio (`POST`) e deixar o `GET /api/torneios/[id]` somente leitura.
   `fix(tournaments): add creator as participant on creation`
+  *O `POST` já inscrevia o criador e a rota de remover participante já recusa remover o líder, então a inserção no `GET` só cobria torneios anteriores a isso (o banco foi recriado na Fase 0). O `GET` deixou de gravar e passou a ordenar os participantes por inscrição (`createdAt`), mantendo o criador em primeiro; a tela acha o líder pelo `criadorId`. Testado: 1 inscrito logo após o `POST`; remover o líder → 400; com a inscrição do criador apagada à mão, 4 `GET`s não recriam nada.*
 
 ## Fase 4: funcionalidades quebradas — branch `phase-4-fixes`
 

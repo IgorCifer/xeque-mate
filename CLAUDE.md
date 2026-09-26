@@ -72,6 +72,7 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 
 **Tournaments** (`Torneio`, `Participante`, `Partida`):
 - The invite is an open link by tournament id (`/torneios/[id]/convite`): any logged-in user who has it can view (`GET .../convite`) and join (`POST .../convite`) until rounds are generated; there is no invite model or token.
+- The creator is enrolled as a `Participante` when the tournament is created (`POST /api/torneios`) and cannot be removed; `GET /api/torneios/[id]` is read-only.
 - `Partida.whiteId`/`blackId` reference `Participante.id`, not `User.id`. `blackId = null` is a bye, stored as `WHITE_WIN`.
 - Standings (`pontos` as float, `vitorias`, `derrotas`, `empates`, `partidas`) are denormalized on `Participante` and maintained incrementally: byes are credited when the round is created; `PATCH .../partidas/[partidaId]` applies the difference between the old and new result via `deltaFromResultado`; `DELETE .../rodadas` wipes matches and resets all stats.
 - `POST .../rodadas` builds Swiss pairings with `tournament-pairings`, generating up to 10 rounds in one call (shuffled in round 1, avoiding rematches and repeat byes).

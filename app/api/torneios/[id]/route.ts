@@ -39,6 +39,7 @@ export async function GET(
       where: { id },
       include: {
         participantes: {
+          orderBy: { createdAt: "asc" },
           include: {
             user: {
               select: { id: true, name: true, image: true }
@@ -76,31 +77,9 @@ export async function GET(
 
     // Permitir visualização mesmo se não for participante/criador; ações sensíveis são checadas em endpoints próprios
 
-    // Garante que o criador está cadastrado como participante (e aparece como líder)
-    const liderJaParticipa = torneio.participantes.some(
-      (p) => p.userId === torneio.criadorId
-    );
-    let participantes = [...torneio.participantes];
-    if (!liderJaParticipa) {
-      const created = await prisma.participante.create({
-        data: {
-          torneioId: torneio.id,
-          userId: torneio.criadorId,
-          pontos: 0,
-          partidas: 0,
-          vitorias: 0,
-          derrotas: 0,
-          empates: 0,
-        },
-        include: {
-          user: {
-            select: { id: true, name: true, image: true },
-          },
-        },
-      });
-
-      participantes = [created, ...participantes];
-    }
+    // O criador é inscrito como participante na criação (POST /api/torneios)
+    // e não pode ser removido; este GET só lê.
+    const participantes = torneio.participantes;
 
     const { partidas, ...torneioSemPartidas } = torneio;
 
