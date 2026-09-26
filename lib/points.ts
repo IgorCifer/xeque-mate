@@ -1,6 +1,7 @@
 // lib/points.ts
 
 import prisma from "@/lib/prisma";
+import { sortTournamentRanking } from "@/lib/tournament-ranking";
 
 /**
  * Configuração de pontos do sistema
@@ -69,16 +70,13 @@ export async function awardPoints(
  */
 export async function awardTournamentPoints(torneioId: string) {
   try {
-    // Busca participantes ordenados por ranking
-    const participantes = await prisma.participante.findMany({
-      where: { torneioId },
-      include: { user: true },
-      orderBy: [
-        { pontos: "desc" },
-        { vitorias: "desc" },
-        { derrotas: "asc" },
-      ],
-    });
+    // Busca participantes e ordena pela classificação do torneio
+    const participantes = sortTournamentRanking(
+      await prisma.participante.findMany({
+        where: { torneioId },
+        include: { user: true },
+      })
+    );
 
     if (participantes.length === 0) {
       console.log("Nenhum participante encontrado no torneio");
