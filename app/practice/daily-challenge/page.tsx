@@ -3,6 +3,7 @@ import { IoArrowBack } from "react-icons/io5";
 import { getDailyPuzzle } from "@/app/data/get-challenge-puzzle";
 import { WeeklyPuzzleClient } from "../weekly-challenge/WeeklyPuzzleClient";
 import { getDailyEndDate, formatDateBR } from "../utils/dates";
+import { requireSession } from "@/lib/session";
 
 async function getDailyPuzzleAuto() {
   const puzzle = await getDailyPuzzle();
@@ -21,6 +22,7 @@ async function getDailyPuzzleAuto() {
 }
 
 export default async function DailyChallengePage() {
+  await requireSession();
   const puzzle = await getDailyPuzzleAuto();
 
   return (

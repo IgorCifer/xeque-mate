@@ -2,8 +2,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getWeeklyEndDate, formatDateBR } from "./utils/getWeeklyEnd";
+import { requireSession } from "@/lib/session";
 
 export default async function PracticePage() {
+  await requireSession();
   const weeklyEnd = getWeeklyEndDate();
   const weeklyEndLabel = formatDateBR(weeklyEnd);
 

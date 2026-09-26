@@ -2,6 +2,7 @@ import Link from "next/link";
 import { IoArrowBack } from "react-icons/io5";
 import { getWeeklyPuzzle } from "@/app/data/get-challenge-puzzle";
 import { WeeklyPuzzleClient } from "./WeeklyPuzzleClient";
+import { requireSession } from "@/lib/session";
 
 async function getWeeklyPuzzleAuto() {
   const puzzle = await getWeeklyPuzzle();
@@ -26,6 +27,7 @@ async function getWeeklyPuzzleAuto() {
 }
 
 export default async function WeeklyChallengePage() {
+  await requireSession();
   const puzzle = await getWeeklyPuzzleAuto();
 
   return (

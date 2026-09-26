@@ -204,14 +204,16 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(auth): enable email change and account deletion`
   *O que o better-auth 1.7.6 exige: trocar e-mail sem envio de e-mail só funciona com `updateEmailWithoutVerification` (e só para e-mail não verificado, o caso de todos aqui) e não aceita senha; excluir conta aceita senha, mas sem ela exclui se a sessão tiver menos de 24 h (`freshAge`); trocar para um e-mail já usado responde sucesso sem mudar nada.*
   *Decisão: senha obrigatória nas duas ações, conferida num hook `before` em `lib/auth.ts` (roda antes da validação do endpoint, com o corpo original); o hook também recusa e-mail já em uso com mensagem clara. A tela de trocar e-mail passou a enviar a senha que já pedia (via `authClient.$fetch`); a de excluir ganhou o campo. Testado: sem senha/senha errada → 400, sem login → 401, com senha → troca/exclui; excluir funciona para quem criou torneio e jogou partidas (efeito em cascata registrado no Diagnóstico D).*
-- [ ] **3.10** Proteger `/ranking`, `/profile` (trocar `notFound()` por `redirect`), `/practice` (layout existente) e `/torneios` (novo `app/torneios/layout.tsx` server-side). O layout é barreira de UX; a proteção real continua nas rotas de API, que não devem perder suas checagens.
+- [x] **3.10** Proteger `/ranking`, `/profile` (trocar `notFound()` por `redirect`), `/practice` (layout existente) e `/torneios` (novo `app/torneios/layout.tsx` server-side). O layout é barreira de UX; a proteção real continua nas rotas de API, que não devem perder suas checagens.
   `fix(auth): require login on protected pages`
+  *Feito com `requireSession()` (`lib/session.ts`, com `cache` do React) chamado nas próprias páginas de servidor (`/ranking`, `/profile`, `/practice`, desafios), e não só no layout: o guia de autenticação do Next 16 avisa que o layout não impede a página de rodar nem de aparecer no payload, e essas páginas leem o banco direto. Os layouts de `/torneios` e `/practice` cobrem as páginas client (dados vêm da API). Testado: as 13 páginas protegidas dão 307 → `/login` sem sessão e 200 com; `/login` e `/registrar` seguem abertas. Efeito colateral: `/ranking` e `/practice/*` viraram dinâmicas (ver 4.1).*
 - [ ] **3.11** Inserir o criador como participante na criação do torneio (`POST`) e deixar o `GET /api/torneios/[id]` somente leitura.
   `fix(tournaments): add creator as participant on creation`
 
 ## Fase 4: funcionalidades quebradas — branch `phase-4-fixes`
 
 - [ ] **4.1** Marcar como dinâmicas as páginas de ranking e de puzzles.
+  *(Adiantado pelo 3.10: ao ler a sessão da requisição, `/ranking` e `/practice/*` já saem dinâmicas (ƒ) no build. Resta conferir e marcar; provavelmente sem mudança de código.)*
   `fix(ranking): render ranking and puzzle pages dynamically`
 - [ ] **4.2** Incrementar `User.wins` no `PATCH` de resultado com a mesma lógica de delta. Estender os testes de 2.2 antes.
   `fix(achievements): track match wins`
@@ -253,6 +255,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - O que a exclusão de conta deve fazer com torneios e partidas de outros (achado no 3.9): anonimizar o jogador em vez de apagar em cascata, ou bloquear a exclusão enquanto houver torneio aberto.
 - Testes de integração das rotas de API.
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
+- Voltar à página de origem depois do login (ex.: `/login?next=/torneios/[id]/convite`). Hoje o login sempre leva a `/home`, então quem abre um convite deslogado precisa abrir o link de novo (achado no 3.10).
 - Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.
   - **react-chess-puzzle 0.6.2 → 2.x** (primeiro da fila): a linha 0.6 não recebe mais correções (última versão em 11/2025). Na 2.x, `@react-chess-tools/react-chess-game` virou peer dependency (instalar direto) e a API provavelmente mudou; afeta `WeeklyPuzzleClient.tsx` (desafios diário e semanal). Fazer depois de 3.1/3.2, com o fluxo dos puzzles já corrigido. Levantado em 25/09/2026, com a 2.1.0 como a mais recente.
 - Deploy.
