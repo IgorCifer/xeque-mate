@@ -1,41 +1,12 @@
 import Link from "next/link";
 import { IoArrowBack } from "react-icons/io5";
-import { PrismaClient } from "@/app/generated/prisma2/client";
+import { getDailyPuzzle } from "@/app/data/get-challenge-puzzle";
 import { WeeklyPuzzleClient } from "../weekly-challenge/WeeklyPuzzleClient";
 import { getDailyEndDate, formatDateBR } from "../utils/dates";
-
-const prisma = new PrismaClient();
-
-function getDayOfYear(date: Date) {
-  const start = new Date(date.getFullYear(), 0, 1);
-  const diff =
-    date.getTime() -
-    start.getTime() +
-    (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
-  return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
-}
+import { requireSession } from "@/lib/session";
 
 async function getDailyPuzzleAuto() {
-  const today = new Date();
-  const day = getDayOfYear(today);
-  const year = today.getFullYear();
-
-  const where = {
-    rating: { gte: 1200, lte: 1699 },
-  };
-
-  const count = await prisma.puzzle.count({ where });
-  if (count === 0) return null;
-
-  const index = (year * 1000 + day) % count;
-
-  const puzzle = await prisma.puzzle.findFirst({
-    where,
-    orderBy: { externalId: "asc" },
-    skip: index,
-    take: 1,
-  });
-
+  const puzzle = await getDailyPuzzle();
   if (!puzzle) return null;
 
   const endDate = getDailyEndDate();
@@ -51,6 +22,7 @@ async function getDailyPuzzleAuto() {
 }
 
 export default async function DailyChallengePage() {
+  await requireSession();
   const puzzle = await getDailyPuzzleAuto();
 
   return (

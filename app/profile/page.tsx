@@ -1,6 +1,4 @@
-import { auth } from "@/lib/auth"
-import { notFound } from "next/navigation"
-import { headers } from "next/headers"
+import { requireSession } from "@/lib/session";
 import { FaUser } from "react-icons/fa";
 import { FlameIcon, Settings, TrophyIcon } from "lucide-react";
 import { getUserPoints } from "../data/get-user-points";
@@ -17,14 +15,9 @@ import { getAllTimeRanking, getWeeklyRanking } from "../data/get-alltime-ranking
 
 export default async function ProfilePage() {
 
-  const rawHeaders = await headers();
-  const session = await auth.api.getSession({
-    headers: Object.fromEntries(rawHeaders.entries())
-  });
+  const session = await requireSession();
 
-  if (!session) return notFound();
-
-  const points = await getUserPoints(session?.user.id);
+  const points = await getUserPoints(session.user.id);
 
   const achievements = await getAchievements(session.user.id);
 

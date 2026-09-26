@@ -45,10 +45,10 @@ npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `
 npm run build
 npx tsc --noEmit             # type check
 npm test                     # vitest run (npx vitest for watch mode; npx vitest run path/to/file.test.ts for one file)
-npm run lint                 # eslint . (12 errors / 13 warnings known; plan 5.5)
+npm run lint                 # eslint . (10 errors / 13 warnings known; plan 5.5)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
-npx prisma migrate deploy    # apply migrations (single 0_init baseline)
+npx prisma migrate deploy    # apply migrations (0_init baseline + later ones)
 npm run db:seed              # seeds the Achievement rows (prisma/seed.ts)
 npx tsx prisma/seed/seed-puzzles.ts   # imports 12k puzzles from prisma/seed/lichess_db_puzzle.csv (rating 1200-2000, popularity >= 90, plays >= 1000); idempotent
 npx tsx prisma/seed/clear-puzzles.ts
@@ -64,21 +64,23 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 
 **Layout.** The app lives at the repository root. `app/` holds pages, `app/api/*` route handlers, `app/data/*` server-side query helpers and `app/components/` (app shell: `LayoutWrapper` adds header and bottom `NavBar` everywhere except `/login` and `/registrar`). Root `components/` holds shadcn primitives and the achievement toast. Business logic shared by routes lives in `lib/`.
 
-**Data flow.** Server components read data directly (via `app/data/*` or Prisma). Client components mutate through `fetch` to `app/api/*` route handlers, which authorize with `auth.api.getSession({ headers: req.headers })` and check ownership (e.g. `torneio.criadorId`). In Next 16 route/page `params` is a Promise and must be awaited.
+**Data flow.** Server components read data directly (via `app/data/*` or Prisma). Client components mutate through `fetch` to `app/api/*` route handlers, which authorize with `auth.api.getSession({ headers: req.headers })` and check ownership (e.g. `torneio.criadorId`). In Next 16 route/page `params` is a Promise and must be awaited. Protected pages call `requireSession()` (`lib/session.ts`, redirects to `/login`) themselves, since a layout does not stop its page from rendering; `app/torneios/layout.tsx` and `app/practice/layout.tsx` also call it to cover client-component pages, whose data comes from the API.
 
 **Prisma.** The schema uses the new `prisma-client` generator with output `app/generated/prisma2`; import types/enums from `@/app/generated/prisma2/client` and the shared client as the default export of `lib/prisma.ts`. `prisma.config.ts` loads `.env` via dotenv. The `user`, `session`, `account` and `verification` models belong to better-auth's schema; do not rename their fields.
 
-**Auth.** `lib/auth.ts` (server, email/password only, mounted at `app/api/auth/[...all]`) and `lib/auth-client.ts` (browser `authClient`, uses `NEXT_PUBLIC_AUTH_URL`).
+**Auth.** `lib/auth.ts` (server, email/password only, mounted at `app/api/auth/[...all]`) and `lib/auth-client.ts` (browser `authClient`, uses `NEXT_PUBLIC_AUTH_URL`). No email is ever sent, so email change is immediate (`updateEmailWithoutVerification`). A `hooks.before` middleware requires and checks the current `password` in the body of `/change-email` and `/delete-user`, and rejects an email already in use; the client sends it (`authClient.$fetch` for change-email, whose typed method has no password field). Deleting a user cascades to everything they own, including tournaments they created and matches they played in others' tournaments.
 
-**Tournaments** (`Torneio`, `Participante`, `Partida`, `Convite`):
+**Tournaments** (`Torneio`, `Participante`, `Partida`):
+- The invite is an open link by tournament id (`/torneios/[id]/convite`): any logged-in user who has it can view (`GET .../convite`) and join (`POST .../convite`) until rounds are generated; there is no invite model or token.
+- The creator is enrolled as a `Participante` when the tournament is created (`POST /api/torneios`) and cannot be removed; `GET /api/torneios/[id]` is read-only.
 - `Partida.whiteId`/`blackId` reference `Participante.id`, not `User.id`. `blackId = null` is a bye, stored as `WHITE_WIN`.
 - Standings (`pontos` as float, `vitorias`, `derrotas`, `empates`, `partidas`) are denormalized on `Participante` and maintained incrementally: byes are credited when the round is created; `PATCH .../partidas/[partidaId]` applies the difference between the old and new result via `deltaFromResultado`; `DELETE .../rodadas` wipes matches and resets all stats.
 - `POST .../rodadas` builds Swiss pairings with `tournament-pairings`, generating up to 10 rounds in one call (shuffled in round 1, avoiding rematches and repeat byes).
-- Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) calls `awardTournamentPoints` in `lib/points.ts`.
+- Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) is final: in one transaction, an `updateMany` guarded by `finalizado: false` flips the flag and, only if it matched, `awardTournamentPoints(tx, id)` awards the points, so repeated or concurrent requests award once (409). Once `finalizado`, the tournament cannot be reopened, and `POST`/`DELETE .../rodadas` and the result `PATCH` answer 409; name, date, mode and description stay editable.
 
-**Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`awardPoints`, `completePuzzle`). Tournament placement ranks by `pontos` desc, `vitorias` desc, `derrotas` asc. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
+**Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`completePuzzle`, `awardTournamentPoints`). Tournament placement ranks by `pontos` desc, `vitorias` desc, `derrotas` asc. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
 
-**Puzzles.** `Puzzle` rows come from the Lichess puzzle CSV (~1 GB, gitignored, placed in `prisma/seed/`). The daily and weekly puzzles are chosen deterministically in their page files (`app/practice/{daily,weekly}-challenge/page.tsx`): filter by rating band (daily 1200–1699, weekly 1700–2000), order by `externalId`, pick index `(year * 1000 + period) % count`. Both render `WeeklyPuzzleClient`, which posts to `/api/puzzles/complete`. The training game (`app/practice/training-game`) uses `chess.js` + `react-chessboard` directly.
+**Puzzles.** `Puzzle` rows come from the Lichess puzzle CSV (~1 GB, gitignored, placed in `prisma/seed/`). The daily and weekly puzzles are chosen deterministically by `getDailyPuzzle`/`getWeeklyPuzzle` in `app/data/get-challenge-puzzle.ts`: filter by rating band (daily 1200–1699, weekly 1700–2000), order by `externalId`, pick index `seed % count` (seed `year * 1000 + dayOfYear` or `year * 100 + weekOfYear`). Both render `WeeklyPuzzleClient`, which posts to `/api/puzzles/complete`; the route recomputes the current puzzle for the type and rejects any other `puzzleId` with 409. The hint/reset rule that forfeits points is still client-only. The training game (`app/practice/training-game`) uses `chess.js` + `react-chessboard` directly.
 
 **Achievements.** `Achievement` rows are seeded with fixed UUIDs that must match `ACHIEVEMENT_IDS` in `lib/achievements.ts`. `AchievementService` recomputes progress from existing data (participations, `User.wins`, finished tournaments won, distinct days with a `Session` for login streaks) and unlocks what is due. Routes call its `record*` methods after relevant events and return the newly unlocked achievements for the client toast.
 

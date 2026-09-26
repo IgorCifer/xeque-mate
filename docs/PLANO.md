@@ -80,6 +80,7 @@ Refs: plan 3.3
 - `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis.
 - `/api/achievements/check-login` nunca é chamado.
 - *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`). Itens 4.8 e 4.9.
+- *(achado no 3.9)* Excluir a conta apaga em cascata os torneios que a pessoa criou (com as partidas de todos) e as partidas que ela jogou em torneios de outros. Os placares desnormalizados dos adversários em `Participante` continuam contando essas partidas, e em torneio aberto as rodadas ficam com buracos. Não testado a fundo; deduzido do schema (todas as relações são `Cascade`). O mesmo vale para "Sair"/"Excluir" de um torneio finalizado como participante (`DELETE .../participantes/[pid]` permite sair depois de finalizado e apaga as partidas da pessoa). Ver "Depois".
 - O perfil mostra "Sequência de X dias" fixo. `getWeeklyPosition` calcula a posição de todos os tempos e carrega todos os usuários.
 - `NavBar` duplicado na home (`LayoutWrapper` e `app/home/page.tsx`).
 - O limite de 5 torneios (criados e participando) conta os finalizados: o usuário fica bloqueado para sempre depois do quinto.
@@ -87,7 +88,7 @@ Refs: plan 3.3
 
 ### E. Limpeza
 
-- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory` e `hasPuzzleCompletedToday` em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`. Dependência `pg` (ninguém importa; o Prisma 6 não precisa dela; veio com o adapter removido em 1.4).
+- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory`, `hasPuzzleCompletedToday` e `awardPoints` (sem uso desde o 3.4) em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`. Dependência `pg` (ninguém importa; o Prisma 6 não precisa dela; veio com o adapter removido em 1.4).
 - `getAchievements` (`app/data/get-achievements.tsx`) duplica `AchievementService.getUserAchievements`.
 - `new PrismaClient()` avulso em `app/practice/{daily,weekly}-challenge/page.tsx` e `app/data/get-weekly-puzzle.ts`.
 - Rotas com o truque "params pode ou não ser Promise"; no Next 16 é sempre Promise.
@@ -103,11 +104,12 @@ Refs: plan 3.3
 - Banco novo, local, via Docker (Docker 29 instalado, sem psql local). Nunca houve banco hospedado, então a baseline de migrations é segura.
 - Commits em inglês, Conventional Commits, conforme a seção Convenções.
 - Mover o app para a raiz do repositório (item 0.2).
+- Trocar e-mail e excluir conta exigem a senha atual, conferida no servidor por um hook do better-auth (item 3.9, 26/09/2026).
+- Convite é um link aberto pelo id do torneio (UUID): qualquer usuário logado com o link entra enquanto não houver confrontos. O modelo `Convite` foi removido (item 3.7, 26/09/2026).
+- Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
-- 3.4: torneio finalizado é definitivo, ou pode ser reaberto com estorno de pontos?
-- 3.7: convite com token secreto e expiração, ou link aberto pelo id (removendo o modelo `Convite`)?
 - 4.6: o que conta como "posição semanal" (pontos de `PointsHistory` na semana corrente?).
 
 ---
@@ -172,32 +174,49 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 3: segurança e regras de pontos — branch `phase-3-security`
 
-- [ ] **3.1** Extrair `getDailyPuzzle`/`getWeeklyPuzzle` para `app/data/`, reaproveitando a lógica das pages, sem mudar comportamento.
+- [x] **3.1** Extrair `getDailyPuzzle`/`getWeeklyPuzzle` para `app/data/`, reaproveitando a lógica das pages, sem mudar comportamento.
   `refactor(puzzles): extract daily and weekly puzzle selection`
-- [ ] **3.2** `POST /api/puzzles/complete` passa a aceitar só o `puzzleId` do dia/semana, calculado no servidor. Limitação aceita: a regra de dica/reinício continua confiando no cliente.
+- [x] **3.2** `POST /api/puzzles/complete` passa a aceitar só o `puzzleId` do dia/semana, calculado no servidor. Limitação aceita: a regra de dica/reinício continua confiando no cliente.
   `fix(puzzles): only accept current daily or weekly puzzle`
-- [ ] **3.3** Bloquear `POST`/`DELETE /rodadas` e `PATCH` de resultado quando `finalizado`.
+  *Outro `puzzleId` é recusado com 409 e a mensagem "Este não é o desafio atual. Recarregue a página." (o cliente já exibe o `message`). Quem abre a página antes da virada e resolve depois também é recusado, de propósito: trocar pelo id atual daria pontos por um puzzle não resolvido.*
+  *Atenção: no build de produção as páginas dos desafios ainda são estáticas (até o 4.1), então mostrariam o puzzle do dia do build e a API recusaria a partir do dia seguinte. Em dev não acontece. Fazer o 4.1 antes de publicar.*
+- [x] **3.3** Bloquear `POST`/`DELETE /rodadas` e `PATCH` de resultado quando `finalizado`.
   `fix(tournaments): block changes to finished tournaments`
-- [ ] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio.
+  *As três rotas respondem 409 depois da checagem de criador; o botão "Excluir Confrontos" também fica desativado em torneio finalizado (gerar e o seletor de resultado já ficavam). Com isso, o `finalizado: false` do `DELETE /rodadas` deixou de ter efeito.*
+  *Brecha que sobra para o 3.4: `PUT /api/torneios/[id]` aceita `{ finalizado: false }` e reabre o torneio (testado: depois disso o `PATCH` volta a funcionar e finalizar de novo concede pontos outra vez).*
+- [x] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio: hoje o `PUT` aceita `finalizado: false` sem restrição (ver 3.3).
   `fix(points): award tournament points only once`
-- [ ] **3.5** `GET` do convite exige login e ser o criador.
-  `fix(tournaments): restrict invite link to tournament creator`
-- [ ] **3.6** Remover a rota duplicada e quebrada `convite/aceitar`.
+  *Decisão: finalizado é definitivo. O `PUT` recusa `finalizado: false` em torneio finalizado (409) e uma finalização repetida responde 409 "Torneio já finalizado". `awardTournamentPoints` recebe a transação; se a concessão falhar, a finalização é desfeita (antes o torneio ficava finalizado sem pontos). O `DELETE /rodadas` não mexe mais em `finalizado`.*
+  *Teste: 5 `PUT finalizado: true` simultâneos → um 200 e quatro 409, 3 concessões para 3 participantes (repetido 7 vezes). A primeira corrida deu um 500 (P2028, a transação não conseguiu começar em 2 s) porque o `import()` dinâmico de `lib/points` compilava dentro da transação no dev; virou import estático.*
+  *Sobra: o `PATCH` de resultado lê `finalizado` antes de gravar; se a finalização acontecer exatamente entre a leitura e a gravação, o resultado muda depois dos pontos. Janela de milissegundos, só o criador faz as duas coisas.*
+- [x] **3.5** `GET` do convite exige login e deixa de devolver o registro do convite (token). *(Reescrito em 26/09/2026: o texto original pedia "ser o criador", mas quem chama esse `GET` é a página que o convidado abre, `app/torneios/[id]/convite/page.tsx`; o criador monta o link no cliente e nunca chama a rota.)*
+  `fix(tournaments): require login to view invite`
+  *Sem login: 401 "Faça login para ver o convite". Logado (convidado ou criador): 200 com `{ torneio }`, sem `convite`. A página só usava `data.torneio`, então não mudou. O `GET` ainda cria o registro `Convite` na primeira visita; isso sai ou muda no 3.7.*
+- [x] **3.6** Remover a rota duplicada e quebrada `convite/aceitar`.
   `refactor(tournaments): remove unused invite accept route`
-- [ ] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`).
+- [x] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`). Em qualquer caso, o `GET` do convite para de gravar no banco; com token, gerar o link vira uma ação só do criador (a parte "ser o criador" que saiu do 3.5). Corrigir também o link de convite, fixo em `http://192.168.0.7:3000` em `app/torneios/[id]/page.tsx` (usar `window.location.origin`).
   `feat(tournaments): validate invite token and expiration` *ou* `refactor(db): drop unused invite model`
-- [ ] **3.8** Retirar `email` dos `select` de participantes.
+  *Decisão: link aberto. Migration `20260926174234_drop_convite` apaga a tabela `convite` (só ela: o diff entre banco e schema não trouxe mais nada). O `GET` do convite não grava mais nada; o link usa `window.location.origin`. Efeito colateral bom: a FK `convite.criadoPorId` era `RESTRICT` e impediria excluir a conta de quem criou torneio (3.9). Conferido: `migrate deploy` num banco vazio aplica as duas migrations e bate com o schema. Commitado junto com o 3.6, a pedido.*
+- [x] **3.8** Retirar `email` dos `select` de participantes.
   `fix(tournaments): stop exposing participant emails`
-- [ ] **3.9** Habilitar `changeEmail` e `deleteUser` em `lib/auth.ts`. Antes, verificar o que o better-auth exige (senha, sessão recente, verificação por e-mail), já que não há envio de e-mail configurado.
+  *5 `select` em `GET /api/torneios/[id]` e `/participando`, mais os tipos que citavam o campo; nenhuma tela exibia o e-mail. Commitado junto com o 3.9, a pedido.*
+- [x] **3.9** Habilitar `changeEmail` e `deleteUser` em `lib/auth.ts`. Antes, verificar o que o better-auth exige (senha, sessão recente, verificação por e-mail), já que não há envio de e-mail configurado.
   `fix(auth): enable email change and account deletion`
-- [ ] **3.10** Proteger `/ranking`, `/profile` (trocar `notFound()` por `redirect`), `/practice` (layout existente) e `/torneios` (novo `app/torneios/layout.tsx` server-side). O layout é barreira de UX; a proteção real continua nas rotas de API, que não devem perder suas checagens.
+  *O que o better-auth 1.7.6 exige: trocar e-mail sem envio de e-mail só funciona com `updateEmailWithoutVerification` (e só para e-mail não verificado, o caso de todos aqui) e não aceita senha; excluir conta aceita senha, mas sem ela exclui se a sessão tiver menos de 24 h (`freshAge`); trocar para um e-mail já usado responde sucesso sem mudar nada.*
+  *Decisão: senha obrigatória nas duas ações, conferida num hook `before` em `lib/auth.ts` (roda antes da validação do endpoint, com o corpo original); o hook também recusa e-mail já em uso com mensagem clara. A tela de trocar e-mail passou a enviar a senha que já pedia (via `authClient.$fetch`); a de excluir ganhou o campo. Testado: sem senha/senha errada → 400, sem login → 401, com senha → troca/exclui; excluir funciona para quem criou torneio e jogou partidas (efeito em cascata registrado no Diagnóstico D).*
+- [x] **3.10** Proteger `/ranking`, `/profile` (trocar `notFound()` por `redirect`), `/practice` (layout existente) e `/torneios` (novo `app/torneios/layout.tsx` server-side). O layout é barreira de UX; a proteção real continua nas rotas de API, que não devem perder suas checagens.
   `fix(auth): require login on protected pages`
-- [ ] **3.11** Inserir o criador como participante na criação do torneio (`POST`) e deixar o `GET /api/torneios/[id]` somente leitura.
+  *Feito com `requireSession()` (`lib/session.ts`, com `cache` do React) chamado nas próprias páginas de servidor (`/ranking`, `/profile`, `/practice`, desafios), e não só no layout: o guia de autenticação do Next 16 avisa que o layout não impede a página de rodar nem de aparecer no payload, e essas páginas leem o banco direto. Os layouts de `/torneios` e `/practice` cobrem as páginas client (dados vêm da API). Testado: as 13 páginas protegidas dão 307 → `/login` sem sessão e 200 com; `/login` e `/registrar` seguem abertas. Efeito colateral: `/ranking` e `/practice/*` viraram dinâmicas (ver 4.1).*
+- [x] **3.11** Inserir o criador como participante na criação do torneio (`POST`) e deixar o `GET /api/torneios/[id]` somente leitura.
   `fix(tournaments): add creator as participant on creation`
+  *O `POST` já inscrevia o criador e a rota de remover participante já recusa remover o líder, então a inserção no `GET` só cobria torneios anteriores a isso (o banco foi recriado na Fase 0). O `GET` deixou de gravar e passou a ordenar os participantes por inscrição (`createdAt`), mantendo o criador em primeiro; a tela acha o líder pelo `criadorId`. Testado: 1 inscrito logo após o `POST`; remover o líder → 400; com a inscrição do criador apagada à mão, 4 `GET`s não recriam nada.*
+
+*Fim da fase (26/09/2026): `tsc`, `vitest` (38) e `npm run build` sem erros; lint no total conhecido (10 erros, 13 warnings, item 5.5); `/ranking` e `/practice/*` saem dinâmicas (ƒ). Roteiro com 2 usuários pela API contra o build de produção (`next start`): 49/49 checagens ok (páginas protegidas, cadastro/login, convite, rodadas e edição de resultado, finalização com 3 cliques simultâneos, ranking e perfil, puzzles, trocar e-mail e excluir conta), sem erro no log. A interface no navegador não foi conferida visualmente.*
 
 ## Fase 4: funcionalidades quebradas — branch `phase-4-fixes`
 
 - [ ] **4.1** Marcar como dinâmicas as páginas de ranking e de puzzles.
+  *(Adiantado pelo 3.10: ao ler a sessão da requisição, `/ranking` e `/practice/*` já saem dinâmicas (ƒ) no build. Resta conferir e marcar; provavelmente sem mudança de código.)*
   `fix(ranking): render ranking and puzzle pages dynamically`
 - [ ] **4.2** Incrementar `User.wins` no `PATCH` de resultado com a mesma lógica de delta. Estender os testes de 2.2 antes.
   `fix(achievements): track match wins`
@@ -236,8 +255,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 ## Depois (fora deste plano)
 
 - Suíço rodada a rodada, considerando resultados (prioridade para uso real no clube).
+- O que a exclusão de conta deve fazer com torneios e partidas de outros (achado no 3.9): anonimizar o jogador em vez de apagar em cascata, ou bloquear a exclusão enquanto houver torneio aberto.
 - Testes de integração das rotas de API.
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
+- Voltar à página de origem depois do login (ex.: `/login?next=/torneios/[id]/convite`). Hoje o login sempre leva a `/home`, então quem abre um convite deslogado precisa abrir o link de novo (achado no 3.10).
 - Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.
   - **react-chess-puzzle 0.6.2 → 2.x** (primeiro da fila): a linha 0.6 não recebe mais correções (última versão em 11/2025). Na 2.x, `@react-chess-tools/react-chess-game` virou peer dependency (instalar direto) e a API provavelmente mudou; afeta `WeeklyPuzzleClient.tsx` (desafios diário e semanal). Fazer depois de 3.1/3.2, com o fluxo dos puzzles já corrigido. Levantado em 25/09/2026, com a 2.1.0 como a mais recente.
 - Deploy.

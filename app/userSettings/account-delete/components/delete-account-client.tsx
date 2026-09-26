@@ -11,6 +11,7 @@ export function DeleteAccountClient() {
   const router = useRouter();
 
   const [isChecked, setIsChecked] = useState(false);
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
 async function handleSubmit(e: React.FormEvent) {
@@ -23,11 +24,15 @@ async function handleSubmit(e: React.FormEvent) {
     return;
   }
 
+  if (!password) {
+    alert("Digite sua senha para confirmar a exclusão.");
+    return;
+  }
+
   setIsLoading(true);
 
   try {
-    const { error } = await authClient.deleteUser({
-    });
+    const { error } = await authClient.deleteUser({ password });
 
     if (error) {
       alert(error.message || "Erro ao excluir conta.");
@@ -135,10 +140,19 @@ async function handleSubmit(e: React.FormEvent) {
             </p>
           </div>
 
+          <input
+            type="password"
+            placeholder="Digite sua senha para confirmar"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            className="w-full mt-2 p-3 bg-[#F5F8FA] border border-neutral-400 rounded-lg focus:outline-none focus:ring-1 text-[10px] text-black"
+          />
+
           <div className="mt-6">
             <Button
               type="submit"
-              disabled={!isChecked || isLoading}
+              disabled={!isChecked || !password || isLoading}
               className="w-full rounded-sm bg-[#F87171] hover:bg-[#DC2626] text-white text-xs font-bold py-3 border-b-4 border-[#B91C1C] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? "Excluindo..." : "Excluir Conta"}

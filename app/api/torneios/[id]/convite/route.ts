@@ -6,6 +6,8 @@ import { AchievementService } from "@/lib/achievements";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// O convite é o link aberto do torneio: qualquer usuário logado que tenha o
+// id vê os dados (GET) e pode entrar (POST) enquanto não houver confrontos.
 export async function GET(
   req: Request,
   context: { params: { id: string } } | { params: Promise<{ id: string }> }
@@ -24,6 +26,14 @@ export async function GET(
     );
   }
 
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: "Faça login para ver o convite" },
+      { status: 401 }
+    );
+  }
+
   const torneio = await prisma.torneio.findUnique({
     where: { id },
     select: {
@@ -31,7 +41,6 @@ export async function GET(
       nome: true,
       data: true,
       modo: true,
-      criadorId: true,
       finalizado: true,
       _count: { select: { partidas: true } },
     },
@@ -58,28 +67,7 @@ export async function GET(
     );
   }
 
-  // Buscar convite existente
-  const convite = await prisma.convite.findFirst({
-    where: { torneioId: id },
-  });
-
-  if (convite) {
-    return NextResponse.json({ convite, torneio });
-  }
-
-  // Criar novo convite
-  const token = crypto.randomUUID();
-
-  const novoConvite = await prisma.convite.create({
-    data: {
-      torneioId: id,
-      token,
-      criadoPorId: torneio.criadorId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias
-    },
-  });
-
-  return NextResponse.json({ convite: novoConvite, torneio });
+  return NextResponse.json({ torneio });
 }
 
 // Método POST para aceitar convite

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { awardTournamentPoints } from "@/lib/points";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
 
 type PlayerSnapshot = {
@@ -8,7 +9,6 @@ type PlayerSnapshot = {
   user: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   } | null;
   pontos: number;
@@ -39,9 +39,10 @@ export async function GET(
       where: { id },
       include: {
         participantes: {
+          orderBy: { createdAt: "asc" },
           include: {
             user: {
-              select: { id: true, name: true, email: true, image: true }
+              select: { id: true, name: true, image: true }
             }
           }
         },
@@ -51,14 +52,14 @@ export async function GET(
             white: {
               include: {
                 user: {
-                  select: { id: true, name: true, email: true, image: true }
+                  select: { id: true, name: true, image: true }
                 }
               }
             },
             black: {
               include: {
                 user: {
-                  select: { id: true, name: true, email: true, image: true }
+                  select: { id: true, name: true, image: true }
                 }
               }
             }
@@ -76,31 +77,9 @@ export async function GET(
 
     // Permitir visualização mesmo se não for participante/criador; ações sensíveis são checadas em endpoints próprios
 
-    // Garante que o criador está cadastrado como participante (e aparece como líder)
-    const liderJaParticipa = torneio.participantes.some(
-      (p) => p.userId === torneio.criadorId
-    );
-    let participantes = [...torneio.participantes];
-    if (!liderJaParticipa) {
-      const created = await prisma.participante.create({
-        data: {
-          torneioId: torneio.id,
-          userId: torneio.criadorId,
-          pontos: 0,
-          partidas: 0,
-          vitorias: 0,
-          derrotas: 0,
-          empates: 0,
-        },
-        include: {
-          user: {
-            select: { id: true, name: true, email: true, image: true },
-          },
-        },
-      });
-
-      participantes = [created, ...participantes];
-    }
+    // O criador é inscrito como participante na criação (POST /api/torneios)
+    // e não pode ser removido; este GET só lê.
+    const participantes = torneio.participantes;
 
     const { partidas, ...torneioSemPartidas } = torneio;
 
@@ -196,31 +175,45 @@ export async function PUT(
       dataUpdate.descricao = body.descricao ?? null;
     }
 
-    // NOVA LÓGICA: Detecta se está finalizando o torneio
-    const estáFinalizando = body.finalizado === true && !torneio.finalizado;
-
-    if (body.finalizado !== undefined) {
-      dataUpdate.finalizado = !!body.finalizado;
+    // Finalizar é definitivo: não há volta para finalizado = false
+    if (body.finalizado === false && torneio.finalizado) {
+      return NextResponse.json(
+        { error: "Torneio finalizado não pode ser reaberto" },
+        { status: 409 }
+      );
     }
 
-    const updated = await prisma.torneio.update({
-      where: { id },
-      data: dataUpdate,
+    if (body.finalizado !== true) {
+      const updated = await prisma.torneio.update({
+        where: { id },
+        data: dataUpdate,
+      });
+      return NextResponse.json(updated);
+    }
+
+    // Finaliza e distribui os pontos na mesma transação. O updateMany só
+    // pega o torneio se ele ainda estiver aberto, então uma segunda
+    // requisição (ou um clique duplo) não concede pontos de novo.
+    const finalizou = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.torneio.updateMany({
+        where: { id, finalizado: false },
+        data: { ...dataUpdate, finalizado: true },
+      });
+      if (count !== 1) return false;
+
+      const awards = await awardTournamentPoints(tx, id);
+      console.log(`Pontos distribuídos no torneio ${id}:`, awards);
+      return true;
     });
 
-    // NOVO: Se está finalizando, distribui pontos aos participantes
-    if (estáFinalizando) {
-      try {
-        const { awardTournamentPoints } = await import("@/lib/points");
-        const awards = await awardTournamentPoints(id);
-        console.log(`Pontos distribuídos no torneio ${id}:`, awards);
-      } catch (pointsError) {
-        console.error("Erro ao distribuir pontos do torneio:", pointsError);
-        // Não falha a requisição se houver erro nos pontos
-        // O torneio já foi finalizado com sucesso
-      }
+    if (!finalizou) {
+      return NextResponse.json(
+        { error: "Torneio já finalizado" },
+        { status: 409 }
+      );
     }
 
+    const updated = await prisma.torneio.findUnique({ where: { id } });
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Erro PUT /torneios/[id]:", error);

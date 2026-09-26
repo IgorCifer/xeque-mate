@@ -7,7 +7,6 @@ import Link from "next/link";
 interface UserMini {
   id?: string;
   name?: string | null;
-  email?: string;
   image?: string | null;
 }
 
@@ -439,7 +438,7 @@ export default function TorneioPage() {
           <button
             className="flex-1 bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] transition px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-white"
             onClick={excluirConfrontos}
-            disabled={excluindo || gerando || (torneio.rodadas?.length ?? 0) === 0}
+            disabled={excluindo || gerando || torneio.finalizado || (torneio.rodadas?.length ?? 0) === 0}
           >
             {excluindo ? "Excluindo..." : "Excluir Confrontos"}
           </button>
@@ -569,7 +568,7 @@ export default function TorneioPage() {
             <div className="p-4 flex flex-col gap-3">
               <p className="text-sm text-gray-200">Compartilhe este link para convidar jogadores:</p>
               {(() => {
-                const conviteLink = `http://192.168.0.7:3000/torneios/${id}/convite`;
+                const conviteLink = `${window.location.origin}/torneios/${id}/convite`;
                 const copyLink = async () => {
                   const copyWithExecCommand = () => {
                     const textarea = document.createElement("textarea");
