@@ -211,6 +211,8 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(tournaments): add creator as participant on creation`
   *O `POST` já inscrevia o criador e a rota de remover participante já recusa remover o líder, então a inserção no `GET` só cobria torneios anteriores a isso (o banco foi recriado na Fase 0). O `GET` deixou de gravar e passou a ordenar os participantes por inscrição (`createdAt`), mantendo o criador em primeiro; a tela acha o líder pelo `criadorId`. Testado: 1 inscrito logo após o `POST`; remover o líder → 400; com a inscrição do criador apagada à mão, 4 `GET`s não recriam nada.*
 
+*Fim da fase (26/09/2026): `tsc`, `vitest` (38) e `npm run build` sem erros; lint no total conhecido (10 erros, 13 warnings, item 5.5); `/ranking` e `/practice/*` saem dinâmicas (ƒ). Roteiro com 2 usuários pela API contra o build de produção (`next start`): 49/49 checagens ok (páginas protegidas, cadastro/login, convite, rodadas e edição de resultado, finalização com 3 cliques simultâneos, ranking e perfil, puzzles, trocar e-mail e excluir conta), sem erro no log. A interface no navegador não foi conferida visualmente.*
+
 ## Fase 4: funcionalidades quebradas — branch `phase-4-fixes`
 
 - [ ] **4.1** Marcar como dinâmicas as páginas de ranking e de puzzles.
