@@ -45,7 +45,7 @@ npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `
 npm run build
 npx tsc --noEmit             # type check
 npm test                     # vitest run (npx vitest for watch mode; npx vitest run path/to/file.test.ts for one file)
-npm run lint                 # eslint . (12 errors / 13 warnings known; plan 5.5)
+npm run lint                 # eslint . (11 errors / 13 warnings known; plan 5.5)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
 npx prisma migrate deploy    # apply migrations (single 0_init baseline)
@@ -74,9 +74,9 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 - `Partida.whiteId`/`blackId` reference `Participante.id`, not `User.id`. `blackId = null` is a bye, stored as `WHITE_WIN`.
 - Standings (`pontos` as float, `vitorias`, `derrotas`, `empates`, `partidas`) are denormalized on `Participante` and maintained incrementally: byes are credited when the round is created; `PATCH .../partidas/[partidaId]` applies the difference between the old and new result via `deltaFromResultado`; `DELETE .../rodadas` wipes matches and resets all stats.
 - `POST .../rodadas` builds Swiss pairings with `tournament-pairings`, generating up to 10 rounds in one call (shuffled in round 1, avoiding rematches and repeat byes).
-- Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) calls `awardTournamentPoints` in `lib/points.ts`. Once `finalizado`, `POST`/`DELETE .../rodadas` and the result `PATCH` answer 409.
+- Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) is final: in one transaction, an `updateMany` guarded by `finalizado: false` flips the flag and, only if it matched, `awardTournamentPoints(tx, id)` awards the points, so repeated or concurrent requests award once (409). Once `finalizado`, the tournament cannot be reopened, and `POST`/`DELETE .../rodadas` and the result `PATCH` answer 409; name, date, mode and description stay editable.
 
-**Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`awardPoints`, `completePuzzle`). Tournament placement ranks by `pontos` desc, `vitorias` desc, `derrotas` asc. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
+**Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`completePuzzle`, `awardTournamentPoints`). Tournament placement ranks by `pontos` desc, `vitorias` desc, `derrotas` asc. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
 
 **Puzzles.** `Puzzle` rows come from the Lichess puzzle CSV (~1 GB, gitignored, placed in `prisma/seed/`). The daily and weekly puzzles are chosen deterministically by `getDailyPuzzle`/`getWeeklyPuzzle` in `app/data/get-challenge-puzzle.ts`: filter by rating band (daily 1200–1699, weekly 1700–2000), order by `externalId`, pick index `seed % count` (seed `year * 1000 + dayOfYear` or `year * 100 + weekOfYear`). Both render `WeeklyPuzzleClient`, which posts to `/api/puzzles/complete`; the route recomputes the current puzzle for the type and rejects any other `puzzleId` with 409. The hint/reset rule that forfeits points is still client-only. The training game (`app/practice/training-game`) uses `chess.js` + `react-chessboard` directly.
 

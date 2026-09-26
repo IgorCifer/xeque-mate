@@ -1,6 +1,7 @@
 // lib/points.ts
 
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@/app/generated/prisma2/client";
 import { sortTournamentRanking } from "@/lib/tournament-ranking";
 
 /**
@@ -66,13 +67,17 @@ export async function awardPoints(
 }
 
 /**
- * Distribui pontos aos participantes de um torneio finalizado
+ * Distribui pontos aos participantes de um torneio finalizado.
+ * Roda na transação de quem chama, junto com a finalização do torneio.
  */
-export async function awardTournamentPoints(torneioId: string) {
+export async function awardTournamentPoints(
+  tx: Prisma.TransactionClient,
+  torneioId: string
+) {
   try {
     // Busca participantes e ordena pela classificação do torneio
     const participantes = sortTournamentRanking(
-      await prisma.participante.findMany({
+      await tx.participante.findMany({
         where: { torneioId },
         include: { user: true },
       })
@@ -82,8 +87,6 @@ export async function awardTournamentPoints(torneioId: string) {
       console.log("Nenhum participante encontrado no torneio");
       return;
     }
-
-    const awards: Promise<any>[] = [];
 
     // Distribui pontos baseado na posição
     for (let i = 0; i < participantes.length; i++) {
@@ -109,14 +112,15 @@ export async function awardTournamentPoints(torneioId: string) {
         reason = "tournament_other";
       }
 
-      // Adiciona pontos ao usuário
-      awards.push(
-        awardPoints(participante.userId, points, reason, torneioId)
-      );
+      // Adiciona pontos ao usuário e registra no histórico
+      await tx.user.update({
+        where: { id: participante.userId },
+        data: { points: { increment: points } },
+      });
+      await tx.pointsHistory.create({
+        data: { userId: participante.userId, points, reason, referenceId: torneioId },
+      });
     }
-
-    // Executa todas as atribuições de pontos
-    await Promise.all(awards);
 
     console.log(
       `Pontos distribuídos para ${participantes.length} participantes do torneio ${torneioId}`

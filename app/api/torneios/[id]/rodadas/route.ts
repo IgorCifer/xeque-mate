@@ -244,7 +244,6 @@ export async function DELETE(req: Request, context: ContextParams) {
       where: { torneioId: id },
       data: { pontos: 0, vitorias: 0, derrotas: 0, empates: 0, partidas: 0 },
     }),
-    prisma.torneio.update({ where: { id }, data: { finalizado: false } }),
   ]);
 
   return NextResponse.json({ success: true });

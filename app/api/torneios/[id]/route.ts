@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { awardTournamentPoints } from "@/lib/points";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
 
 type PlayerSnapshot = {
@@ -196,31 +197,45 @@ export async function PUT(
       dataUpdate.descricao = body.descricao ?? null;
     }
 
-    // NOVA LÓGICA: Detecta se está finalizando o torneio
-    const estáFinalizando = body.finalizado === true && !torneio.finalizado;
-
-    if (body.finalizado !== undefined) {
-      dataUpdate.finalizado = !!body.finalizado;
+    // Finalizar é definitivo: não há volta para finalizado = false
+    if (body.finalizado === false && torneio.finalizado) {
+      return NextResponse.json(
+        { error: "Torneio finalizado não pode ser reaberto" },
+        { status: 409 }
+      );
     }
 
-    const updated = await prisma.torneio.update({
-      where: { id },
-      data: dataUpdate,
+    if (body.finalizado !== true) {
+      const updated = await prisma.torneio.update({
+        where: { id },
+        data: dataUpdate,
+      });
+      return NextResponse.json(updated);
+    }
+
+    // Finaliza e distribui os pontos na mesma transação. O updateMany só
+    // pega o torneio se ele ainda estiver aberto, então uma segunda
+    // requisição (ou um clique duplo) não concede pontos de novo.
+    const finalizou = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.torneio.updateMany({
+        where: { id, finalizado: false },
+        data: { ...dataUpdate, finalizado: true },
+      });
+      if (count !== 1) return false;
+
+      const awards = await awardTournamentPoints(tx, id);
+      console.log(`Pontos distribuídos no torneio ${id}:`, awards);
+      return true;
     });
 
-    // NOVO: Se está finalizando, distribui pontos aos participantes
-    if (estáFinalizando) {
-      try {
-        const { awardTournamentPoints } = await import("@/lib/points");
-        const awards = await awardTournamentPoints(id);
-        console.log(`Pontos distribuídos no torneio ${id}:`, awards);
-      } catch (pointsError) {
-        console.error("Erro ao distribuir pontos do torneio:", pointsError);
-        // Não falha a requisição se houver erro nos pontos
-        // O torneio já foi finalizado com sucesso
-      }
+    if (!finalizou) {
+      return NextResponse.json(
+        { error: "Torneio já finalizado" },
+        { status: 409 }
+      );
     }
 
+    const updated = await prisma.torneio.findUnique({ where: { id } });
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Erro PUT /torneios/[id]:", error);

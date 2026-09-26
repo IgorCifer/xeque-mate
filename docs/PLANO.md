@@ -87,7 +87,7 @@ Refs: plan 3.3
 
 ### E. Limpeza
 
-- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory` e `hasPuzzleCompletedToday` em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`. Dependência `pg` (ninguém importa; o Prisma 6 não precisa dela; veio com o adapter removido em 1.4).
+- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory`, `hasPuzzleCompletedToday` e `awardPoints` (sem uso desde o 3.4) em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`. Dependência `pg` (ninguém importa; o Prisma 6 não precisa dela; veio com o adapter removido em 1.4).
 - `getAchievements` (`app/data/get-achievements.tsx`) duplica `AchievementService.getUserAchievements`.
 - `new PrismaClient()` avulso em `app/practice/{daily,weekly}-challenge/page.tsx` e `app/data/get-weekly-puzzle.ts`.
 - Rotas com o truque "params pode ou não ser Promise"; no Next 16 é sempre Promise.
@@ -103,10 +103,10 @@ Refs: plan 3.3
 - Banco novo, local, via Docker (Docker 29 instalado, sem psql local). Nunca houve banco hospedado, então a baseline de migrations é segura.
 - Commits em inglês, Conventional Commits, conforme a seção Convenções.
 - Mover o app para a raiz do repositório (item 0.2).
+- Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
-- 3.4: torneio finalizado é definitivo, ou pode ser reaberto com estorno de pontos?
 - 3.7: convite com token secreto e expiração, ou link aberto pelo id (removendo o modelo `Convite`)?
 - 4.6: o que conta como "posição semanal" (pontos de `PointsHistory` na semana corrente?).
 
@@ -182,8 +182,11 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(tournaments): block changes to finished tournaments`
   *As três rotas respondem 409 depois da checagem de criador; o botão "Excluir Confrontos" também fica desativado em torneio finalizado (gerar e o seletor de resultado já ficavam). Com isso, o `finalizado: false` do `DELETE /rodadas` deixou de ter efeito.*
   *Brecha que sobra para o 3.4: `PUT /api/torneios/[id]` aceita `{ finalizado: false }` e reabre o torneio (testado: depois disso o `PATCH` volta a funcionar e finalizar de novo concede pontos outra vez).*
-- [ ] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio: hoje o `PUT` aceita `finalizado: false` sem restrição (ver 3.3).
+- [x] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio: hoje o `PUT` aceita `finalizado: false` sem restrição (ver 3.3).
   `fix(points): award tournament points only once`
+  *Decisão: finalizado é definitivo. O `PUT` recusa `finalizado: false` em torneio finalizado (409) e uma finalização repetida responde 409 "Torneio já finalizado". `awardTournamentPoints` recebe a transação; se a concessão falhar, a finalização é desfeita (antes o torneio ficava finalizado sem pontos). O `DELETE /rodadas` não mexe mais em `finalizado`.*
+  *Teste: 5 `PUT finalizado: true` simultâneos → um 200 e quatro 409, 3 concessões para 3 participantes (repetido 7 vezes). A primeira corrida deu um 500 (P2028, a transação não conseguiu começar em 2 s) porque o `import()` dinâmico de `lib/points` compilava dentro da transação no dev; virou import estático.*
+  *Sobra: o `PATCH` de resultado lê `finalizado` antes de gravar; se a finalização acontecer exatamente entre a leitura e a gravação, o resultado muda depois dos pontos. Janela de milissegundos, só o criador faz as duas coisas.*
 - [ ] **3.5** `GET` do convite exige login e ser o criador.
   `fix(tournaments): restrict invite link to tournament creator`
 - [ ] **3.6** Remover a rota duplicada e quebrada `convite/aceitar`.
