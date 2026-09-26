@@ -44,6 +44,7 @@ npx prisma generate          # required before tsc/dev/build; output is gitignor
 npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `npx next dev -H 127.0.0.1` for localhost only
 npm run build
 npx tsc --noEmit             # type check
+npm test                     # vitest run (npx vitest for watch mode; npx vitest run path/to/file.test.ts for one file)
 npm run lint                 # eslint . (12 errors / 13 warnings known; plan 5.5)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
@@ -53,7 +54,9 @@ npx tsx prisma/seed/seed-puzzles.ts   # imports 12k puzzles from prisma/seed/lic
 npx tsx prisma/seed/clear-puzzles.ts
 ```
 
-Required env vars (`.env`, not committed; copy from `.env.example`): `DATABASE_URL`, `NEXT_PUBLIC_AUTH_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. There is no test runner yet (Vitest arrives in plan phase 2).
+Required env vars (`.env`, not committed; copy from `.env.example`): `DATABASE_URL`, `NEXT_PUBLIC_AUTH_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`.
+
+Tests use Vitest 4 (`vitest.config.ts`: node environment, `@/` alias, files named `*.test.ts`). Vitest 5 would need `@types/node` >= 22, a major bump.
 
 ## Architecture
 

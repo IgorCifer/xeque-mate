@@ -161,7 +161,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 2: testes do núcleo — branch `phase-2-tests`
 
-- [ ] **2.1** Instalar e configurar Vitest; adicionar script `test`.
+- [x] **2.1** Instalar e configurar Vitest; adicionar script `test`.
   `test: set up vitest`
 - [ ] **2.2** Testar `deltaFromResultado`, incluindo edição de resultado (vitória → empate, empate → derrota, etc.) e bye.
   `test(tournaments): cover result delta calculation`
