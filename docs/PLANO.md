@@ -87,7 +87,7 @@ Refs: plan 3.3
 
 ### E. Limpeza
 
-- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory` e `hasPuzzleCompletedToday` em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`.
+- Não usados: `components/achievement-provider.tsx`, `app/data/get-weekly-puzzle.ts`, `app/practice/utils/getWeeklyEnd.ts` (duplica `dates.ts`), `getUserPointsHistory` e `hasPuzzleCompletedToday` em `lib/points.ts`, `GET /api/achievements`, `scripts/check-participante.{js,ts}`, `tailwind.config.ts`. Dependência `pg` (ninguém importa; o Prisma 6 não precisa dela; veio com o adapter removido em 1.4).
 - `getAchievements` (`app/data/get-achievements.tsx`) duplica `AchievementService.getUserAchievements`.
 - `new PrismaClient()` avulso em `app/practice/{daily,weekly}-challenge/page.tsx` e `app/data/get-weekly-puzzle.ts`.
 - Rotas com o truque "params pode ou não ser Promise"; no Next 16 é sempre Promise.
@@ -153,8 +153,11 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `refactor(tournaments): remove unused nanoid import`
 - [x] **1.4** Remover a dependência `@prisma/adapter-pg`.
   `chore(deps): remove unused prisma pg adapter`
-- [ ] **1.5** `npm update` (patch/minor) e `npm audit fix` **sem** `--force`. Ignorar a sugestão de downgrade do Prisma. Conferir login e cadastro depois (better-auth muda entre minors).
+- [x] **1.5** `npm update` (patch/minor) e `npm audit fix` **sem** `--force`. Ignorar a sugestão de downgrade do Prisma. Conferir login e cadastro depois (better-auth muda entre minors).
   `chore(deps): update dependencies within current majors`
+  *Resultado: só o lockfile mudou (better-auth 1.4.1 → 1.7.6, Prisma 6.19.0 → 6.19.3, react-chessboard 5.8.6 → 5.12.1, entre outros). `react`/`react-dom` seguem fixados em 19.2.0. Audit: de 17 para 3 vulnerabilidades, todas altas e da cadeia `prisma` → `@prisma/config` → `deepmerge-ts` (só na CLI; a "correção" é o downgrade ignorado). Lint ganhou 1 erro por regra nova do `eslint-plugin-react-hooks` 7.1 (`components/ui/carousel.tsx`, fica para 5.5).*
+
+*Fim da fase (26/09/2026): `npm run build` sem erros; roteiro da linha de base sem falhas (48 passos); cadastro, login, logout e login de usuário antigo ok no better-auth 1.7.6.*
 
 ## Fase 2: testes do núcleo — branch `phase-2-tests`
 
