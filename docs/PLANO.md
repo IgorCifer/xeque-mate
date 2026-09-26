@@ -147,9 +147,9 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 - [x] **1.1** Atualizar `next` e `eslint-config-next` para 16.3.x. Remover do CLAUDE.md a regra temporária do `npx next dev`.
   `chore(deps): bump next to 16.3`
-- [ ] **1.2** Declarar `chess.js` e `react-chessboard` nas versões já instaladas.
+- [x] **1.2** Declarar `chess.js` e `react-chessboard` nas versões já instaladas.
   `chore(deps): declare chess.js and react-chessboard`
-- [ ] **1.3** Remover o import não usado de `nanoid`.
+- [x] **1.3** Remover o import não usado de `nanoid`.
   `refactor(tournaments): remove unused nanoid import`
 - [ ] **1.4** Remover a dependência `@prisma/adapter-pg`.
   `chore(deps): remove unused prisma pg adapter`
@@ -235,7 +235,8 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - Suíço rodada a rodada, considerando resultados (prioridade para uso real no clube).
 - Testes de integração das rotas de API.
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
-- Majors (Prisma 7, etc.).
+- Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.
+  - **react-chess-puzzle 0.6.2 → 2.x** (primeiro da fila): a linha 0.6 não recebe mais correções (última versão em 11/2025). Na 2.x, `@react-chess-tools/react-chess-game` virou peer dependency (instalar direto) e a API provavelmente mudou; afeta `WeeklyPuzzleClient.tsx` (desafios diário e semanal). Fazer depois de 3.1/3.2, com o fluxo dos puzzles já corrigido. Levantado em 25/09/2026, com a 2.1.0 como a mais recente.
 - Deploy.
 
 ---
