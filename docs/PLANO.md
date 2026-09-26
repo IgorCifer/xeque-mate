@@ -174,8 +174,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 - [x] **3.1** Extrair `getDailyPuzzle`/`getWeeklyPuzzle` para `app/data/`, reaproveitando a lógica das pages, sem mudar comportamento.
   `refactor(puzzles): extract daily and weekly puzzle selection`
-- [ ] **3.2** `POST /api/puzzles/complete` passa a aceitar só o `puzzleId` do dia/semana, calculado no servidor. Limitação aceita: a regra de dica/reinício continua confiando no cliente.
+- [x] **3.2** `POST /api/puzzles/complete` passa a aceitar só o `puzzleId` do dia/semana, calculado no servidor. Limitação aceita: a regra de dica/reinício continua confiando no cliente.
   `fix(puzzles): only accept current daily or weekly puzzle`
+  *Outro `puzzleId` é recusado com 409 e a mensagem "Este não é o desafio atual. Recarregue a página." (o cliente já exibe o `message`). Quem abre a página antes da virada e resolve depois também é recusado, de propósito: trocar pelo id atual daria pontos por um puzzle não resolvido.*
+  *Atenção: no build de produção as páginas dos desafios ainda são estáticas (até o 4.1), então mostrariam o puzzle do dia do build e a API recusaria a partir do dia seguinte. Em dev não acontece. Fazer o 4.1 antes de publicar.*
 - [ ] **3.3** Bloquear `POST`/`DELETE /rodadas` e `PATCH` de resultado quando `finalizado`.
   `fix(tournaments): block changes to finished tournaments`
 - [ ] **3.4** Finalizar de forma atômica: `updateMany` com `finalizado: false` no `where`; conceder pontos só se `count === 1`, na mesma transação. Decidir sobre reabrir torneio.

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { completePuzzle } from "@/lib/points";
+import { getDailyPuzzle, getWeeklyPuzzle } from "@/app/data/get-challenge-puzzle";
 
 export async function POST(req: Request) {
   try {
@@ -29,6 +30,20 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "type deve ser 'daily' ou 'weekly'" },
         { status: 400 }
+      );
+    }
+
+    // Só vale o puzzle atual do desafio, calculado no servidor
+    const current =
+      type === "daily" ? await getDailyPuzzle() : await getWeeklyPuzzle();
+
+    if (!current || current.id !== puzzleId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Este não é o desafio atual. Recarregue a página.",
+        },
+        { status: 409 }
       );
     }
 
