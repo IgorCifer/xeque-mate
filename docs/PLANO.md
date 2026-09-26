@@ -167,7 +167,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `test(tournaments): cover result delta calculation`
 - [x] **2.3** Extrair a ordenação de desempate de `awardTournamentPoints` para uma função pura, sem mudar comportamento.
   `refactor(points): extract tournament ranking sort`
-- [ ] **2.4** Testar o desempate (pontos desc, vitórias desc, derrotas asc).
+- [x] **2.4** Testar o desempate (pontos desc, vitórias desc, derrotas asc).
   `test(points): cover tournament tie-breaks`
 
 ## Fase 3: segurança e regras de pontos — branch `phase-3-security`
