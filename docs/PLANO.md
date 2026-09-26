@@ -163,7 +163,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 - [x] **2.1** Instalar e configurar Vitest; adicionar script `test`.
   `test: set up vitest`
-- [ ] **2.2** Testar `deltaFromResultado`, incluindo edição de resultado (vitória → empate, empate → derrota, etc.) e bye.
+- [x] **2.2** Testar `deltaFromResultado`, incluindo edição de resultado (vitória → empate, empate → derrota, etc.) e bye.
   `test(tournaments): cover result delta calculation`
 - [ ] **2.3** Extrair a ordenação de desempate de `awardTournamentPoints` para uma função pura, sem mudar comportamento.
   `refactor(points): extract tournament ranking sort`

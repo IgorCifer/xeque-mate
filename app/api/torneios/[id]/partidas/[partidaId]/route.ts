@@ -2,45 +2,12 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ResultadoPartida } from "@/app/generated/prisma2/client";
+import { resultadoChangeDelta } from "@/lib/match-results";
 
 interface ContextParams {
   params:
     | { id: string; partidaId: string }
     | Promise<{ id: string; partidaId: string }>;
-}
-
-type Papel = "WHITE" | "BLACK";
-
-function deltaFromResultado(
-  resultado: ResultadoPartida | null | undefined,
-  papel: Papel
-) {
-  if (!resultado) {
-    return { pontos: 0, vitorias: 0, derrotas: 0, empates: 0, partidas: 0 };
-  }
-
-  if (resultado === ResultadoPartida.DRAW) {
-    return {
-      pontos: 0.5,
-      vitorias: 0,
-      derrotas: 0,
-      empates: 1,
-      partidas: 1,
-    };
-  }
-
-  const vencedorWhite = resultado === ResultadoPartida.WHITE_WIN;
-  const vencedorBlack = resultado === ResultadoPartida.BLACK_WIN;
-  const venceu = (papel === "WHITE" && vencedorWhite) || (papel === "BLACK" && vencedorBlack);
-  const perdeu = (papel === "WHITE" && vencedorBlack) || (papel === "BLACK" && vencedorWhite);
-
-  return {
-    pontos: venceu ? 1 : 0,
-    vitorias: venceu ? 1 : 0,
-    derrotas: perdeu ? 1 : 0,
-    empates: 0,
-    partidas: 1,
-  };
 }
 
 export async function PATCH(req: Request, context: ContextParams) {
@@ -83,10 +50,8 @@ export async function PATCH(req: Request, context: ContextParams) {
     return NextResponse.json({ error: "Somente o criador pode registrar resultados" }, { status: 403 });
   }
 
-  const whiteDeltaPrev = deltaFromResultado(partida.resultado, "WHITE");
-  const blackDeltaPrev = deltaFromResultado(partida.resultado, "BLACK");
-  const whiteDeltaNew = deltaFromResultado(resultado, "WHITE");
-  const blackDeltaNew = deltaFromResultado(resultado, "BLACK");
+  const whiteDelta = resultadoChangeDelta(partida.resultado, resultado, "WHITE");
+  const blackDelta = resultadoChangeDelta(partida.resultado, resultado, "BLACK");
 
   const ops = [] as ReturnType<typeof prisma.participante.update>[];
 
@@ -95,21 +60,11 @@ export async function PATCH(req: Request, context: ContextParams) {
       prisma.participante.update({
         where: { id: partida.whiteId },
         data: {
-          pontos: {
-            increment: whiteDeltaNew.pontos - whiteDeltaPrev.pontos,
-          },
-          vitorias: {
-            increment: whiteDeltaNew.vitorias - whiteDeltaPrev.vitorias,
-          },
-          derrotas: {
-            increment: whiteDeltaNew.derrotas - whiteDeltaPrev.derrotas,
-          },
-          empates: {
-            increment: whiteDeltaNew.empates - whiteDeltaPrev.empates,
-          },
-          partidas: {
-            increment: whiteDeltaNew.partidas - whiteDeltaPrev.partidas,
-          },
+          pontos: { increment: whiteDelta.pontos },
+          vitorias: { increment: whiteDelta.vitorias },
+          derrotas: { increment: whiteDelta.derrotas },
+          empates: { increment: whiteDelta.empates },
+          partidas: { increment: whiteDelta.partidas },
         },
       })
     );
@@ -120,21 +75,11 @@ export async function PATCH(req: Request, context: ContextParams) {
       prisma.participante.update({
         where: { id: partida.blackId },
         data: {
-          pontos: {
-            increment: blackDeltaNew.pontos - blackDeltaPrev.pontos,
-          },
-          vitorias: {
-            increment: blackDeltaNew.vitorias - blackDeltaPrev.vitorias,
-          },
-          derrotas: {
-            increment: blackDeltaNew.derrotas - blackDeltaPrev.derrotas,
-          },
-          empates: {
-            increment: blackDeltaNew.empates - blackDeltaPrev.empates,
-          },
-          partidas: {
-            increment: blackDeltaNew.partidas - blackDeltaPrev.partidas,
-          },
+          pontos: { increment: blackDelta.pontos },
+          vitorias: { increment: blackDelta.vitorias },
+          derrotas: { increment: blackDelta.derrotas },
+          empates: { increment: blackDelta.empates },
+          partidas: { increment: blackDelta.partidas },
         },
       })
     );
