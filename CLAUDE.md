@@ -56,7 +56,7 @@ npx tsx prisma/seed/clear-puzzles.ts
 
 Required env vars (`.env`, not committed; copy from `.env.example`): `DATABASE_URL`, `NEXT_PUBLIC_AUTH_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`.
 
-Tests use Vitest 4 (`vitest.config.ts`: node environment, `@/` alias, files named `*.test.ts`). Vitest 5 would need `@types/node` >= 22, a major bump.
+Tests use Vitest 4 (`vitest.config.mts`: node environment, `@/` alias, files named `*.test.ts`). Vitest 5 would need `@types/node` >= 22, a major bump.
 
 ## Architecture
 
