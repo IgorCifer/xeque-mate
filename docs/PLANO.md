@@ -161,13 +161,13 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 2: testes do núcleo — branch `phase-2-tests`
 
-- [ ] **2.1** Instalar e configurar Vitest; adicionar script `test`.
+- [x] **2.1** Instalar e configurar Vitest; adicionar script `test`.
   `test: set up vitest`
-- [ ] **2.2** Testar `deltaFromResultado`, incluindo edição de resultado (vitória → empate, empate → derrota, etc.) e bye.
+- [x] **2.2** Testar `deltaFromResultado`, incluindo edição de resultado (vitória → empate, empate → derrota, etc.) e bye.
   `test(tournaments): cover result delta calculation`
-- [ ] **2.3** Extrair a ordenação de desempate de `awardTournamentPoints` para uma função pura, sem mudar comportamento.
+- [x] **2.3** Extrair a ordenação de desempate de `awardTournamentPoints` para uma função pura, sem mudar comportamento.
   `refactor(points): extract tournament ranking sort`
-- [ ] **2.4** Testar o desempate (pontos desc, vitórias desc, derrotas asc).
+- [x] **2.4** Testar o desempate (pontos desc, vitórias desc, derrotas asc).
   `test(points): cover tournament tie-breaks`
 
 ## Fase 3: segurança e regras de pontos — branch `phase-3-security`
@@ -213,7 +213,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(ui): remove duplicate navbar on home`
 - [ ] **4.8** Checar conquistas nos eventos que as disparam: criador ao criar o torneio (`recordTournamentJoined`), vitória de partida no `PATCH` de resultado (`recordMatchWin`, depende de 4.2) e vencedor ao finalizar (`recordTournamentWin`). Devolver as conquistas desbloqueadas na resposta, como o aceite de convite já faz.
   `fix(achievements): check achievements after tournament events`
-- [ ] **4.9** `calculateUserProgress` decide o vencedor do torneio só por `pontos`; usar a ordenação de desempate extraída em 2.3.
+- [ ] **4.9** `calculateUserProgress` decide o vencedor do torneio só por `pontos`; usar a ordenação de desempate extraída em 2.3 (`lib/tournament-ranking.ts`). O `GET /api/torneios/[id]` tem uma terceira cópia da regra, com o nome como último critério: num empate total, a tela pode mostrar em 1º quem não recebeu os pontos de 1º. Decidir o critério final (nome? ordem de inscrição?) e usar a mesma função nos três lugares.
   `fix(achievements): use tie-breaks to decide tournament winner`
 
 ## Fase 5: limpeza — branch `phase-5-cleanup`
