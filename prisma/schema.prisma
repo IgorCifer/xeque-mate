@@ -26,10 +26,6 @@ model User {
   participacoes  Participante[]
   userAchievements UserAchievement[]
   
-  // Relação com convites
-  convitesCriados Convite[] @relation("ConviteCriadoPor")
-  convitesUsados  Convite[] @relation("ConviteUsadoPor")
-  
   // Relação com puzzles e pontos
   puzzleCompletions PuzzleCompletion[]
   pointsHistory     PointsHistory[]
@@ -122,7 +118,6 @@ model Torneio {
   // Relação com User
   criador       User          @relation("TorneiosCriados", fields: [criadorId], references: [id], onDelete: Cascade)
   participantes Participante[]
-  convites      Convite[]
   partidas      Partida[]
 
   @@index([criadorId])
@@ -176,27 +171,6 @@ model Partida {
   @@index([rodada])
   @@unique([torneioId, rodada, whiteId, blackId])
   @@map("partida")
-}
-
-model Convite {
-  id          String   @id @default(uuid())
-  torneioId   String
-  token       String   @unique
-  aceito      Boolean  @default(false)
-  aceiteEm    DateTime?
-  criadoPorId String
-  usadoPorId  String?
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
-
-  torneio   Torneio @relation(fields: [torneioId], references: [id], onDelete: Cascade)
-  criadoPor User    @relation("ConviteCriadoPor", fields: [criadoPorId], references: [id])
-  usadoPor  User?   @relation("ConviteUsadoPor", fields: [usadoPorId], references: [id])
-
-  @@index([torneioId])
-  @@index([token])
-  @@index([criadoPorId])
-  @@map("convite")
 }
 
 model Puzzle {

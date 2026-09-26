@@ -6,6 +6,8 @@ import { AchievementService } from "@/lib/achievements";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// O convite é o link aberto do torneio: qualquer usuário logado que tenha o
+// id vê os dados (GET) e pode entrar (POST) enquanto não houver confrontos.
 export async function GET(
   req: Request,
   context: { params: { id: string } } | { params: Promise<{ id: string }> }
@@ -39,7 +41,6 @@ export async function GET(
       nome: true,
       data: true,
       modo: true,
-      criadorId: true,
       finalizado: true,
       _count: { select: { partidas: true } },
     },
@@ -65,28 +66,6 @@ export async function GET(
       { status: 400 }
     );
   }
-
-  // O registro do convite (token) não vai na resposta: quem abre o link
-  // só precisa dos dados do torneio. Criação e uso do token: item 3.7.
-  const convite = await prisma.convite.findFirst({
-    where: { torneioId: id },
-  });
-
-  if (convite) {
-    return NextResponse.json({ torneio });
-  }
-
-  // Criar novo convite
-  const token = crypto.randomUUID();
-
-  await prisma.convite.create({
-    data: {
-      torneioId: id,
-      token,
-      criadoPorId: torneio.criadorId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias
-    },
-  });
 
   return NextResponse.json({ torneio });
 }

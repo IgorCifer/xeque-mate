@@ -103,11 +103,11 @@ Refs: plan 3.3
 - Banco novo, local, via Docker (Docker 29 instalado, sem psql local). Nunca houve banco hospedado, então a baseline de migrations é segura.
 - Commits em inglês, Conventional Commits, conforme a seção Convenções.
 - Mover o app para a raiz do repositório (item 0.2).
+- Convite é um link aberto pelo id do torneio (UUID): qualquer usuário logado com o link entra enquanto não houver confrontos. O modelo `Convite` foi removido (item 3.7, 26/09/2026).
 - Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
-- 3.7: convite com token secreto e expiração, ou link aberto pelo id (removendo o modelo `Convite`)?
 - 4.6: o que conta como "posição semanal" (pontos de `PointsHistory` na semana corrente?).
 
 ---
@@ -190,10 +190,11 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - [x] **3.5** `GET` do convite exige login e deixa de devolver o registro do convite (token). *(Reescrito em 26/09/2026: o texto original pedia "ser o criador", mas quem chama esse `GET` é a página que o convidado abre, `app/torneios/[id]/convite/page.tsx`; o criador monta o link no cliente e nunca chama a rota.)*
   `fix(tournaments): require login to view invite`
   *Sem login: 401 "Faça login para ver o convite". Logado (convidado ou criador): 200 com `{ torneio }`, sem `convite`. A página só usava `data.torneio`, então não mudou. O `GET` ainda cria o registro `Convite` na primeira visita; isso sai ou muda no 3.7.*
-- [ ] **3.6** Remover a rota duplicada e quebrada `convite/aceitar`.
+- [x] **3.6** Remover a rota duplicada e quebrada `convite/aceitar`.
   `refactor(tournaments): remove unused invite accept route`
-- [ ] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`). Em qualquer caso, o `GET` do convite para de gravar no banco; com token, gerar o link vira uma ação só do criador (a parte "ser o criador" que saiu do 3.5). Corrigir também o link de convite, fixo em `http://192.168.0.7:3000` em `app/torneios/[id]/page.tsx` (usar `window.location.origin`).
+- [x] **3.7** Aplicar a decisão do convite (validar token/expiração, ou remover o modelo `Convite`). Em qualquer caso, o `GET` do convite para de gravar no banco; com token, gerar o link vira uma ação só do criador (a parte "ser o criador" que saiu do 3.5). Corrigir também o link de convite, fixo em `http://192.168.0.7:3000` em `app/torneios/[id]/page.tsx` (usar `window.location.origin`).
   `feat(tournaments): validate invite token and expiration` *ou* `refactor(db): drop unused invite model`
+  *Decisão: link aberto. Migration `20260926174234_drop_convite` apaga a tabela `convite` (só ela: o diff entre banco e schema não trouxe mais nada). O `GET` do convite não grava mais nada; o link usa `window.location.origin`. Efeito colateral bom: a FK `convite.criadoPorId` era `RESTRICT` e impediria excluir a conta de quem criou torneio (3.9). Conferido: `migrate deploy` num banco vazio aplica as duas migrations e bate com o schema. Commitado junto com o 3.6, a pedido.*
 - [ ] **3.8** Retirar `email` dos `select` de participantes.
   `fix(tournaments): stop exposing participant emails`
 - [ ] **3.9** Habilitar `changeEmail` e `deleteUser` em `lib/auth.ts`. Antes, verificar o que o better-auth exige (senha, sessão recente, verificação por e-mail), já que não há envio de e-mail configurado.
