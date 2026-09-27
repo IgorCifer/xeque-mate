@@ -66,12 +66,12 @@ export async function POST(req: Request) {
     }
 
     const count = await prisma.torneio.count({
-      where: { criadorId: session.user.id }
+      where: { criadorId: session.user.id, finalizado: false }
     });
 
     if (count >= 5) {
       return NextResponse.json(
-        { error: "Limite de 5 torneios atingido" },
+        { error: "Limite de 5 torneios em andamento atingido" },
         { status: 400 }
       );
     }

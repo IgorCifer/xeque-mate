@@ -14,6 +14,7 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
 - Never stage `.env` or `prisma/seed/*.csv`.
+- Never write code comments (`//`, `/* */`, JSX `{/* */}`), not even to explain a change. When editing a file, remove the comments it already has.
 
 ## Git workflow
 
@@ -70,6 +71,7 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 **Tournaments** (`Torneio`, `Participante`, `Partida`):
 - The invite is an open link by tournament id (`/torneios/[id]/convite`): any logged-in user who has it can view (`GET .../convite`) and join (`POST .../convite`) until rounds are generated; there is no invite model or token.
 - The creator is enrolled as a `Participante` when the tournament is created (`POST /api/torneios`) and cannot be removed; `GET /api/torneios/[id]` is read-only.
+- Limits count only tournaments not `finalizado`: at most 5 created (checked on `POST /api/torneios`) and 5 joined in other people's tournaments (checked on `POST .../convite`; the ones the user created don't count). `app/torneios/page.tsx` mirrors both in its counters.
 - `Partida.whiteId`/`blackId` reference `Participante.id`, not `User.id`. `blackId = null` is a bye, stored as `WHITE_WIN`.
 - Standings (`pontos` as float, `vitorias`, `derrotas`, `empates`, `partidas`) are denormalized on `Participante` and maintained incrementally: byes are credited when the round is created; `PATCH .../partidas/[partidaId]` applies the difference between the old and new result via `deltaFromResultado`; `DELETE .../rodadas` wipes matches and resets all stats.
 - `POST .../rodadas` builds Swiss pairings with `tournament-pairings`, generating up to 10 rounds in one call (shuffled in round 1, avoiding rematches and repeat byes).

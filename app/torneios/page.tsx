@@ -177,21 +177,23 @@ export default function TorneiosPage() {
     return <p className="text-white p-5">Carregando...</p>;
   }
 
-  const atingiuLimiteCriados = torneios.length >= 5;
+  const criadosAtivos = torneios.filter((t) => !t.finalizado).length;
+  const participandoAtivos = participando.filter(
+    (t) => !t.finalizado && t.criadorId !== userId
+  ).length;
+  const atingiuLimiteCriados = criadosAtivos >= 5;
 
   return (
     <main className="min-h-screen text-white p-5 flex flex-col gap-6">
-      {/* HEADER */}
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Torneios</h1>
 
         <div className="flex flex-col items-end gap-1 text-sm opacity-80">
-          <span>{torneios.length}/5 Torneios criados</span>
-          <span>{participando.length}/5 Torneios em disputa</span>
+          <span>{criadosAtivos}/5 Torneios criados em andamento</span>
+          <span>{participandoAtivos}/5 Torneios em disputa</span>
         </div>
       </header>
 
-      {/* CARD DE CRIAR TORNEIO */}
       <section className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
         <div className="flex items-center gap-3">
           <img src="/black-king.png" className="w-14 h-14" alt="imagem" />
@@ -208,7 +210,7 @@ export default function TorneiosPage() {
           onClick={(e) => {
             if (atingiuLimiteCriados) {
               e.preventDefault();
-              alert("Limite de 5 torneios atingido. Exclua um para criar outro.");
+              alert("Limite de 5 torneios em andamento atingido. Finalize ou exclua um para criar outro.");
             }
           }}
           className="w-full sm:w-auto text-center bg-[#6BAAFD] hover:bg-[#5C9CF0] transition px-4 py-3 rounded-lg text-white font-medium border border-[#5C9CF0]"
@@ -217,7 +219,6 @@ export default function TorneiosPage() {
         </Link>
       </section>
 
-      {/* LISTA DE TORNEIOS CRIADOS */}
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-bold mb-2">Torneios Criados</h2>
         {torneios.length === 0 ? (
@@ -279,7 +280,6 @@ export default function TorneiosPage() {
         )}
       </div>
 
-      {/* LISTA DE TORNEIOS PARTICIPANDO */}
       <div className="flex flex-col gap-4 mt-8">
         <h2 className="text-lg font-bold mb-2">Torneios em disputa</h2>
         {participando.length === 0 ? (
@@ -313,7 +313,6 @@ export default function TorneiosPage() {
                 >
                   Acessar
                 </Link>
-                {/* Sem editar/apagar/compartilhar para torneios apenas participando */}
                 {t.criadorId !== userId && (
                   <button
                     onClick={() =>

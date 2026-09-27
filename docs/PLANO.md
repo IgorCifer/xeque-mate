@@ -20,6 +20,7 @@ Este arquivo é a fonte de verdade do trabalho. Cada item é uma mudança isolad
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
 - Never stage `.env` or `prisma/seed/*.csv`.
+- Never write code comments (`//`, `/* */`, JSX `{/* */}`), not even to explain a change. When editing a file, remove the comments it already has.
 
 ### Git workflow
 
@@ -104,6 +105,7 @@ tournament was finished, which let points be awarded twice.
 - Trocar e-mail e excluir conta exigem a senha atual, conferida no servidor por um hook do better-auth (item 3.9, 26/09/2026).
 - Convite é um link aberto pelo id do torneio (UUID): qualquer usuário logado com o link entra enquanto não houver confrontos. O modelo `Convite` foi removido (item 3.7, 26/09/2026).
 - Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
+- Limites de torneio separados e só para os em andamento: 5 criados e 5 de outras pessoas; o torneio que a pessoa criou não conta como participação (item 4.3, 27/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
@@ -218,8 +220,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   *Sem mudança de código. As cinco páginas chamam `requireSession()`, que lê `headers()`, e isso já as torna dinâmicas. O guia do Next 16 (`connection`) diz que `connection()`/`dynamic = 'force-dynamic'` só são necessários quando a página não usa APIs da requisição; acrescentar seria redundante. Conferido em 27/09/2026 com `npm run build`: `/ranking`, `/practice`, `/practice/daily-challenge`, `/practice/weekly-challenge` e `/practice/training-game` saem ƒ; só `/_not-found`, `/login` e `/registrar` saem estáticas (○). Se um dia alguma dessas páginas deixar de exigir login, o `requireSession()` sai e ela precisa de `await connection()` no lugar.*
 - [ ] **4.2** Incrementar `User.wins` no `PATCH` de resultado com a mesma lógica de delta. Estender os testes de 2.2 antes.
   `fix(achievements): track match wins`
-- [ ] **4.3** Limite de 5 torneios conta só os não finalizados.
+- [x] **4.3** Limite de 5 torneios conta só os não finalizados.
   `fix(tournaments): count only active tournaments toward limit`
+  *Decisão (27/09/2026): limites separados. Até 5 torneios em andamento criados (`POST /api/torneios`) e até 5 em andamento de outras pessoas (`POST .../convite`). Desde o 3.11 o criador também é participante, então o próprio torneio contava como participação: quem criava 5 não entrava em nenhum outro, e quem participava de 5 ainda podia criar mais 5. A tela `/torneios` usa a mesma regra nos contadores e no bloqueio do botão; as listas continuam mostrando os finalizados.*
+  *Testado pela API com 3 usuários: 6º criado barrado, liberado depois de finalizar um; 6º torneio de outros barrado, liberado quando um deles é finalizado; os 5 criados não impedem entrar em torneio de outro. Sobra: contar e criar não são atômicos, então dois pedidos simultâneos podem passar do limite por um (não afeta pontos).*
 - [ ] **4.4** Chamar `check-login` após o login.
   `fix(achievements): check login streak on sign-in`
 - [ ] **4.5** Mostrar a sequência real no perfil (`AchievementService.calculateUserProgress` já calcula `currentStreak`).
