@@ -29,6 +29,17 @@ interface UserProgress {
 }
 
 export class AchievementService {
+  static async calculateStreaks(userId: string) {
+    const activity = await prisma.userActivityDay.findMany({
+      where: { userId },
+      select: { day: true },
+    });
+    return computeStreaks(
+      activity.map((a) => a.day.toISOString().slice(0, 10)),
+      activityDay(new Date())
+    );
+  }
+
   static async calculateUserProgress(userId: string): Promise<UserProgress> {
     const tournamentsJoined = await prisma.participante.count({
       where: { userId },
@@ -66,14 +77,7 @@ export class AchievementService {
         p.torneio.finalizado && p.torneio.participantes[0]?.userId === userId
     ).length;
 
-    const activity = await prisma.userActivityDay.findMany({
-      where: { userId },
-      select: { day: true },
-    });
-    const { currentStreak, longestStreak } = computeStreaks(
-      activity.map((a) => a.day.toISOString().slice(0, 10)),
-      activityDay(new Date())
-    );
+    const { currentStreak, longestStreak } = await this.calculateStreaks(userId);
 
     return {
       tournamentsJoined,
