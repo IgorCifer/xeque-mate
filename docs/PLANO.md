@@ -75,7 +75,7 @@ tournament was finished, which let points be awarded twice.
 ### D. Funcionalidades quebradas ou incompletas
 
 - `/ranking`, `/practice`, `/practice/daily-challenge` e `/practice/weekly-challenge` são pré-renderizadas no build: em produção ficariam congeladas na data do deploy (e o build exige banco).
-- `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis.
+- `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis. *(resolvido no 4.2: a coluna saiu e as vitórias são contadas das partidas)*
 - `/api/achievements/check-login` nunca é chamado.
 - *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`). Itens 4.8 e 4.9.
 - *(achado no 3.9)* Excluir a conta apaga em cascata os torneios que a pessoa criou (com as partidas de todos) e as partidas que ela jogou em torneios de outros. Os placares desnormalizados dos adversários em `Participante` continuam contando essas partidas, e em torneio aberto as rodadas ficam com buracos. Não testado a fundo; deduzido do schema (todas as relações são `Cascade`). O mesmo vale para "Sair"/"Excluir" de um torneio finalizado como participante (`DELETE .../participantes/[pid]` permite sair depois de finalizado e apaga as partidas da pessoa). Ver "Depois".
@@ -106,6 +106,7 @@ tournament was finished, which let points be awarded twice.
 - Convite é um link aberto pelo id do torneio (UUID): qualquer usuário logado com o link entra enquanto não houver confrontos. O modelo `Convite` foi removido (item 3.7, 26/09/2026).
 - Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
 - Limites de torneio separados e só para os em andamento: 5 criados e 5 de outras pessoas; o torneio que a pessoa criou não conta como participação (item 4.3, 27/09/2026).
+- Vitórias em partidas são contadas das `Partida`, sem contador; bye não conta. A coluna `User.wins` foi removida (item 4.2, 27/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
@@ -218,8 +219,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   *(Adiantado pelo 3.10: ao ler a sessão da requisição, `/ranking` e `/practice/*` já saem dinâmicas (ƒ) no build. Resta conferir e marcar; provavelmente sem mudança de código.)*
   `docs: confirm ranking and puzzle pages render dynamically`
   *Sem mudança de código. As cinco páginas chamam `requireSession()`, que lê `headers()`, e isso já as torna dinâmicas. O guia do Next 16 (`connection`) diz que `connection()`/`dynamic = 'force-dynamic'` só são necessários quando a página não usa APIs da requisição; acrescentar seria redundante. Conferido em 27/09/2026 com `npm run build`: `/ranking`, `/practice`, `/practice/daily-challenge`, `/practice/weekly-challenge` e `/practice/training-game` saem ƒ; só `/_not-found`, `/login` e `/registrar` saem estáticas (○). Se um dia alguma dessas páginas deixar de exigir login, o `requireSession()` sai e ela precisa de `await connection()` no lugar.*
-- [ ] **4.2** Incrementar `User.wins` no `PATCH` de resultado com a mesma lógica de delta. Estender os testes de 2.2 antes.
-  `fix(achievements): track match wins`
+- [x] **4.2** ~~Incrementar `User.wins` no `PATCH` de resultado com a mesma lógica de delta.~~ Contar as vitórias em partidas a partir das `Partida` e remover `User.wins`.
+  `fix(achievements): count match wins from played matches`
+  *Decisão (27/09/2026): sem contador. Manter `User.wins` exigiria acertá-lo em todo caminho que muda ou apaga partidas (editar resultado, excluir confrontos, sair do torneio, excluir conta em cascata), e bastava esquecer um para o número ficar errado; excluir confrontos e lançar de novo fabricaria vitórias. `calculateUserProgress` passou a contar as partidas com `WHITE_WIN` jogadas de brancas (com `blackId`, então bye não conta) ou `BLACK_WIN` de pretas, e a migration `20260927180741_drop_user_wins` apaga a coluna. Os testes de 2.2 não mudaram: a regra saiu do delta.*
+  *Testado com um script contra o banco local: torneio com vitória de brancas, vitória de pretas, 2 byes, empate e partida sem resultado dá a=2, b=0, c=1; "Primeira Vitória" desbloqueia; depois de apagar as partidas, 0 para todos. `migrate diff` entre banco e schema sem diferença. As conquistas ainda só são checadas no aceite do convite; chamar `recordMatchWin` no `PATCH` é o 4.8.*
 - [x] **4.3** Limite de 5 torneios conta só os não finalizados.
   `fix(tournaments): count only active tournaments toward limit`
   *Decisão (27/09/2026): limites separados. Até 5 torneios em andamento criados (`POST /api/torneios`) e até 5 em andamento de outras pessoas (`POST .../convite`). Desde o 3.11 o criador também é participante, então o próprio torneio contava como participação: quem criava 5 não entrava em nenhum outro, e quem participava de 5 ainda podia criar mais 5. A tela `/torneios` usa a mesma regra nos contadores e no bloqueio do botão; as listas continuam mostrando os finalizados.*

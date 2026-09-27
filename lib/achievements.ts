@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
+import { ResultadoPartida } from "@/app/generated/prisma2/enums";
 
-// IDs fixos das conquistas
 export const ACHIEVEMENT_IDS = {
   FIRST_TOURNAMENT: "c55c466f-8d0d-4889-9d19-75ff60e15467",
   FREQUENT_COMPETITOR: "0fc48b96-1499-4905-be78-37874a6a22e3",
@@ -27,27 +27,25 @@ interface UserProgress {
   longestStreak: number;
 }
 
-/**
- * Serviço centralizado para gerenciar conquistas
- */
 export class AchievementService {
-  /**
-   * Calcula o progresso do usuário baseado nos dados existentes
-   */
   static async calculateUserProgress(userId: string): Promise<UserProgress> {
-    // Conta torneios que o usuário participou
     const tournamentsJoined = await prisma.participante.count({
       where: { userId },
     });
 
-    // Conta vitórias em partidas (usando o campo wins do User)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { wins: true },
+    const matchWins = await prisma.partida.count({
+      where: {
+        OR: [
+          {
+            resultado: ResultadoPartida.WHITE_WIN,
+            blackId: { not: null },
+            white: { userId },
+          },
+          { resultado: ResultadoPartida.BLACK_WIN, black: { userId } },
+        ],
+      },
     });
-    const matchWins = user?.wins || 0;
 
-    // Conta torneios vencidos (1º lugar = mais pontos no torneio)
     const participacoes = await prisma.participante.findMany({
       where: { userId },
       include: {
@@ -67,7 +65,6 @@ export class AchievementService {
         p.torneio.finalizado && p.torneio.participantes[0]?.userId === userId
     ).length;
 
-    // Para streaks, vamos calcular baseado em logins (sessions criadas em dias diferentes)
     const sessions = await prisma.session.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -114,7 +111,6 @@ export class AchievementService {
 
     longestStreak = Math.max(longestStreak, tempStreak);
 
-    // Current streak é a streak mais recente se o último login foi hoje ou ontem
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -137,19 +133,13 @@ export class AchievementService {
     };
   }
 
-  /**
-   * Verifica e desbloqueia conquistas baseado no progresso do usuário
-   * @returns Array de conquistas desbloqueadas nesta verificação
-   */
   static async checkAndUnlockAchievements(
     userId: string
   ): Promise<UnlockedAchievement[]> {
     const unlockedAchievements: UnlockedAchievement[] = [];
 
-    // Calcular progresso do usuário
     const progress = await this.calculateUserProgress(userId);
 
-    // Buscar conquistas já desbloqueadas
     const userAchievements = await prisma.userAchievement.findMany({
       where: { userId },
       select: { achievementId: true },
@@ -157,7 +147,6 @@ export class AchievementService {
 
     const unlockedIds = new Set(userAchievements.map((ua) => ua.achievementId));
 
-    // Verificar cada conquista
     const achievementsToCheck = [
       {
         id: ACHIEVEMENT_IDS.FIRST_TOURNAMENT,
@@ -193,7 +182,6 @@ export class AchievementService {
       },
     ];
 
-    // Desbloquear conquistas que atendem às condições
     for (const { id, condition } of achievementsToCheck) {
       if (condition && !unlockedIds.has(id)) {
         const achievement = await prisma.achievement.findUnique({
@@ -221,43 +209,28 @@ export class AchievementService {
     return unlockedAchievements;
   }
 
-  /**
-   * Registra participação em torneio
-   */
   static async recordTournamentJoined(
     userId: string
   ): Promise<UnlockedAchievement[]> {
     return this.checkAndUnlockAchievements(userId);
   }
 
-  /**
-   * Registra vitória em partida de torneio
-   */
   static async recordMatchWin(userId: string): Promise<UnlockedAchievement[]> {
     return this.checkAndUnlockAchievements(userId);
   }
 
-  /**
-   * Registra vitória em torneio completo
-   */
   static async recordTournamentWin(
     userId: string
   ): Promise<UnlockedAchievement[]> {
     return this.checkAndUnlockAchievements(userId);
   }
 
-  /**
-   * Registra login diário
-   */
   static async recordDailyLogin(
     userId: string
   ): Promise<UnlockedAchievement[]> {
     return this.checkAndUnlockAchievements(userId);
   }
 
-  /**
-   * Busca todas as conquistas (desbloqueadas e bloqueadas) para um usuário
-   */
   static async getUserAchievements(userId: string) {
     const [allAchievements, userAchievements] = await Promise.all([
       prisma.achievement.findMany(),
@@ -281,9 +254,6 @@ export class AchievementService {
     }));
   }
 
-  /**
-   * Busca o progresso do usuário
-   */
   static async getUserProgress(userId: string) {
     return this.calculateUserProgress(userId);
   }

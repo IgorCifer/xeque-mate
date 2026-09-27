@@ -18,15 +18,11 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-  wins          Int       @default(0)
   points        Int       @default(0)
 
-  // Relação com torneios
   torneioCriados Torneio[] @relation("TorneiosCriados")
   participacoes  Participante[]
   userAchievements UserAchievement[]
-  
-  // Relação com puzzles e pontos
   puzzleCompletions PuzzleCompletion[]
   pointsHistory     PointsHistory[]
 
@@ -115,7 +111,6 @@ model Torneio {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relação com User
   criador       User          @relation("TorneiosCriados", fields: [criadorId], references: [id], onDelete: Cascade)
   participantes Participante[]
   partidas      Partida[]
@@ -195,7 +190,7 @@ model PuzzleCompletion {
   userId        String
   puzzleId      String
   completedAt   DateTime @default(now())
-  type          String   // "daily" ou "weekly"
+  type          String
   pointsAwarded Int      @default(0)
   
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -211,8 +206,8 @@ model PointsHistory {
   id          String   @id @default(uuid())
   userId      String
   points      Int
-  reason      String   // "tournament_1st", "tournament_2nd", "tournament_3rd", "tournament_other", "daily_puzzle", "weekly_puzzle"
-  referenceId String?  // ID do torneio ou puzzle
+  reason      String
+  referenceId String?
   createdAt   DateTime @default(now())
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
