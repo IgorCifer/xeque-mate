@@ -47,6 +47,7 @@ export class AchievementService {
 
     const matchWins = await prisma.partida.count({
       where: {
+        torneio: { finalizado: true },
         OR: [
           {
             resultado: ResultadoPartida.WHITE_WIN,
@@ -144,12 +145,11 @@ export class AchievementService {
         });
 
         if (achievement) {
-          await prisma.userAchievement.create({
-            data: {
-              userId,
-              achievementId: id,
-            },
+          const { count } = await prisma.userAchievement.createMany({
+            data: [{ userId, achievementId: id }],
+            skipDuplicates: true,
           });
+          if (count === 0) continue;
 
           unlockedAchievements.push({
             id: achievement.id,
@@ -170,11 +170,7 @@ export class AchievementService {
     return this.checkAndUnlockAchievements(userId);
   }
 
-  static async recordMatchWin(userId: string): Promise<UnlockedAchievement[]> {
-    return this.checkAndUnlockAchievements(userId);
-  }
-
-  static async recordTournamentWin(
+  static async recordTournamentFinished(
     userId: string
   ): Promise<UnlockedAchievement[]> {
     return this.checkAndUnlockAchievements(userId);

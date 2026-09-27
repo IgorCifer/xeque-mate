@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useAchievements } from "@/components/achievement-provider";
 
 interface UserMini {
   id?: string;
@@ -52,6 +53,7 @@ export default function TorneioPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const { showAchievement } = useAchievements();
 
   const [torneio, setTorneio] = useState<Torneio | null>(null);
   const [loading, setLoading] = useState(true);
@@ -157,7 +159,6 @@ export default function TorneioPage() {
         return;
       }
 
-      // Recarrega dados para refletir novas rodadas
       const reload = await fetch(`/api/torneios/${id}`, { cache: "no-store" });
       const reloadJson = await reload.json();
       if (!reload.ok || reloadJson.error) {
@@ -215,6 +216,10 @@ export default function TorneioPage() {
       if (!res.ok || json.error) {
         alert(json.error ?? "Falha ao finalizar torneio");
         return;
+      }
+
+      if (Array.isArray(json.unlockedAchievements)) {
+        json.unlockedAchievements.forEach(showAchievement);
       }
 
       setTorneio((prev) => (prev ? { ...prev, finalizado: true } : prev));
@@ -278,11 +283,9 @@ export default function TorneioPage() {
         return;
       }
 
-      // Recarrega para atualizar ranking e estatísticas
       const reload = await fetch(`/api/torneios/${id}`, { cache: "no-store" });
       const reloadJson = await reload.json();
       if (!reload.ok || reloadJson.error) {
-        // fallback: apenas marca resultado localmente
         setTorneio((prev) => {
           if (!prev?.rodadas) return prev;
           const rodadas = prev.rodadas.map((r) => ({
@@ -331,9 +334,7 @@ export default function TorneioPage() {
 
   return (
     <main className="min-h-screen text-white p-5 flex flex-col gap-6">
-      {/* HEADER COM BOTÕES */}
       <header className="flex items-center justify-between">
-        {/* Botão Voltar */}
         <button
           onClick={() => router.back()}
           className="p-2 hover:bg-white/10 rounded-lg transition flex items-center gap-2"
@@ -355,7 +356,6 @@ export default function TorneioPage() {
           <span className="hidden sm:inline">Voltar</span>
         </button>
 
-        {/* Botão Compartilhar */}
         <button
           onClick={() => setShareOpen(true)}
           className="bg-[#6BAAFD] hover:bg-[#5C9CF0] transition px-4 py-2 rounded-lg font-semibold text-white border border-[#5C9CF0]"
@@ -365,7 +365,6 @@ export default function TorneioPage() {
         </button>
       </header>
 
-      {/* INFORMAÇÕES DO TORNEIO */}
       <section className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 flex-1 text-center sm:text-left">
@@ -407,7 +406,6 @@ export default function TorneioPage() {
         </div>
       </section>
 
-      {/* BOTÕES DE AÇÃO */}
       <section className="flex flex-col sm:flex-row gap-3">
         {isCriador && (
           <button
@@ -452,7 +450,6 @@ export default function TorneioPage() {
         </section>
       )}
 
-      {/* RODADAS / CONFRONTOS */}
       {torneio.rodadas && torneio.rodadas.length > 0 && (
         <section className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 flex flex-col gap-4">
           <h2 className="text-xl font-bold">Confrontos</h2>
@@ -509,7 +506,6 @@ export default function TorneioPage() {
         </section>
       )}
 
-      {/* MODAL RANKING */}
       {verTabela && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4">
           <div className="bg-slate-900 text-white w-full max-w-3xl rounded-2xl border border-white/10 shadow-xl overflow-hidden">
@@ -552,7 +548,6 @@ export default function TorneioPage() {
         </div>
       )}
 
-      {/* MODAL COMPARTILHAR */}
       {shareOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4">
           <div className="bg-slate-900 text-white w-full max-w-lg rounded-2xl border border-white/10 shadow-xl overflow-hidden">
@@ -724,7 +719,6 @@ export default function TorneioPage() {
       )}
 
 
-      {/* SEÇÃO DE PARTICIPANTES */}
       <section className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
         <h2 className="text-xl font-bold mb-4">Participantes</h2>
         {torneio.participantes.length === 0 ? (
@@ -733,7 +727,6 @@ export default function TorneioPage() {
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {/* Líder (criador) */}
             {(() => {
               const lider = torneio.participantes.find(
                 (p) => p.user?.id === torneio.criadorId || p.id === torneio.criadorId
@@ -759,7 +752,6 @@ export default function TorneioPage() {
               }
               return null;
             })()}
-            {/* Participantes comuns */}
             {torneio.participantes
               .filter((p) => p.user?.id !== torneio.criadorId && p.id !== torneio.criadorId)
               .map((p) => {

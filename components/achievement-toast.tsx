@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 import DynamicIcon from "@/app/utils/icon-convert";
 
@@ -24,7 +24,7 @@ export function AchievementToast({ achievement, onClose }: AchievementToastProps
             setIsVisible(true);
             const timer = setTimeout(() => {
                 setIsVisible(false);
-                setTimeout(onClose, 300); // Aguarda animação de saída
+                setTimeout(onClose, 300);
             }, 5000);
 
             return () => clearTimeout(timer);
@@ -78,32 +78,19 @@ export function AchievementToast({ achievement, onClose }: AchievementToastProps
     );
 }
 
-// Hook para gerenciar toasts de conquistas
 export function useAchievementToast() {
-    const [achievement, setAchievement] = useState<Achievement | null>(null);
     const [queue, setQueue] = useState<Achievement[]>([]);
 
-    const showAchievement = (newAchievement: Achievement) => {
-        if (achievement) {
-            // Se já tem um toast sendo exibido, adiciona à fila
-            setQueue(prev => [...prev, newAchievement]);
-        } else {
-            setAchievement(newAchievement);
-        }
-    };
+    const showAchievement = useCallback((newAchievement: Achievement) => {
+        setQueue((prev) => [...prev, newAchievement]);
+    }, []);
 
-    const handleClose = () => {
-        setAchievement(null);
-        // Mostra o próximo da fila se existir
-        if (queue.length > 0) {
-            const [next, ...rest] = queue;
-            setQueue(rest);
-            setTimeout(() => setAchievement(next), 300);
-        }
-    };
+    const handleClose = useCallback(() => {
+        setQueue((prev) => prev.slice(1));
+    }, []);
 
     return {
-        achievement,
+        achievement: queue[0] ?? null,
         showAchievement,
         handleClose,
     };

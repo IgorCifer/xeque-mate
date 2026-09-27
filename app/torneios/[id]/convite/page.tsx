@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AchievementToast, useAchievementToast } from "@/components/achievement-toast";
+import { useAchievements } from "@/components/achievement-provider";
 
 type TorneioConvite = {
   id: string;
@@ -20,7 +20,7 @@ export default function ConvitePage() {
   const [torneio, setTorneio] = useState<TorneioConvite | null>(null);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
-  const { achievement, handleClose, showAchievement } = useAchievementToast();
+  const { showAchievement } = useAchievements();
 
   const ErrorPanel = ({ title, message }: { title: string; message: string }) => (
     <div className="w-full max-w-xl bg-gradient-to-br from-[#2a0a0a] via-[#3b1111] to-[#1f0a0a] border border-[#f87171]/40 rounded-2xl p-6 text-white shadow-lg backdrop-blur-md">
@@ -184,7 +184,6 @@ export default function ConvitePage() {
           Recusar convite
         </button>
       </div>
-      <AchievementToast achievement={achievement} onClose={handleClose} />
     </main>
   );
 }

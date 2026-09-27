@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAchievements } from "@/components/achievement-provider";
 
 export default function NovoTorneioPage() {
   const router = useRouter();
+  const { showAchievement } = useAchievements();
 
   const [nome, setNome] = useState("");
   const [data, setData] = useState("");
@@ -50,7 +52,11 @@ export default function NovoTorneioPage() {
       setErro(json.error || "Erro ao criar torneio");
       setLoading(false);
       return;
-    }   
+    }
+
+    if (Array.isArray(json.unlockedAchievements)) {
+      json.unlockedAchievements.forEach(showAchievement);
+    }
 
     router.push("/torneios");
   }
@@ -73,7 +79,6 @@ export default function NovoTorneioPage() {
           className="p-6 flex flex-col gap-5"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Nome */}
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className="text-sm text-white/80">Nome do Torneio</label>
               <input
@@ -85,7 +90,6 @@ export default function NovoTorneioPage() {
               />
             </div>
 
-            {/* Data */}
             <div className="flex flex-col gap-1">
               <label className="text-sm text-white/80">Data</label>
               <input
@@ -98,7 +102,6 @@ export default function NovoTorneioPage() {
               />
             </div>
 
-            {/* Modo */}
             <div className="flex flex-col gap-1">
               <label className="text-sm text-white/80">Modo</label>
               <select
@@ -116,7 +119,6 @@ export default function NovoTorneioPage() {
               </select>
             </div>
 
-            {/* Descrição (opcional) */}
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className="text-sm text-white/80">Descrição (opcional)</label>
               <textarea

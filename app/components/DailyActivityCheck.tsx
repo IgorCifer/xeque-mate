@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { AchievementToast, useAchievementToast } from "@/components/achievement-toast";
+import { useAchievements } from "@/components/achievement-provider";
 
 export default function DailyActivityCheck() {
   const pathname = usePathname();
   const lastCheckedDay = useRef<string | null>(null);
-  const { achievement, handleClose, showAchievement } = useAchievementToast();
+  const { showAchievement } = useAchievements();
 
   useEffect(() => {
     const today = new Date().toDateString();
@@ -28,5 +28,5 @@ export default function DailyActivityCheck() {
       });
   }, [pathname, showAchievement]);
 
-  return <AchievementToast achievement={achievement} onClose={handleClose} />;
+  return null;
 }

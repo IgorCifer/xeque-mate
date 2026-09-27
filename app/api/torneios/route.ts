@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { AchievementService } from "@/lib/achievements";
 
 export async function GET(req: Request) {
   try {
@@ -99,7 +100,13 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(torneio, { status: 201 });
+    const unlockedAchievements =
+      await AchievementService.recordTournamentJoined(session.user.id);
+
+    return NextResponse.json(
+      { ...torneio, unlockedAchievements },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Erro ao criar torneio:", error);
     return NextResponse.json(
