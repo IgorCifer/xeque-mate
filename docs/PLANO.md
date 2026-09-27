@@ -212,9 +212,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 4: funcionalidades quebradas — branch `phase-4-fixes`
 
-- [ ] **4.1** Marcar como dinâmicas as páginas de ranking e de puzzles.
+- [x] **4.1** Marcar como dinâmicas as páginas de ranking e de puzzles.
   *(Adiantado pelo 3.10: ao ler a sessão da requisição, `/ranking` e `/practice/*` já saem dinâmicas (ƒ) no build. Resta conferir e marcar; provavelmente sem mudança de código.)*
-  `fix(ranking): render ranking and puzzle pages dynamically`
+  `docs: confirm ranking and puzzle pages render dynamically`
+  *Sem mudança de código. As cinco páginas chamam `requireSession()`, que lê `headers()`, e isso já as torna dinâmicas. O guia do Next 16 (`connection`) diz que `connection()`/`dynamic = 'force-dynamic'` só são necessários quando a página não usa APIs da requisição; acrescentar seria redundante. Conferido em 27/09/2026 com `npm run build`: `/ranking`, `/practice`, `/practice/daily-challenge`, `/practice/weekly-challenge` e `/practice/training-game` saem ƒ; só `/_not-found`, `/login` e `/registrar` saem estáticas (○). Se um dia alguma dessas páginas deixar de exigir login, o `requireSession()` sai e ela precisa de `await connection()` no lugar.*
 - [ ] **4.2** Incrementar `User.wins` no `PATCH` de resultado com a mesma lógica de delta. Estender os testes de 2.2 antes.
   `fix(achievements): track match wins`
 - [ ] **4.3** Limite de 5 torneios conta só os não finalizados.
