@@ -21,7 +21,6 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 - Commits follow Conventional Commits 1.0: `<type>(<scope>): <subject>`
   - subject: imperative mood, lowercase, no trailing period, at most 72 characters (aim for ~50)
   - body (optional): what changed and why, wrapped at 72 characters
-  - footer: `Refs: plan <n.m>`
 - Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` (dependencies use `chore(deps)`).
 - Scopes: `db`, `deps`, `config`, `auth`, `tournaments`, `puzzles`, `points`, `achievements`, `profile`, `ranking`, `ui`.
 
@@ -32,8 +31,6 @@ fix(tournaments): block changes to finished tournaments
 
 Result edits and round regeneration were still allowed after a
 tournament was finished, which let points be awarded twice.
-
-Refs: plan 3.3
 ```
 
 ## Commands
