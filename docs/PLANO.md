@@ -76,7 +76,7 @@ tournament was finished, which let points be awarded twice.
 
 - `/ranking`, `/practice`, `/practice/daily-challenge` e `/practice/weekly-challenge` são pré-renderizadas no build: em produção ficariam congeladas na data do deploy (e o build exige banco).
 - `User.wins` nunca é incrementado: "Primeira Vitória" e "Campeão de Rodada" são impossíveis. *(resolvido no 4.2: a coluna saiu e as vitórias são contadas das partidas)*
-- `/api/achievements/check-login` nunca é chamado.
+- `/api/achievements/check-login` nunca é chamado. *(resolvido no 4.4, junto com a sequência, que dependia das linhas de `session`)*
 - *(achado no 0.11)* Conquistas só são checadas ao aceitar convite: `AchievementService.recordMatchWin` e `recordTournamentWin` nunca são chamados. O criador não ganha "Primeiro Torneio" pelo próprio torneio, e "Campeão Estreante"/"Lenda dos Torneios" não desbloqueiam ao finalizar (só se o vencedor aceitar outro convite depois). Além disso, o vencedor é decidido só por `pontos` (sem o desempate de `awardTournamentPoints`). Itens 4.8 e 4.9.
 - *(achado no 3.9)* Excluir a conta apaga em cascata os torneios que a pessoa criou (com as partidas de todos) e as partidas que ela jogou em torneios de outros. Os placares desnormalizados dos adversários em `Participante` continuam contando essas partidas, e em torneio aberto as rodadas ficam com buracos. Não testado a fundo; deduzido do schema (todas as relações são `Cascade`). O mesmo vale para "Sair"/"Excluir" de um torneio finalizado como participante (`DELETE .../participantes/[pid]` permite sair depois de finalizado e apaga as partidas da pessoa). Ver "Depois".
 - O perfil mostra "Sequência de X dias" fixo. `getWeeklyPosition` calcula a posição de todos os tempos e carrega todos os usuários.
@@ -107,6 +107,7 @@ tournament was finished, which let points be awarded twice.
 - Torneio finalizado é definitivo: não pode ser reaberto, e partidas e resultados ficam somente leitura. Nome, data, modo e descrição continuam editáveis (item 3.4, 26/09/2026).
 - Limites de torneio separados e só para os em andamento: 5 criados e 5 de outras pessoas; o torneio que a pessoa criou não conta como participação (item 4.3, 27/09/2026).
 - Vitórias em partidas são contadas das `Partida`, sem contador; bye não conta. A coluna `User.wins` foi removida (item 4.2, 27/09/2026).
+- Sequência de dias conta os dias em que a pessoa usou o app (qualquer página logada), não só os logins, no fuso de Brasília. Fica na tabela `user_activity_day` (item 4.4, 27/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
@@ -227,8 +228,12 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(tournaments): count only active tournaments toward limit`
   *Decisão (27/09/2026): limites separados. Até 5 torneios em andamento criados (`POST /api/torneios`) e até 5 em andamento de outras pessoas (`POST .../convite`). Desde o 3.11 o criador também é participante, então o próprio torneio contava como participação: quem criava 5 não entrava em nenhum outro, e quem participava de 5 ainda podia criar mais 5. A tela `/torneios` usa a mesma regra nos contadores e no bloqueio do botão; as listas continuam mostrando os finalizados.*
   *Testado pela API com 3 usuários: 6º criado barrado, liberado depois de finalizar um; 6º torneio de outros barrado, liberado quando um deles é finalizado; os 5 criados não impedem entrar em torneio de outro. Sobra: contar e criar não são atômicos, então dois pedidos simultâneos podem passar do limite por um (não afeta pontos).*
-- [ ] **4.4** Chamar `check-login` após o login.
-  `fix(achievements): check login streak on sign-in`
+- [x] **4.4** ~~Chamar `check-login` após o login.~~ Registrar os dias de uso numa tabela própria e calcular a sequência a partir dela; chamar `check-login` a cada dia de uso.
+  `fix(achievements): track daily activity for login streaks`
+  *Achado: a sequência era calculada das linhas de `session`, mas o `sign-out` do better-auth apaga a linha da sessão, e quem continua logado não cria sessão nova (dura 7 dias). Quem saía e entrava perdia os dias anteriores, e quem ficava logado nunca passava de 1: "Começo da Jornada" e "Dedicado" eram quase impossíveis. Só chamar a rota depois do login não resolveria.*
+  *Decisão (27/09/2026): tabela `user_activity_day` (uma linha por usuário por dia, chave `(userId, day)`, migration `20260927182037_add_user_activity_day`). O dia é o de Brasília (`America/Sao_Paulo`), não o fuso do servidor. `recordDailyLogin` grava o dia com `createMany` + `skipDuplicates` (sem erro em chamadas simultâneas) e checa as conquistas. Quem chama é `DailyActivityCheck`, um componente client no `LayoutWrapper` (fora de `/login` e `/registrar`): um `POST` por dia, na primeira página que a pessoa abre, repetido se a aba ficar aberta até o dia seguinte e ela navegar. A resposta alimenta o toast. A gravação não fica no `requireSession()` porque ele roda durante a renderização (e nos prefetches), e mutação na renderização não é boa prática. A lógica da sequência virou função pura em `lib/activity.ts` (9 testes).*
+  *Testado pelo servidor de dev: cadastro → `check-login` duas vezes no mesmo dia → 1 linha; sem login → 401; logout e login de novo → o dia continua lá; com os 2 dias anteriores inseridos, o `check-login` desbloqueia "Começo da Jornada" e o progresso dá sequência atual 3 e maior 3; excluir a conta apaga os dias em cascata. O toast na tela não foi conferido no navegador.*
+  *Achado de passagem (fora do item): `useAchievementToast` perde conquistas quando várias chegam juntas. O `forEach(showAchievement)` usa o mesmo `achievement` desatualizado (null) em todas as chamadas, então só a última aparece e a fila nunca é usada. Afeta também o aceite de convite. Ver "Depois".*
 - [ ] **4.5** Mostrar a sequência real no perfil (`AchievementService.calculateUserProgress` já calcula `currentStreak`).
   `fix(profile): show actual login streak`
 - [ ] **4.6** Corrigir `getWeeklyPosition` conforme a decisão sobre "posição semanal", sem carregar todos os usuários.
@@ -264,6 +269,7 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - O que a exclusão de conta deve fazer com torneios e partidas de outros (achado no 3.9): anonimizar o jogador em vez de apagar em cascata, ou bloquear a exclusão enquanto houver torneio aberto.
 - Testes de integração das rotas de API.
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
+- Fila de toasts de conquista: `useAchievementToast` mostra só a última quando várias são desbloqueadas de uma vez (achado no 4.4).
 - Voltar à página de origem depois do login (ex.: `/login?next=/torneios/[id]/convite`). Hoje o login sempre leva a `/home`, então quem abre um convite deslogado precisa abrir o link de novo (achado no 3.10).
 - Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.
   - **react-chess-puzzle 0.6.2 → 2.x** (primeiro da fila): a linha 0.6 não recebe mais correções (última versão em 11/2025). Na 2.x, `@react-chess-tools/react-chess-game` virou peer dependency (instalar direto) e a API provavelmente mudou; afeta `WeeklyPuzzleClient.tsx` (desafios diário e semanal). Fazer depois de 3.1/3.2, com o fluxo dos puzzles já corrigido. Levantado em 25/09/2026, com a 2.1.0 como a mais recente.

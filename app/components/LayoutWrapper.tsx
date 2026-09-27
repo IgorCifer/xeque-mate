@@ -1,8 +1,8 @@
-// components/LayoutWrapper.tsx
 "use client";
 import { usePathname } from "next/navigation";
 import NavBar from "./navbar";
 import TittleHeader from "./tittle-header";
+import DailyActivityCheck from "./DailyActivityCheck";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       {!hideHeaderNav && <TittleHeader />}
       <div className={hideHeaderNav ? "" : "pb-24"}>{children}</div>
       {!hideHeaderNav && <NavBar />}
+      {!hideHeaderNav && <DailyActivityCheck />}
     </>
   );
 }

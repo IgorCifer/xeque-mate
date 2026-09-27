@@ -25,6 +25,7 @@ model User {
   userAchievements UserAchievement[]
   puzzleCompletions PuzzleCompletion[]
   pointsHistory     PointsHistory[]
+  activityDays      UserActivityDay[]
 
   @@unique([email])
   @@map("user")
@@ -50,6 +51,16 @@ model UserAchievement {
   @@unique([userId, achievementId])
   @@index([userId])
   @@index([achievementId])
+}
+
+model UserActivityDay {
+  userId String
+  day    DateTime @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@map("user_activity_day")
 }
 
 model Session {

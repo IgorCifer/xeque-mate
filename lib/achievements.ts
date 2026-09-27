@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { ResultadoPartida } from "@/app/generated/prisma2/enums";
+import { activityDay, computeStreaks } from "@/lib/activity";
 
 export const ACHIEVEMENT_IDS = {
   FIRST_TOURNAMENT: "c55c466f-8d0d-4889-9d19-75ff60e15467",
@@ -65,64 +66,14 @@ export class AchievementService {
         p.torneio.finalizado && p.torneio.participantes[0]?.userId === userId
     ).length;
 
-    const sessions = await prisma.session.findMany({
+    const activity = await prisma.userActivityDay.findMany({
       where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
+      select: { day: true },
     });
-
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-    let lastDate: Date | null = null;
-
-    const uniqueDays = new Set<string>();
-    sessions.forEach((s) => {
-      const date = new Date(s.createdAt);
-      date.setHours(0, 0, 0, 0);
-      uniqueDays.add(date.toISOString());
-    });
-
-    const sortedDays = Array.from(uniqueDays)
-      .map((d) => new Date(d))
-      .sort((a, b) => b.getTime() - a.getTime());
-
-    for (let i = 0; i < sortedDays.length; i++) {
-      const currentDay = sortedDays[i];
-
-      if (i === 0) {
-        tempStreak = 1;
-        lastDate = currentDay;
-      } else if (lastDate) {
-        const diffInDays = Math.floor(
-          (lastDate.getTime() - currentDay.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        if (diffInDays === 1) {
-          tempStreak++;
-          lastDate = currentDay;
-        } else {
-          longestStreak = Math.max(longestStreak, tempStreak);
-          tempStreak = 1;
-          lastDate = currentDay;
-        }
-      }
-    }
-
-    longestStreak = Math.max(longestStreak, tempStreak);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (sortedDays.length > 0) {
-      const daysSinceLastLogin = Math.floor(
-        (today.getTime() - sortedDays[0].getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      if (daysSinceLastLogin <= 1) {
-        currentStreak = tempStreak;
-      }
-    }
+    const { currentStreak, longestStreak } = computeStreaks(
+      activity.map((a) => a.day.toISOString().slice(0, 10)),
+      activityDay(new Date())
+    );
 
     return {
       tournamentsJoined,
@@ -228,6 +179,10 @@ export class AchievementService {
   static async recordDailyLogin(
     userId: string
   ): Promise<UnlockedAchievement[]> {
+    await prisma.userActivityDay.createMany({
+      data: [{ userId, day: new Date(`${activityDay(new Date())}T00:00:00Z`) }],
+      skipDuplicates: true,
+    });
     return this.checkAndUnlockAchievements(userId);
   }
 
