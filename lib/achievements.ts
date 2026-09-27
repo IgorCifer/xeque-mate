@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { ResultadoPartida } from "@/app/generated/prisma2/enums";
 import { activityDay, computeStreaks } from "@/lib/activity";
+import { rankTournament } from "@/lib/tournament-ranking";
 
 export const ACHIEVEMENT_IDS = {
   FIRST_TOURNAMENT: "c55c466f-8d0d-4889-9d19-75ff60e15467",
@@ -60,13 +61,16 @@ export class AchievementService {
     });
 
     const participacoes = await prisma.participante.findMany({
-      where: { userId },
-      include: {
+      where: { userId, torneio: { finalizado: true } },
+      select: {
+        id: true,
         torneio: {
-          include: {
+          select: {
             participantes: {
-              orderBy: { pontos: "desc" },
-              take: 1,
+              select: { id: true, pontos: true, vitorias: true },
+            },
+            partidas: {
+              select: { whiteId: true, blackId: true, resultado: true },
             },
           },
         },
@@ -75,7 +79,9 @@ export class AchievementService {
 
     const tournamentWins = participacoes.filter(
       (p) =>
-        p.torneio.finalizado && p.torneio.participantes[0]?.userId === userId
+        rankTournament(p.torneio.participantes, p.torneio.partidas).find(
+          (c) => c.id === p.id
+        )?.posicao === 1
     ).length;
 
     const { currentStreak, longestStreak } = await this.calculateStreaks(userId);

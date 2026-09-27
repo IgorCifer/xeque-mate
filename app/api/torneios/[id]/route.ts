@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { awardTournamentPoints } from "@/lib/points";
 import { AchievementService } from "@/lib/achievements";
+import { rankTournament } from "@/lib/tournament-ranking";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
 
 type PlayerSnapshot = {
@@ -107,8 +108,8 @@ export async function GET(
       .sort((a, b) => a[0] - b[0])
       .map(([rodada, matches]) => ({ rodada, partidas: matches }));
 
-    const ranking = [...participantes]
-      .map((p) => ({
+    const ranking = rankTournament(
+      participantes.map((p) => ({
         id: p.id,
         user: p.user,
         pontos: Number(p.pontos ?? 0),
@@ -116,13 +117,9 @@ export async function GET(
         empates: p.empates,
         derrotas: p.derrotas,
         partidas: p.partidas,
-      }))
-      .sort((a, b) => {
-        if (b.pontos !== a.pontos) return b.pontos - a.pontos;
-        if (b.vitorias !== a.vitorias) return b.vitorias - a.vitorias;
-        if (a.derrotas !== b.derrotas) return a.derrotas - b.derrotas;
-        return (a.user?.name ?? "").localeCompare(b.user?.name ?? "");
-      });
+      })),
+      partidas
+    );
 
     return NextResponse.json({
       ...torneioSemPartidas,

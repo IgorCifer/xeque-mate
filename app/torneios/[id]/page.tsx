@@ -19,6 +19,9 @@ interface Participante {
   vitorias?: number;
   derrotas?: number;
   empates?: number;
+  posicao?: number;
+  buchholz?: number;
+  sonnebornBerger?: number;
 }
 
 type Resultado = "WHITE_WIN" | "BLACK_WIN" | "DRAW" | null;
@@ -522,23 +525,29 @@ export default function TorneioPage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-800 text-gray-200">
                   <tr>
+                    <th className="text-center px-4 py-2">#</th>
                     <th className="text-left px-4 py-2">Nome</th>
                     <th className="text-center px-4 py-2">Pontos</th>
                     <th className="text-center px-4 py-2">Partidas Jogadas</th>
                     <th className="text-center px-4 py-2">Vitórias</th>
                     <th className="text-center px-4 py-2">Derrotas</th>
                     <th className="text-center px-4 py-2">Empates</th>
+                    <th className="text-center px-4 py-2">Buchholz</th>
+                    <th className="text-center px-4 py-2">SB</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(torneio.ranking ?? []).map((p) => (
                     <tr key={p.id} className="odd:bg-slate-900 even:bg-slate-800/40">
+                      <td className="px-4 py-2 text-center">{p.posicao}º</td>
                       <td className="px-4 py-2 font-semibold">{p.user?.name ?? "Participante"}</td>
                       <td className="px-4 py-2 text-center">{p.pontos ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.partidas ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.vitorias ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.derrotas ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.empates ?? 0}</td>
+                      <td className="px-4 py-2 text-center">{p.buchholz ?? 0}</td>
+                      <td className="px-4 py-2 text-center">{p.sonnebornBerger ?? 0}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -676,23 +685,29 @@ export default function TorneioPage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-800 text-gray-200">
                   <tr>
+                    <th className="text-center px-4 py-2">#</th>
                     <th className="text-left px-4 py-2">Nome</th>
                     <th className="text-center px-4 py-2">Pontos</th>
                     <th className="text-center px-4 py-2">Partidas Jogadas</th>
                     <th className="text-center px-4 py-2">Vitórias</th>
                     <th className="text-center px-4 py-2">Derrotas</th>
                     <th className="text-center px-4 py-2">Empates</th>
+                    <th className="text-center px-4 py-2">Buchholz</th>
+                    <th className="text-center px-4 py-2">SB</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(torneio.ranking ?? []).map((p) => (
                     <tr key={p.id} className="odd:bg-slate-900 even:bg-slate-800/40">
+                      <td className="px-4 py-2 text-center">{p.posicao}º</td>
                       <td className="px-4 py-2 font-semibold">{p.user?.name ?? "Participante"}</td>
                       <td className="px-4 py-2 text-center">{p.pontos ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.partidas ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.vitorias ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.derrotas ?? 0}</td>
                       <td className="px-4 py-2 text-center">{p.empates ?? 0}</td>
+                      <td className="px-4 py-2 text-center">{p.buchholz ?? 0}</td>
+                      <td className="px-4 py-2 text-center">{p.sonnebornBerger ?? 0}</td>
                     </tr>
                   ))}
                 </tbody>

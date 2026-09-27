@@ -1,24 +1,16 @@
-// lib/points.ts
-
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@/app/generated/prisma2/client";
-import { sortTournamentRanking } from "@/lib/tournament-ranking";
+import { rankTournament } from "@/lib/tournament-ranking";
 
-/**
- * Configuração de pontos do sistema
- */
 export const POINTS_CONFIG = {
   TOURNAMENT_1ST: 100,
   TOURNAMENT_2ND: 60,
   TOURNAMENT_3RD: 30,
-  TOURNAMENT_OTHER: 10, // 4º lugar em diante
+  TOURNAMENT_OTHER: 10,
   DAILY_PUZZLE: 15,
   WEEKLY_PUZZLE: 50,
 } as const;
 
-/**
- * Tipos de razões para histórico de pontos
- */
 export type PointsReason =
   | "tournament_1st"
   | "tournament_2nd"
@@ -27,9 +19,6 @@ export type PointsReason =
   | "daily_puzzle"
   | "weekly_puzzle";
 
-/**
- * Adiciona pontos a um usuário e registra no histórico
- */
 export async function awardPoints(
   userId: string,
   points: number,
@@ -37,9 +26,7 @@ export async function awardPoints(
   referenceId?: string
 ) {
   try {
-    // Atualiza pontos do usuário e cria histórico em uma transação
     const result = await prisma.$transaction([
-      // Incrementa pontos do usuário
       prisma.user.update({
         where: { id: userId },
         data: {
@@ -48,7 +35,6 @@ export async function awardPoints(
           },
         },
       }),
-      // Registra no histórico
       prisma.pointsHistory.create({
         data: {
           userId,
@@ -59,27 +45,30 @@ export async function awardPoints(
       }),
     ]);
 
-    return result[0]; // Retorna o usuário atualizado
+    return result[0];
   } catch (error) {
     console.error("Erro ao atribuir pontos:", error);
     throw error;
   }
 }
 
-/**
- * Distribui pontos aos participantes de um torneio finalizado.
- * Roda na transação de quem chama, junto com a finalização do torneio.
- */
+function tournamentPrize(posicao: number): { points: number; reason: PointsReason } {
+  if (posicao === 1) return { points: POINTS_CONFIG.TOURNAMENT_1ST, reason: "tournament_1st" };
+  if (posicao === 2) return { points: POINTS_CONFIG.TOURNAMENT_2ND, reason: "tournament_2nd" };
+  if (posicao === 3) return { points: POINTS_CONFIG.TOURNAMENT_3RD, reason: "tournament_3rd" };
+  return { points: POINTS_CONFIG.TOURNAMENT_OTHER, reason: "tournament_other" };
+}
+
 export async function awardTournamentPoints(
   tx: Prisma.TransactionClient,
   torneioId: string
 ) {
   try {
-    // Busca participantes e ordena pela classificação do torneio
-    const participantes = sortTournamentRanking(
-      await tx.participante.findMany({
+    const participantes = rankTournament(
+      await tx.participante.findMany({ where: { torneioId } }),
+      await tx.partida.findMany({
         where: { torneioId },
-        include: { user: true },
+        select: { whiteId: true, blackId: true, resultado: true },
       })
     );
 
@@ -88,37 +77,19 @@ export async function awardTournamentPoints(
       return;
     }
 
-    // Distribui pontos baseado na posição
-    for (let i = 0; i < participantes.length; i++) {
-      const participante = participantes[i];
-      let points = 0;
-      let reason: PointsReason;
+    const awards = participantes.map((p) => ({
+      userId: p.userId,
+      position: p.posicao,
+      ...tournamentPrize(p.posicao),
+    }));
 
-      if (i === 0) {
-        // 1º lugar
-        points = POINTS_CONFIG.TOURNAMENT_1ST;
-        reason = "tournament_1st";
-      } else if (i === 1) {
-        // 2º lugar
-        points = POINTS_CONFIG.TOURNAMENT_2ND;
-        reason = "tournament_2nd";
-      } else if (i === 2) {
-        // 3º lugar
-        points = POINTS_CONFIG.TOURNAMENT_3RD;
-        reason = "tournament_3rd";
-      } else {
-        // 4º lugar em diante
-        points = POINTS_CONFIG.TOURNAMENT_OTHER;
-        reason = "tournament_other";
-      }
-
-      // Adiciona pontos ao usuário e registra no histórico
+    for (const { userId, points, reason } of awards) {
       await tx.user.update({
-        where: { id: participante.userId },
+        where: { id: userId },
         data: { points: { increment: points } },
       });
       await tx.pointsHistory.create({
-        data: { userId: participante.userId, points, reason, referenceId: torneioId },
+        data: { userId, points, reason, referenceId: torneioId },
       });
     }
 
@@ -126,34 +97,19 @@ export async function awardTournamentPoints(
       `Pontos distribuídos para ${participantes.length} participantes do torneio ${torneioId}`
     );
 
-    return participantes.map((p, i) => ({
-      userId: p.userId,
-      position: i + 1,
-      points:
-        i === 0
-          ? POINTS_CONFIG.TOURNAMENT_1ST
-          : i === 1
-          ? POINTS_CONFIG.TOURNAMENT_2ND
-          : i === 2
-          ? POINTS_CONFIG.TOURNAMENT_3RD
-          : POINTS_CONFIG.TOURNAMENT_OTHER,
-    }));
+    return awards.map(({ userId, position, points }) => ({ userId, position, points }));
   } catch (error) {
     console.error("Erro ao distribuir pontos do torneio:", error);
     throw error;
   }
 }
 
-/**
- * Registra conclusão de puzzle e atribui pontos
- */
 export async function completePuzzle(
   userId: string,
   puzzleId: string,
   type: "daily" | "weekly"
 ) {
   try {
-    // Verifica se o usuário já completou este puzzle
     const existing = await prisma.puzzleCompletion.findUnique({
       where: {
         userId_puzzleId_type: {
@@ -172,7 +128,6 @@ export async function completePuzzle(
       };
     }
 
-    // Define pontos baseado no tipo
     const points =
       type === "daily"
         ? POINTS_CONFIG.DAILY_PUZZLE
@@ -181,7 +136,6 @@ export async function completePuzzle(
     const reason: PointsReason =
       type === "daily" ? "daily_puzzle" : "weekly_puzzle";
 
-    // Cria registro de conclusão e atribui pontos em transação
     const [completion] = await prisma.$transaction([
       prisma.puzzleCompletion.create({
         data: {
@@ -221,9 +175,6 @@ export async function completePuzzle(
   }
 }
 
-/**
- * Busca histórico de pontos de um usuário
- */
 export async function getUserPointsHistory(
   userId: string,
   limit = 50
@@ -242,9 +193,6 @@ export async function getUserPointsHistory(
   }
 }
 
-/**
- * Verifica se usuário já completou puzzle de um tipo específico hoje/esta semana
- */
 export async function hasPuzzleCompletedToday(
   userId: string,
   type: "daily" | "weekly"
@@ -254,10 +202,8 @@ export async function hasPuzzleCompletedToday(
     let startDate: Date;
 
     if (type === "daily") {
-      // Início do dia atual
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else {
-      // Início da semana atual (domingo)
       const day = now.getDay();
       startDate = new Date(now);
       startDate.setDate(now.getDate() - day);
