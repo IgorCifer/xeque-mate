@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activityDay, computeStreaks } from "./activity";
+import { activityDay, computeStreaks, weekStart } from "./activity";
 
 describe("activityDay", () => {
   it("usa o dia de Brasília, não o UTC", () => {
@@ -9,6 +9,32 @@ describe("activityDay", () => {
 
   it("formata com zeros à esquerda", () => {
     expect(activityDay(new Date("2026-01-05T15:00:00Z"))).toBe("2026-01-05");
+  });
+});
+
+describe("weekStart", () => {
+  it("é o domingo à meia-noite de Brasília", () => {
+    expect(weekStart(new Date("2026-09-30T15:00:00Z")).toISOString()).toBe(
+      "2026-09-27T03:00:00.000Z"
+    );
+  });
+
+  it("no próprio domingo, começa naquele dia", () => {
+    expect(weekStart(new Date("2026-09-27T03:00:00Z")).toISOString()).toBe(
+      "2026-09-27T03:00:00.000Z"
+    );
+  });
+
+  it("sábado à noite em Brasília ainda é a semana anterior, mesmo já sendo domingo em UTC", () => {
+    expect(weekStart(new Date("2026-09-27T02:59:00Z")).toISOString()).toBe(
+      "2026-09-20T03:00:00.000Z"
+    );
+  });
+
+  it("atravessa a virada de ano", () => {
+    expect(weekStart(new Date("2026-01-02T12:00:00Z")).toISOString()).toBe(
+      "2025-12-28T03:00:00.000Z"
+    );
   });
 });
 

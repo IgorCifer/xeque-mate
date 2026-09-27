@@ -108,10 +108,11 @@ tournament was finished, which let points be awarded twice.
 - Limites de torneio separados e só para os em andamento: 5 criados e 5 de outras pessoas; o torneio que a pessoa criou não conta como participação (item 4.3, 27/09/2026).
 - Vitórias em partidas são contadas das `Partida`, sem contador; bye não conta. A coluna `User.wins` foi removida (item 4.2, 27/09/2026).
 - Sequência de dias conta os dias em que a pessoa usou o app (qualquer página logada), não só os logins, no fuso de Brasília. Fica na tabela `user_activity_day` (item 4.4, 27/09/2026).
+- Ranking semanal (lista e posição no perfil) soma o `PointsHistory` da semana corrente, de domingo 00h no fuso de Brasília; empate divide a posição (1, 2, 2, 4) (item 4.6, 27/09/2026).
 
 **Em aberto** (decidir ao chegar no item)
 
-- 4.6: o que conta como "posição semanal" (pontos de `PointsHistory` na semana corrente?).
+- 4.9: critério final de desempate do torneio.
 
 ---
 
@@ -239,8 +240,12 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   *O cálculo da sequência saiu de `calculateUserProgress` para `AchievementService.calculateStreaks`, que ela reaproveita. O perfil chama só esse método, sem as contagens de torneios e vitórias. O texto fixo "Sequência de X dias" virou `currentStreak`, com "dia" no singular.*
   *Testado pelo servidor de dev com um usuário novo: sem dias → 0 dias; depois do `check-login` → 1 dia; hoje e os 2 dias anteriores → 3 dias; ontem e anteontem → 2 (a sequência continua viva até o fim de hoje); só anteontem → 0. `tsc` e `vitest` passando.*
   *Limitação: o `check-login` roda no cliente depois da renderização. Se o perfil for a primeira página do dia, ele mostra a sequência sem o dia de hoje (ex.: 2 em vez de 3, ou 0 em vez de 1 depois de uma falha) até a próxima navegação. Ver "Depois".*
-- [ ] **4.6** Corrigir `getWeeklyPosition` conforme a decisão sobre "posição semanal", sem carregar todos os usuários.
+- [x] **4.6** Corrigir `getWeeklyPosition` conforme a decisão sobre "posição semanal", sem carregar todos os usuários.
   `fix(profile): compute weekly ranking position`
+  *Achado: `getWeeklyPosition` ordenava por `User.points` (total de sempre), então o perfil mostrava a posição geral com o rótulo "Ranking Semanal". A lista semanal (`getWeeklyRanking`) usava outra regra, os últimos 7 dias em janela móvel.*
+  *Decisão (27/09/2026): a semana é a corrente, de domingo 00h até agora no fuso de Brasília (mesmo começo de semana do puzzle semanal), e quem empata divide a posição (1, 2, 2, 4). `weekStart` em `lib/activity.ts` calcula o começo da semana; `withTiedPositions` em `lib/ranking.ts` numera a lista (9 testes novos). `getWeeklyRanking` agrupa, ordena e corta no banco (`having` > 0, `orderBy` pela soma). `getWeeklyPosition` soma os pontos da pessoa na semana e conta só os usuários com soma maior; sem pontos na semana, fica "Sem posição". Os rankings mensal e de todos os tempos não mudaram.*
+  *Testado pelo servidor de dev com 6 usuários e pontos inseridos em `points_history`: 30, 20 (em duas linhas), 20, 50 às 23h59 de sábado, 10 às 00h00 de domingo e nenhum. Perfis: 1º, 2º, 2º, sem posição, 4º, sem posição; a lista semanal de `/ranking` numerou igual. `tsc`, `vitest` (56) e `eslint` nos arquivos alterados passando.*
+  *Achados de passagem (fora do item): o diálogo de ranking do perfil passa a lista semanal para as três abas (`ProfileClient`), e `getAllTimeRanking` é importado sem uso em `app/profile/page.tsx`. O puzzle semanal troca no domingo pelo horário do servidor (`getWeekOfYear`), não pelo de Brasília; com o servidor em UTC, a troca acontece às 21h de sábado e o ranking às 00h de domingo. Ver "Depois".*
 - [x] **4.7** Remover o `NavBar` duplicado da home.
   `fix(ui): remove duplicate navbar on home`
   *Os dois eram `fixed bottom-0` e ficavam um sobre o outro: parecia um só, mas o fundo semitransparente saía mais escuro na home e os links apareciam duas vezes para teclado e leitor de tela. Testado com usuário logado: `/home` passou de 2 para 1 `<nav>`.*
@@ -274,6 +279,9 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 - CI no GitHub Actions rodando `tsc`, `eslint` e `vitest` em cada PR.
 - Fila de toasts de conquista: `useAchievementToast` mostra só a última quando várias são desbloqueadas de uma vez (achado no 4.4).
 - Sequência do perfil atrasada um dia na primeira visita do dia (achado no 4.5): o `DailyActivityCheck` poderia chamar `router.refresh()` quando o `check-login` gravar um dia novo, o que exige a rota informar isso na resposta.
+- Diálogo de ranking do perfil com as três abas mostrando a lista semanal: passar as listas mensal e de todos os tempos, ou tirar as abas do diálogo (achado no 4.6).
+- Puzzle semanal e diário trocam pelo horário do servidor (`getWeekOfYear`/`getDayOfYear` em `app/data/get-challenge-puzzle.ts`), não pelo de Brasília como a sequência e o ranking semanal (achado no 4.6).
+- Rankings mensal e de todos os tempos ainda numeram empates em sequência (1, 2, 3), ao contrário do semanal (achado no 4.6).
 - Voltar à página de origem depois do login (ex.: `/login?next=/torneios/[id]/convite`). Hoje o login sempre leva a `/home`, então quem abre um convite deslogado precisa abrir o link de novo (achado no 3.10).
 - Majors (Prisma 7, etc.), cada um em item próprio: ler o changelog, adaptar o código, testar a tela afetada.
   - **react-chess-puzzle 0.6.2 → 2.x** (primeiro da fila): a linha 0.6 não recebe mais correções (última versão em 11/2025). Na 2.x, `@react-chess-tools/react-chess-game` virou peer dependency (instalar direto) e a API provavelmente mudou; afeta `WeeklyPuzzleClient.tsx` (desafios diário e semanal). Fazer depois de 3.1/3.2, com o fluxo dos puzzles já corrigido. Levantado em 25/09/2026, com a 2.1.0 como a mais recente.

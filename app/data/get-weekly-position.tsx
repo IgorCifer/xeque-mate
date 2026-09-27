@@ -1,14 +1,21 @@
-// app/data/get-weekly-position.ts
 import prisma from "@/lib/prisma";
+import { weekStart } from "@/lib/activity";
 
 export async function getWeeklyPosition(userId: string) {
-  const users = await prisma.user.findMany({
-    orderBy: { points: "desc" },
-    select: { id: true },
+  const since = weekStart(new Date());
+
+  const mine = await prisma.pointsHistory.aggregate({
+    where: { userId, createdAt: { gte: since } },
+    _sum: { points: true },
+  });
+  const points = mine._sum.points ?? 0;
+  if (points <= 0) return null;
+
+  const ahead = await prisma.pointsHistory.groupBy({
+    by: ["userId"],
+    where: { createdAt: { gte: since } },
+    having: { points: { _sum: { gt: points } } },
   });
 
-  const index = users.findIndex((u) => u.id === userId);
-  if (index === -1) return null;
-
-  return index + 1;
+  return ahead.length + 1;
 }
