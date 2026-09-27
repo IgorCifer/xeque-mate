@@ -6,8 +6,6 @@ import { AchievementService } from "@/lib/achievements";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-// O convite é o link aberto do torneio: qualquer usuário logado que tenha o
-// id vê os dados (GET) e pode entrar (POST) enquanto não houver confrontos.
 export async function GET(
   req: Request,
   context: { params: { id: string } } | { params: Promise<{ id: string }> }
@@ -70,12 +68,10 @@ export async function GET(
   return NextResponse.json({ torneio });
 }
 
-// Método POST para aceitar convite
 export async function POST(req: Request, context: any) {
   try {
     let id;
     if (context?.params) {
-      // Se params for uma Promise, resolva
       const params =
         typeof context.params.then === "function"
           ? await context.params
@@ -104,7 +100,6 @@ export async function POST(req: Request, context: any) {
     const userId = String(session.user.id);
     console.log("[convite aceitar] userId=", userId, "torneioId=", id);
 
-    // Verifica se o torneio existe
     const torneio = await prisma.torneio.findUnique({
       where: { id },
       select: {
@@ -134,7 +129,6 @@ export async function POST(req: Request, context: any) {
       );
     }
 
-    // Verifica se o usuário já é participante
     const participanteExistente = await prisma.participante.findFirst({
       where: { torneioId: id, userId },
     });
@@ -145,18 +139,19 @@ export async function POST(req: Request, context: any) {
       );
     }
 
-    // Verifica se o usuário já participa de 5 torneios
     const totalParticipando = await prisma.participante.count({
-      where: { userId },
+      where: {
+        userId,
+        torneio: { finalizado: false, criadorId: { not: userId } },
+      },
     });
     if (totalParticipando >= 5) {
       return NextResponse.json(
-        { error: "Limite de 5 torneios participando atingido" },
+        { error: "Limite de 5 torneios em andamento participando atingido" },
         { status: 400 }
       );
     }
 
-    // Adiciona usuário como participante
     const novoParticipante = await prisma.participante.create({
       data: {
         torneioId: id,
@@ -169,7 +164,6 @@ export async function POST(req: Request, context: any) {
       },
     });
 
-    // Desbloqueia conquistas relacionadas a participação em torneio
     const unlockedAchievements =
       await AchievementService.recordTournamentJoined(userId);
 

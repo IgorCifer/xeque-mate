@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { awardTournamentPoints } from "@/lib/points";
+import { AchievementService } from "@/lib/achievements";
+import { rankTournament } from "@/lib/tournament-ranking";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
 
 type PlayerSnapshot = {
@@ -75,10 +77,6 @@ export async function GET(
       );
     }
 
-    // Permitir visualização mesmo se não for participante/criador; ações sensíveis são checadas em endpoints próprios
-
-    // O criador é inscrito como participante na criação (POST /api/torneios)
-    // e não pode ser removido; este GET só lê.
     const participantes = torneio.participantes;
 
     const { partidas, ...torneioSemPartidas } = torneio;
@@ -110,8 +108,8 @@ export async function GET(
       .sort((a, b) => a[0] - b[0])
       .map(([rodada, matches]) => ({ rodada, partidas: matches }));
 
-    const ranking = [...participantes]
-      .map((p) => ({
+    const ranking = rankTournament(
+      participantes.map((p) => ({
         id: p.id,
         user: p.user,
         pontos: Number(p.pontos ?? 0),
@@ -119,13 +117,9 @@ export async function GET(
         empates: p.empates,
         derrotas: p.derrotas,
         partidas: p.partidas,
-      }))
-      .sort((a, b) => {
-        if (b.pontos !== a.pontos) return b.pontos - a.pontos;
-        if (b.vitorias !== a.vitorias) return b.vitorias - a.vitorias;
-        if (a.derrotas !== b.derrotas) return a.derrotas - b.derrotas;
-        return (a.user?.name ?? "").localeCompare(b.user?.name ?? "");
-      });
+      })),
+      partidas
+    );
 
     return NextResponse.json({
       ...torneioSemPartidas,
@@ -175,7 +169,6 @@ export async function PUT(
       dataUpdate.descricao = body.descricao ?? null;
     }
 
-    // Finalizar é definitivo: não há volta para finalizado = false
     if (body.finalizado === false && torneio.finalizado) {
       return NextResponse.json(
         { error: "Torneio finalizado não pode ser reaberto" },
@@ -191,30 +184,36 @@ export async function PUT(
       return NextResponse.json(updated);
     }
 
-    // Finaliza e distribui os pontos na mesma transação. O updateMany só
-    // pega o torneio se ele ainda estiver aberto, então uma segunda
-    // requisição (ou um clique duplo) não concede pontos de novo.
-    const finalizou = await prisma.$transaction(async (tx) => {
+    const awards = await prisma.$transaction(async (tx) => {
       const { count } = await tx.torneio.updateMany({
         where: { id, finalizado: false },
         data: { ...dataUpdate, finalizado: true },
       });
-      if (count !== 1) return false;
+      if (count !== 1) return null;
 
       const awards = await awardTournamentPoints(tx, id);
       console.log(`Pontos distribuídos no torneio ${id}:`, awards);
-      return true;
+      return awards ?? [];
     });
 
-    if (!finalizou) {
+    if (!awards) {
       return NextResponse.json(
         { error: "Torneio já finalizado" },
         { status: 409 }
       );
     }
 
+    const desbloqueadas = await Promise.all(
+      awards.map(async ({ userId }) => ({
+        userId,
+        unlocked: await AchievementService.recordTournamentFinished(userId),
+      }))
+    );
+    const unlockedAchievements =
+      desbloqueadas.find((d) => d.userId === session.user.id)?.unlocked ?? [];
+
     const updated = await prisma.torneio.findUnique({ where: { id } });
-    return NextResponse.json(updated);
+    return NextResponse.json({ ...updated, unlockedAchievements });
   } catch (error) {
     console.error("Erro PUT /torneios/[id]:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });

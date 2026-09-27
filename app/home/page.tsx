@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import CardNavigation from "../components/card-navigation";
 import ImagesCarousel from "../components/images-carousel";
-import NavBar from "../components/navbar";
 import { redirect } from "next/navigation";
 
 
@@ -36,7 +35,6 @@ if(!session){
             navigate_to="/practice"
           />
         </main>
-        <NavBar />
       </div>
   );
 }

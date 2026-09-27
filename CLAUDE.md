@@ -14,6 +14,7 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 - Never bump a major version. Never run `npm audit fix --force`.
 - Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
 - Never stage `.env` or `prisma/seed/*.csv`.
+- Never write code comments (`//`, `/* */`, JSX `{/* */}`), not even to explain a change. When editing a file, remove the comments it already has.
 
 ## Git workflow
 
@@ -21,7 +22,6 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 - Commits follow Conventional Commits 1.0: `<type>(<scope>): <subject>`
   - subject: imperative mood, lowercase, no trailing period, at most 72 characters (aim for ~50)
   - body (optional): what changed and why, wrapped at 72 characters
-  - footer: `Refs: plan <n.m>`
 - Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` (dependencies use `chore(deps)`).
 - Scopes: `db`, `deps`, `config`, `auth`, `tournaments`, `puzzles`, `points`, `achievements`, `profile`, `ranking`, `ui`.
 
@@ -32,8 +32,6 @@ fix(tournaments): block changes to finished tournaments
 
 Result edits and round regeneration were still allowed after a
 tournament was finished, which let points be awarded twice.
-
-Refs: plan 3.3
 ```
 
 ## Commands
@@ -73,16 +71,17 @@ Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`comp
 **Tournaments** (`Torneio`, `Participante`, `Partida`):
 - The invite is an open link by tournament id (`/torneios/[id]/convite`): any logged-in user who has it can view (`GET .../convite`) and join (`POST .../convite`) until rounds are generated; there is no invite model or token.
 - The creator is enrolled as a `Participante` when the tournament is created (`POST /api/torneios`) and cannot be removed; `GET /api/torneios/[id]` is read-only.
+- Limits count only tournaments not `finalizado`: at most 5 created (checked on `POST /api/torneios`) and 5 joined in other people's tournaments (checked on `POST .../convite`; the ones the user created don't count). `app/torneios/page.tsx` mirrors both in its counters.
 - `Partida.whiteId`/`blackId` reference `Participante.id`, not `User.id`. `blackId = null` is a bye, stored as `WHITE_WIN`.
 - Standings (`pontos` as float, `vitorias`, `derrotas`, `empates`, `partidas`) are denormalized on `Participante` and maintained incrementally: byes are credited when the round is created; `PATCH .../partidas/[partidaId]` applies the difference between the old and new result via `deltaFromResultado`; `DELETE .../rodadas` wipes matches and resets all stats.
 - `POST .../rodadas` builds Swiss pairings with `tournament-pairings`, generating up to 10 rounds in one call (shuffled in round 1, avoiding rematches and repeat byes).
 - Finishing (`PUT /api/torneios/[id]` with `finalizado: true`) is final: in one transaction, an `updateMany` guarded by `finalizado: false` flips the flag and, only if it matched, `awardTournamentPoints(tx, id)` awards the points, so repeated or concurrent requests award once (409). Once `finalizado`, the tournament cannot be reopened, and `POST`/`DELETE .../rodadas` and the result `PATCH` answer 409; name, date, mode and description stay editable.
 
-**Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`completePuzzle`, `awardTournamentPoints`). Tournament placement ranks by `pontos` desc, `vitorias` desc, `derrotas` asc. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
+**Points.** Global ranking is `User.points`, always changed together with a `PointsHistory` row in one transaction (`completePuzzle`, `awardTournamentPoints`). Tournament placement comes from `rankTournament` (`lib/tournament-ranking.ts`), used by `awardTournamentPoints`, `calculateUserProgress` and `GET /api/torneios/[id]`: `pontos`, then Buchholz, Sonneborn-Berger and `vitorias` (byes and matches without a result don't count toward tie-breaks); a full tie shares the position (1, 1, 3) and its prize. Values are in `POINTS_CONFIG`. `PuzzleCompletion` is unique per `(userId, puzzleId, type)`.
 
 **Puzzles.** `Puzzle` rows come from the Lichess puzzle CSV (~1 GB, gitignored, placed in `prisma/seed/`). The daily and weekly puzzles are chosen deterministically by `getDailyPuzzle`/`getWeeklyPuzzle` in `app/data/get-challenge-puzzle.ts`: filter by rating band (daily 1200–1699, weekly 1700–2000), order by `externalId`, pick index `seed % count` (seed `year * 1000 + dayOfYear` or `year * 100 + weekOfYear`). Both render `WeeklyPuzzleClient`, which posts to `/api/puzzles/complete`; the route recomputes the current puzzle for the type and rejects any other `puzzleId` with 409. The hint/reset rule that forfeits points is still client-only. The training game (`app/practice/training-game`) uses `chess.js` + `react-chessboard` directly.
 
-**Achievements.** `Achievement` rows are seeded with fixed UUIDs that must match `ACHIEVEMENT_IDS` in `lib/achievements.ts`. `AchievementService` recomputes progress from existing data (participations, `User.wins`, finished tournaments won, distinct days with a `Session` for login streaks) and unlocks what is due. Routes call its `record*` methods after relevant events and return the newly unlocked achievements for the client toast.
+**Achievements.** `Achievement` rows are seeded with fixed UUIDs that must match `ACHIEVEMENT_IDS` in `lib/achievements.ts`. `AchievementService` recomputes progress from existing data (participations, match wins counted from `Partida` rows of finished tournaments with byes excluded, finished tournaments won, and login streaks from `UserActivityDay`, one row per user per day of use in the São Paulo time zone) and unlocks what is due. Routes call its `record*` methods after relevant events (joining or creating a tournament; finishing one checks every participant, since results stay editable until then) and return the requester's newly unlocked achievements; pages show them with `useAchievements()` from `AchievementProvider`, mounted in `LayoutWrapper` so the toast survives navigation. `DailyActivityCheck` (rendered by `LayoutWrapper`) posts to `/api/achievements/check-login` once per day of use, which records the day and checks achievements.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

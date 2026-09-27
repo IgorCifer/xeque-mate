@@ -9,6 +9,7 @@ import Link from "next/link";
 import { getWeeklyPosition } from "../data/get-weekly-position";
 import { ProfileClient } from "./ProfileClient";
 import { getAllTimeRanking, getWeeklyRanking } from "../data/get-alltime-ranking";
+import { AchievementService } from "@/lib/achievements";
 
 
 
@@ -20,6 +21,8 @@ export default async function ProfilePage() {
   const points = await getUserPoints(session.user.id);
 
   const achievements = await getAchievements(session.user.id);
+
+  const { currentStreak } = await AchievementService.calculateStreaks(session.user.id);
 
   const weeklyPosition = await getWeeklyPosition(session.user.id);
   const weeklyRanking = await getWeeklyRanking();
@@ -38,7 +41,7 @@ export default async function ProfilePage() {
         <div className="flex items-center gap-2 text-base w-[95%] bg-white/20 backdrop-blur-md p-2 rounded-md">
           <div className="flex items-center text-yellow-400 gap-2">
             <FlameIcon />
-            <h2>Sequência de X dias</h2>
+            <h2>Sequência de {currentStreak} {currentStreak === 1 ? "dia" : "dias"}</h2>
           </div>
           <div className="w-0.5 h-6 bg-white" />
           <div className="flex items-center gap-2">
