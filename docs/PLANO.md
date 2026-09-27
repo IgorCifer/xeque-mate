@@ -226,8 +226,9 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `fix(profile): show actual login streak`
 - [ ] **4.6** Corrigir `getWeeklyPosition` conforme a decisão sobre "posição semanal", sem carregar todos os usuários.
   `fix(profile): compute weekly ranking position`
-- [ ] **4.7** Remover o `NavBar` duplicado da home.
+- [x] **4.7** Remover o `NavBar` duplicado da home.
   `fix(ui): remove duplicate navbar on home`
+  *Os dois eram `fixed bottom-0` e ficavam um sobre o outro: parecia um só, mas o fundo semitransparente saía mais escuro na home e os links apareciam duas vezes para teclado e leitor de tela. Testado com usuário logado: `/home` passou de 2 para 1 `<nav>`.*
 - [ ] **4.8** Checar conquistas nos eventos que as disparam: criador ao criar o torneio (`recordTournamentJoined`), vitória de partida no `PATCH` de resultado (`recordMatchWin`, depende de 4.2) e vencedor ao finalizar (`recordTournamentWin`). Devolver as conquistas desbloqueadas na resposta, como o aceite de convite já faz.
   `fix(achievements): check achievements after tournament events`
 - [ ] **4.9** `calculateUserProgress` decide o vencedor do torneio só por `pontos`; usar a ordenação de desempate extraída em 2.3 (`lib/tournament-ranking.ts`). O `GET /api/torneios/[id]` tem uma terceira cópia da regra, com o nome como último critério: num empate total, a tela pode mostrar em 1º quem não recebeu os pontos de 1º. Decidir o critério final (nome? ordem de inscrição?) e usar a mesma função nos três lugares.
