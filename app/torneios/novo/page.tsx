@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAchievements } from "@/components/achievement-provider";
 
 export default function NovoTorneioPage() {
@@ -66,7 +67,7 @@ export default function NovoTorneioPage() {
       <section className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600/70 via-purple-600/60 to-slate-900/80 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <img src="/black-king.png" alt="Imagem" className="w-12 h-12" />
+            <Image src="/black-king.png" alt="Imagem" width={48} height={48} className="w-12 h-12" />
             <div>
               <h1 className="text-2xl font-semibold">Criar Novo Torneio</h1>
               <p className="text-sm text-white/80">Defina nome, data e modo para começar.</p>

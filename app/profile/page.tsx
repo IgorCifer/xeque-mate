@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import Link from "next/link";
 import { getWeeklyPosition } from "../data/get-weekly-position";
 import { ProfileClient } from "./ProfileClient";
-import { getAllTimeRanking, getWeeklyRanking } from "../data/get-alltime-ranking";
+import { getWeeklyRanking } from "../data/get-alltime-ranking";
 import { AchievementService } from "@/lib/achievements";
 
 

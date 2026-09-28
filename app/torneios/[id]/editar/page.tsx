@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 
 export default function EditarTorneioPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function EditarTorneioPage() {
         }
 
         setNome(json.nome);
-        setData(json.data.split("T")[0]); // yyyy-mm-dd
+        setData(json.data.split("T")[0]);
         const legacyToNew: Record<string, string> = {
           "Clássico": "Classic",
           "Rápido": "Rapid",
@@ -102,7 +103,7 @@ export default function EditarTorneioPage() {
       <section className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600/70 via-purple-600/60 to-slate-900/80 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <img src={modeImage(modo)} alt={modo || "modo"} className="w-12 h-12" />
+            <Image src={modeImage(modo)} alt={modo || "modo"} width={48} height={48} className="w-12 h-12" />
             <div>
               <h1 className="text-2xl font-semibold">Editar Torneio</h1>
               <p className="text-sm text-white/80">Atualize os dados do torneio.</p>

@@ -57,7 +57,7 @@ export default function LoginPage() {
           setIsLoading(false);
           router.push("/home");
         },
-        onError: (ctx) => {
+        onError: () => {
           setIsLoading(false);
           setErrors({ global: "Email ou senha Inválidos." });
         },

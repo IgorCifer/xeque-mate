@@ -41,7 +41,7 @@ async function handleSubmit(e: React.FormEvent) {
     }
 
     alert("Sua conta foi excluída com sucesso.");
-    window.location.href = "/login";
+    router.replace("/login");
   } catch (err) {
     console.error(err);
     alert("Erro inesperado ao excluir conta.");

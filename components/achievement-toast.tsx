@@ -21,13 +21,16 @@ export function AchievementToast({ achievement, onClose }: AchievementToastProps
 
     useEffect(() => {
         if (achievement) {
-            setIsVisible(true);
+            const frame = requestAnimationFrame(() => setIsVisible(true));
             const timer = setTimeout(() => {
                 setIsVisible(false);
                 setTimeout(onClose, 300);
             }, 5000);
 
-            return () => clearTimeout(timer);
+            return () => {
+                cancelAnimationFrame(frame);
+                clearTimeout(timer);
+            };
         }
     }, [achievement, onClose]);
 

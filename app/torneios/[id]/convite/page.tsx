@@ -12,17 +12,15 @@ type TorneioConvite = {
   _count?: { partidas?: number };
 };
 
-export default function ConvitePage() {
-  const { id } = useParams();
-  const router = useRouter();
+type ErrorPanelProps = {
+  title: string;
+  message: string;
+  onBack: () => void;
+  onDismiss: () => void;
+};
 
-  const [loading, setLoading] = useState(true);
-  const [torneio, setTorneio] = useState<TorneioConvite | null>(null);
-  const [error, setError] = useState("");
-  const [actionError, setActionError] = useState("");
-  const { showAchievement } = useAchievements();
-
-  const ErrorPanel = ({ title, message }: { title: string; message: string }) => (
+function ErrorPanel({ title, message, onBack, onDismiss }: ErrorPanelProps) {
+  return (
     <div className="w-full max-w-xl bg-gradient-to-br from-[#2a0a0a] via-[#3b1111] to-[#1f0a0a] border border-[#f87171]/40 rounded-2xl p-6 text-white shadow-lg backdrop-blur-md">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f87171]/20 border border-[#f87171]/60 text-[#fecdd3] text-lg font-bold">
@@ -34,16 +32,13 @@ export default function ConvitePage() {
           <p className="text-sm text-[#ffe4e6] mt-1 leading-relaxed">{message}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <button
-              onClick={() => router.push("/torneios")}
+              onClick={onBack}
               className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold"
             >
               Voltar para torneios
             </button>
             <button
-              onClick={() => {
-                setActionError("");
-                setError("");
-              }}
+              onClick={onDismiss}
               className="px-4 py-2 rounded-lg bg-[#f87171] hover:bg-[#f05252] text-sm font-semibold border border-[#f87171]/60"
             >
               Fechar aviso
@@ -53,6 +48,23 @@ export default function ConvitePage() {
       </div>
     </div>
   );
+}
+
+export default function ConvitePage() {
+  const { id } = useParams();
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [torneio, setTorneio] = useState<TorneioConvite | null>(null);
+  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const { showAchievement } = useAchievements();
+
+  const voltarParaTorneios = () => router.push("/torneios");
+  const fecharAviso = () => {
+    setActionError("");
+    setError("");
+  };
 
   useEffect(() => {
     async function load() {
@@ -65,7 +77,7 @@ export default function ConvitePage() {
         } else {
           setTorneio(data.torneio);
         }
-      } catch (e) {
+      } catch {
         setError("Erro ao carregar convite");
       }
       setLoading(false);
@@ -118,7 +130,7 @@ export default function ConvitePage() {
     }
 
     if (Array.isArray(json.unlockedAchievements)) {
-      json.unlockedAchievements.forEach((a: any) => showAchievement(a));
+      json.unlockedAchievements.forEach(showAchievement);
     }
 
     alert("Você entrou no torneio!");
@@ -131,7 +143,12 @@ export default function ConvitePage() {
   if (error) {
     return (
       <main className="min-h-screen flex items-center justify-center px-4">
-        <ErrorPanel title="Não foi possível acessar o convite" message={error} />
+        <ErrorPanel
+          title="Não foi possível acessar o convite"
+          message={error}
+          onBack={voltarParaTorneios}
+          onDismiss={fecharAviso}
+        />
       </main>
     );
   }
@@ -139,7 +156,12 @@ export default function ConvitePage() {
   if (!torneio) {
     return (
       <main className="min-h-screen flex items-center justify-center px-4">
-        <ErrorPanel title="Convite não disponível" message="Este convite pode ter expirado ou sido removido." />
+        <ErrorPanel
+          title="Convite não disponível"
+          message="Este convite pode ter expirado ou sido removido."
+          onBack={voltarParaTorneios}
+          onDismiss={fecharAviso}
+        />
       </main>
     );
   }

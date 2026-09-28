@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ChevronLeft, Image as ImageIcon, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -131,9 +132,12 @@ export function ChangeProfileClient() {
                 <div className="w-28 h-28 rounded-2xl bg-[#B3B6BF] overflow-hidden flex items-center justify-center">
                   {previewUrl ? (
 
-                    <img
+                    <Image
                       src={previewUrl}
                       alt="Pré-visualização do avatar"
+                      width={112}
+                      height={112}
+                      unoptimized
                       className="w-full h-full object-cover"
                     />
                   ) : (

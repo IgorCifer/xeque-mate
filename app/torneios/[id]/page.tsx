@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
+import Image from "next/image";
 import { useAchievements } from "@/components/achievement-provider";
 
 interface UserMini {
@@ -371,8 +371,10 @@ export default function TorneioPage() {
       <section className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 flex-1 text-center sm:text-left">
-            <img
+            <Image
               src={modeImage(torneio.modo)}
+              width={64}
+              height={64}
               className="w-16 h-16 flex-shrink-0 mx-auto sm:mx-0"
               alt={torneio.modo}
             />
