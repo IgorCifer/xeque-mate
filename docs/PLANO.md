@@ -281,12 +281,19 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `refactor: simplify route params handling`
   *Quatro rotas tinham o truque (`convite`, `partidas/[partidaId]`, `rodadas` e `participantes/[pid]`); `[id]/route.ts` já estava certa. Todas passaram a `context: { params: Promise<...> }` e `await context.params`, como a `[id]/route.ts`. O guia do Next 16 sugere `RouteContext<'/rota'>`, mas o tipo só existe depois do `next typegen`/`dev`/`build`, e o `tsc --noEmit` direto num clone novo quebraria. Saíram também os `if (!id)` (o segmento dinâmico sempre vem preenchido; eles só existiam pelo `resolved ?? {}`); a checagem de UUID do `POST` do convite ficou. O `context: any` do `POST` do convite era um dos erros do lint (agora 8).*
   *Testado pelo servidor de dev com 2 usuários: ver e aceitar convite (200), id inválido (400), aceitar de novo (400), gerar rodada como não criador (403) e como criador (200), `PATCH` de resultado (200, pontos 1 e 0) e de partida inexistente (404), excluir confrontos (200, pontos zerados), remover o líder (400) e sair do torneio (200). `tsc` e `vitest` (57) passando.*
-- [ ] **5.5** Corrigir os erros e warnings do ESLint (um commit por área, se ficar grande).
+- [x] **5.5** Corrigir os erros e warnings do ESLint (um commit por área, se ficar grande).
   `fix: resolve eslint errors`
-- [ ] **5.6** Ajustar metadata e `lang="pt-BR"` em `app/layout.tsx`.
+  *De 8 erros e 13 warnings para zero, sem desligar regra nem usar `eslint-disable` (que seria comentário). Erros: o jogo treino lia o ref durante a renderização (`useState(chessGame.fen())`); o `Chess` passou a ser criado uma vez só em `useState(() => new Chess())`, e antes era recriado a cada renderização e descartado. O convite definia o `ErrorPanel` dentro do componente (recriado a cada renderização); ele foi para fora e recebe as ações por props. Dois `any` saíram (`forEach(showAchievement)`, como nas outras telas, e `Record<string, LucideIcon>` no `DynamicIcon`). O toast de conquista chamava `setIsVisible(true)` direto no efeito; a entrada passou a ser no próximo frame (`requestAnimationFrame`), que é o que a transição precisa. O carousel do shadcn (usado na home) espelhava `canScrollPrev`/`canScrollNext` num estado atualizado pelo efeito; passou a ler da API do Embla com `useSyncExternalStore`, e o `reInit` agora é desassinado no cleanup (antes só o `select` era).*
+  *Warnings: imports e variáveis sem uso; os seis `<img>` viraram `next/image` (PNGs locais de 128 px; a pré-visualização do avatar é uma URL `blob:` e usa `unoptimized`); a exclusão de conta navega com `router.replace("/login")`, como o "Sair"; saiu o `eslint-disable` sem efeito de `lib/prisma.ts`.*
+  *Testado pelo servidor de dev com 2 usuários: as 11 páginas tocadas (home com o carousel, perfil, práticas, jogo treino, torneios, novo, torneio, editar, convite, alterar perfil, excluir conta) dão 200 sem erro no log; `/_next/image` serve os PNGs. A interface no navegador (animação do toast, setas do carousel, jogo treino) não foi conferida visualmente.*
+- [x] **5.6** Ajustar metadata e `lang="pt-BR"` em `app/layout.tsx`.
   `fix(ui): set page metadata and pt-BR language`
-- [ ] **5.7** Escrever o README (o que é, stack, como rodar localmente, como importar puzzles).
+  *Título "Xeque-Mate" e descrição em português. Conferido: todas as páginas, inclusive `/login` sem sessão, saem com `lang="pt-BR"` e `<title>Xeque-Mate</title>`.*
+- [x] **5.7** Escrever o README (o que é, stack, como rodar localmente, como importar puzzles).
   `docs: write project readme`
+  *Em português: funcionalidades, stack, passo a passo local (Node 20.9+, Docker, `.env`, migrations, seed, puzzles), importação dos puzzles do Lichess (download do `.zst`, filtros do script, reexecução), scripts e estrutura de pastas.*
+
+*Fim da fase e do plano (28/09/2026): `tsc`, `eslint .` (0 problemas), `vitest` (57) e `npm run build` sem erros; `/ranking` e `/practice/*` saem dinâmicas (ƒ). As 4 migrations aplicadas com `migrate deploy` num banco vazio batem com o schema (`migrate diff` sem diferença). O `prisma migrate reset` pedido na verificação não foi rodado: o Prisma recusa o comando quando quem executa é um agente de IA, e o teste equivalente sem apagar nada foi o `deploy` num banco novo. Falta o roteiro manual completo com 2 usuários no navegador.*
 
 ## Depois (fora deste plano)
 
