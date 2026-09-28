@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface UserMini {
@@ -196,7 +197,7 @@ export default function TorneiosPage() {
 
       <section className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
         <div className="flex items-center gap-3">
-          <img src="/black-king.png" className="w-14 h-14" alt="imagem" />
+          <Image src="/black-king.png" width={56} height={56} className="w-14 h-14" alt="imagem" />
           <div>
             <h2 className="text-lg font-semibold">Criação de Torneios</h2>
             <p className="text-sm opacity-80">Crie um torneio com suas configurações.</p>
@@ -229,7 +230,7 @@ export default function TorneiosPage() {
               key={t.id}
               className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5"
             >
-              <img src={modeImage(t.modo)} className="w-10 h-10 mx-auto sm:mx-0" alt={t.modo} />
+              <Image src={modeImage(t.modo)} width={40} height={40} className="w-10 h-10 mx-auto sm:mx-0" alt={t.modo} />
 
               <div className="flex-1 flex flex-col gap-1 items-center text-center sm:items-start sm:text-left">
                 <h3 className="text-lg font-semibold leading-tight break-words">{t.nome}</h3>
@@ -290,7 +291,7 @@ export default function TorneiosPage() {
               key={t.id}
               className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5"
             >
-              <img src={modeImage(t.modo)} className="w-10 h-10 mx-auto sm:mx-0" alt={t.modo} />
+              <Image src={modeImage(t.modo)} width={40} height={40} className="w-10 h-10 mx-auto sm:mx-0" alt={t.modo} />
 
               <div className="flex-1 flex flex-col gap-1 items-center text-center sm:items-start sm:text-left">
                 <h3 className="text-lg font-semibold leading-tight break-words">{t.nome}</h3>

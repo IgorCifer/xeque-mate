@@ -266,20 +266,34 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 5: limpeza — branch `phase-5-cleanup`
 
-- [ ] **5.1** Remover o código morto listado em E.
+- [x] **5.1** Remover o código morto listado em E.
   `refactor: remove unused modules`
-- [ ] **5.2** Unificar `getAchievements` com `AchievementService.getUserAchievements`.
+  *`getWeeklyEnd.ts` não estava sem uso: `app/practice/page.tsx` importava dele. A página passou a importar de `dates.ts`, que tem as mesmas funções e ainda `getDailyEndDate`. Com o `GET /api/achievements` apagado, `AchievementService.getUserProgress` (só repassava para `calculateUserProgress`) perdeu o único uso e saiu junto. O `components.json` apontava o shadcn para o `tailwind.config.ts`; ficou `"config": ""`, que é o valor do shadcn para Tailwind 4 (sem `@config` no CSS, o Tailwind 4 nunca leu esse arquivo, então os estilos não mudam). `pg` e `@types/pg` saíram do `package.json`; o `pg` continua citado no lockfile só como peer opcional do better-auth.*
+  *Verificado: `tsc`, `vitest` (57) e `npm run build` sem erros; `/ranking` e `/practice/*` seguem ƒ. O lint caiu para 9 erros e 13 warnings (o erro a menos era o `require()` de `scripts/check-participante.js`). O build falhou uma vez por causa de tipos antigos de um `next dev` anterior (`.next/dev/types`, que citavam a rota apagada); apagar essa pasta resolveu, e ela é recriada pelo próximo `next dev`.*
+- [x] **5.2** Unificar `getAchievements` com `AchievementService.getUserAchievements`.
   `refactor(achievements): remove duplicated achievements query`
-- [ ] **5.3** Usar só o singleton de `lib/prisma.ts`.
+  *O perfil era o único que usava `getAchievements` e sempre passava o `userId`. O ramo sem usuário nunca rodava, e o resto era uma cópia de `getUserAchievements`. O perfil passou a chamar `AchievementService.getUserAchievements`, e `app/data/get-achievements.tsx` foi apagado.*
+  *Testado pelo servidor de dev com um usuário novo: perfil com as 8 conquistas bloqueadas; depois de criar um torneio, "Primeiro Torneio" aparece desbloqueada e as outras 7 continuam bloqueadas. `tsc` e `vitest` (57) passando. No teste, o banco local estava sem as migrations do 4.2 e do 4.4, e o perfil dava 500 (`user_activity_day` não existia); `prisma migrate deploy` resolveu.*
+- [x] **5.3** Usar só o singleton de `lib/prisma.ts`.
   `refactor(db): use shared prisma client everywhere`
-- [ ] **5.4** Simplificar `params` para `await context.params`.
+  *Sem mudança de código. As páginas dos desafios deixaram de criar o próprio cliente no 3.1, e `get-weekly-puzzle.ts` saiu no 5.1; o app já usava só o singleton. Os `new PrismaClient()` que sobram estão nos scripts de linha de comando (`prisma/seed.ts`, `prisma/seed/seed-puzzles.ts`, `prisma/seed/clear-puzzles.ts`) e ficam: rodam fora do Next, fecham a conexão com `$disconnect()`, e o singleton registraria cada query no terminal (`log: ["query", ...]` fora de produção), sem ganho do cache em `globalThis`, que só serve ao hot reload. Commitado junto com o 5.4, a pedido.*
+- [x] **5.4** Simplificar `params` para `await context.params`.
   `refactor: simplify route params handling`
-- [ ] **5.5** Corrigir os erros e warnings do ESLint (um commit por área, se ficar grande).
+  *Quatro rotas tinham o truque (`convite`, `partidas/[partidaId]`, `rodadas` e `participantes/[pid]`); `[id]/route.ts` já estava certa. Todas passaram a `context: { params: Promise<...> }` e `await context.params`, como a `[id]/route.ts`. O guia do Next 16 sugere `RouteContext<'/rota'>`, mas o tipo só existe depois do `next typegen`/`dev`/`build`, e o `tsc --noEmit` direto num clone novo quebraria. Saíram também os `if (!id)` (o segmento dinâmico sempre vem preenchido; eles só existiam pelo `resolved ?? {}`); a checagem de UUID do `POST` do convite ficou. O `context: any` do `POST` do convite era um dos erros do lint (agora 8).*
+  *Testado pelo servidor de dev com 2 usuários: ver e aceitar convite (200), id inválido (400), aceitar de novo (400), gerar rodada como não criador (403) e como criador (200), `PATCH` de resultado (200, pontos 1 e 0) e de partida inexistente (404), excluir confrontos (200, pontos zerados), remover o líder (400) e sair do torneio (200). `tsc` e `vitest` (57) passando.*
+- [x] **5.5** Corrigir os erros e warnings do ESLint (um commit por área, se ficar grande).
   `fix: resolve eslint errors`
-- [ ] **5.6** Ajustar metadata e `lang="pt-BR"` em `app/layout.tsx`.
+  *De 8 erros e 13 warnings para zero, sem desligar regra nem usar `eslint-disable` (que seria comentário). Erros: o jogo treino lia o ref durante a renderização (`useState(chessGame.fen())`); o `Chess` passou a ser criado uma vez só em `useState(() => new Chess())`, e antes era recriado a cada renderização e descartado. O convite definia o `ErrorPanel` dentro do componente (recriado a cada renderização); ele foi para fora e recebe as ações por props. Dois `any` saíram (`forEach(showAchievement)`, como nas outras telas, e `Record<string, LucideIcon>` no `DynamicIcon`). O toast de conquista chamava `setIsVisible(true)` direto no efeito; a entrada passou a ser no próximo frame (`requestAnimationFrame`), que é o que a transição precisa. O carousel do shadcn (usado na home) espelhava `canScrollPrev`/`canScrollNext` num estado atualizado pelo efeito; passou a ler da API do Embla com `useSyncExternalStore`, e o `reInit` agora é desassinado no cleanup (antes só o `select` era).*
+  *Warnings: imports e variáveis sem uso; os seis `<img>` viraram `next/image` (PNGs locais de 128 px; a pré-visualização do avatar é uma URL `blob:` e usa `unoptimized`); a exclusão de conta navega com `router.replace("/login")`, como o "Sair"; saiu o `eslint-disable` sem efeito de `lib/prisma.ts`.*
+  *Testado pelo servidor de dev com 2 usuários: as 11 páginas tocadas (home com o carousel, perfil, práticas, jogo treino, torneios, novo, torneio, editar, convite, alterar perfil, excluir conta) dão 200 sem erro no log; `/_next/image` serve os PNGs. A interface no navegador (animação do toast, setas do carousel, jogo treino) não foi conferida visualmente.*
+- [x] **5.6** Ajustar metadata e `lang="pt-BR"` em `app/layout.tsx`.
   `fix(ui): set page metadata and pt-BR language`
-- [ ] **5.7** Escrever o README (o que é, stack, como rodar localmente, como importar puzzles).
+  *Título "Xeque-Mate" e descrição em português. Conferido: todas as páginas, inclusive `/login` sem sessão, saem com `lang="pt-BR"` e `<title>Xeque-Mate</title>`.*
+- [x] **5.7** Escrever o README (o que é, stack, como rodar localmente, como importar puzzles).
   `docs: write project readme`
+  *Em português: funcionalidades, stack, passo a passo local (Node 20.9+, Docker, `.env`, migrations, seed, puzzles), importação dos puzzles do Lichess (download do `.zst`, filtros do script, reexecução), scripts e estrutura de pastas.*
+
+*Fim da fase e do plano (28/09/2026): `tsc`, `eslint .` (0 problemas), `vitest` (57) e `npm run build` sem erros; `/ranking` e `/practice/*` saem dinâmicas (ƒ). As 4 migrations aplicadas com `migrate deploy` num banco vazio batem com o schema (`migrate diff` sem diferença). O `prisma migrate reset` pedido na verificação não foi rodado: o Prisma recusa o comando quando quem executa é um agente de IA, e o teste equivalente sem apagar nada foi o `deploy` num banco novo. Falta o roteiro manual completo com 2 usuários no navegador.*
 
 ## Depois (fora deste plano)
 

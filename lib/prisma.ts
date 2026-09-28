@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { PrismaClient } from "../app/generated/prisma2/client";
 
 declare global {

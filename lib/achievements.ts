@@ -214,8 +214,4 @@ export class AchievementService {
       unlockedAt: unlockedMap.get(achievement.id) || null,
     }));
   }
-
-  static async getUserProgress(userId: string) {
-    return this.calculateUserProgress(userId);
-  }
 }

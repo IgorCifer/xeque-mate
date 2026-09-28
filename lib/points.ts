@@ -19,39 +19,6 @@ export type PointsReason =
   | "daily_puzzle"
   | "weekly_puzzle";
 
-export async function awardPoints(
-  userId: string,
-  points: number,
-  reason: PointsReason,
-  referenceId?: string
-) {
-  try {
-    const result = await prisma.$transaction([
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          points: {
-            increment: points,
-          },
-        },
-      }),
-      prisma.pointsHistory.create({
-        data: {
-          userId,
-          points,
-          reason,
-          referenceId,
-        },
-      }),
-    ]);
-
-    return result[0];
-  } catch (error) {
-    console.error("Erro ao atribuir pontos:", error);
-    throw error;
-  }
-}
-
 function tournamentPrize(posicao: number): { points: number; reason: PointsReason } {
   if (posicao === 1) return { points: POINTS_CONFIG.TOURNAMENT_1ST, reason: "tournament_1st" };
   if (posicao === 2) return { points: POINTS_CONFIG.TOURNAMENT_2ND, reason: "tournament_2nd" };
@@ -172,57 +139,5 @@ export async function completePuzzle(
   } catch (error) {
     console.error("Erro ao completar puzzle:", error);
     throw error;
-  }
-}
-
-export async function getUserPointsHistory(
-  userId: string,
-  limit = 50
-) {
-  try {
-    const history = await prisma.pointsHistory.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-    });
-
-    return history;
-  } catch (error) {
-    console.error("Erro ao buscar histórico de pontos:", error);
-    throw error;
-  }
-}
-
-export async function hasPuzzleCompletedToday(
-  userId: string,
-  type: "daily" | "weekly"
-) {
-  try {
-    const now = new Date();
-    let startDate: Date;
-
-    if (type === "daily") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    } else {
-      const day = now.getDay();
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - day);
-      startDate.setHours(0, 0, 0, 0);
-    }
-
-    const completion = await prisma.puzzleCompletion.findFirst({
-      where: {
-        userId,
-        type,
-        completedAt: {
-          gte: startDate,
-        },
-      },
-    });
-
-    return !!completion;
-  } catch (error) {
-    console.error("Erro ao verificar conclusão de puzzle:", error);
-    return false;
   }
 }
