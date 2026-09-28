@@ -1,7 +1,6 @@
-// app/practice/page.tsx
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getWeeklyEndDate, formatDateBR } from "./utils/getWeeklyEnd";
+import { getWeeklyEndDate, formatDateBR } from "./utils/dates";
 import { requireSession } from "@/lib/session";
 
 export default async function PracticePage() {
@@ -12,7 +11,6 @@ export default async function PracticePage() {
   return (
     <div className="min-h-screen flex flex-col pb-20">
       <main className="flex-1 flex flex-col px-4 gap-6">
-        {/* Card Desafio Semanal */}
         <div className="w-full">
           <h1 className="text-white text-3xl font-bold text-center m-6">
             Desafio Semanal
@@ -24,7 +22,6 @@ export default async function PracticePage() {
                 Check mate em 2
               </h2>
 
-              {/* Tabuleiro placeholder do desafio */}
               <div className="w-full aspect-square max-w-md mx-auto mb-4 rounded-xl overflow-hidden">
                 <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-orange-600 via-orange-500 to-orange-600">
                   <span className="text-6xl">♔</span>
@@ -38,10 +35,8 @@ export default async function PracticePage() {
           </Link>
         </div>
 
-        {/* Botões de Opções */}
         <div className="w-full flex flex-col gap-4 ">
-          {/* Jogo Treino - FUNCIONAL */}
-          <Button 
+          <Button
             asChild
             size="lg"
             className="h-13 w-full rounded-sm bg-[#6BAAFD] hover:bg-[#1E50A4] hover:border-[#152E59] transition text-white text-xs font-bold py-3 border-b-4 border-[#5C9CF0]"
@@ -51,7 +46,6 @@ export default async function PracticePage() {
             </Link>
           </Button>
 
-          {/* Desafio Diário - Funcional */}
         <Link href="/practice/daily-challenge">
           <Button
             size="lg"

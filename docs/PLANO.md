@@ -266,8 +266,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
 
 ## Fase 5: limpeza — branch `phase-5-cleanup`
 
-- [ ] **5.1** Remover o código morto listado em E.
+- [x] **5.1** Remover o código morto listado em E.
   `refactor: remove unused modules`
+  *`getWeeklyEnd.ts` não estava sem uso: `app/practice/page.tsx` importava dele. A página passou a importar de `dates.ts`, que tem as mesmas funções e ainda `getDailyEndDate`. Com o `GET /api/achievements` apagado, `AchievementService.getUserProgress` (só repassava para `calculateUserProgress`) perdeu o único uso e saiu junto. O `components.json` apontava o shadcn para o `tailwind.config.ts`; ficou `"config": ""`, que é o valor do shadcn para Tailwind 4 (sem `@config` no CSS, o Tailwind 4 nunca leu esse arquivo, então os estilos não mudam). `pg` e `@types/pg` saíram do `package.json`; o `pg` continua citado no lockfile só como peer opcional do better-auth.*
+  *Verificado: `tsc`, `vitest` (57) e `npm run build` sem erros; `/ranking` e `/practice/*` seguem ƒ. O lint caiu para 9 erros e 13 warnings (o erro a menos era o `require()` de `scripts/check-participante.js`). O build falhou uma vez por causa de tipos antigos de um `next dev` anterior (`.next/dev/types`, que citavam a rota apagada); apagar essa pasta resolveu, e ela é recriada pelo próximo `next dev`.*
 - [ ] **5.2** Unificar `getAchievements` com `AchievementService.getUserAchievements`.
   `refactor(achievements): remove duplicated achievements query`
 - [ ] **5.3** Usar só o singleton de `lib/prisma.ts`.

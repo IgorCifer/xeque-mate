@@ -43,7 +43,7 @@ npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `
 npm run build
 npx tsc --noEmit             # type check
 npm test                     # vitest run (npx vitest for watch mode; npx vitest run path/to/file.test.ts for one file)
-npm run lint                 # eslint . (10 errors / 13 warnings known; plan 5.5)
+npm run lint                 # eslint . (9 errors / 13 warnings known; plan 5.5)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
 npx prisma migrate deploy    # apply migrations (0_init baseline + later ones)
