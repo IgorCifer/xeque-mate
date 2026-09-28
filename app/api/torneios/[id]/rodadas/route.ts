@@ -7,7 +7,7 @@ import { ResultadoPartida } from "@/app/generated/prisma2/client";
 import type { Prisma } from "@/app/generated/prisma2/client";
 
 interface ContextParams {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }
 
 interface PlayerState {
@@ -36,16 +36,7 @@ function toSwissPlayers(states: Map<string, PlayerState>, shuffle = false): Play
 }
 
 export async function POST(req: Request, context: ContextParams) {
-  const rawParams = context.params as Promise<{ id: string }>;
-  const resolved =
-    typeof (rawParams as Promise<{ id: string }>).then === "function"
-      ? await rawParams
-      : (context.params as { id: string });
-  const { id } = resolved ?? {};
-
-  if (!id) {
-    return NextResponse.json({ error: "ID do torneio não informado" }, { status: 400 });
-  }
+  const { id } = await context.params;
 
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user?.id) {
@@ -209,16 +200,7 @@ export async function POST(req: Request, context: ContextParams) {
 }
 
 export async function DELETE(req: Request, context: ContextParams) {
-  const rawParams = context.params as Promise<{ id: string }>;
-  const resolved =
-    typeof (rawParams as Promise<{ id: string }>).then === "function"
-      ? await rawParams
-      : (context.params as { id: string });
-  const { id } = resolved ?? {};
-
-  if (!id) {
-    return NextResponse.json({ error: "ID do torneio não informado" }, { status: 400 });
-  }
+  const { id } = await context.params;
 
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user?.id) {

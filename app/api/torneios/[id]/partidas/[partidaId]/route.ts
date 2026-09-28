@@ -4,24 +4,11 @@ import { auth } from "@/lib/auth";
 import { ResultadoPartida } from "@/app/generated/prisma2/client";
 import { resultadoChangeDelta } from "@/lib/match-results";
 
-interface ContextParams {
-  params:
-    | { id: string; partidaId: string }
-    | Promise<{ id: string; partidaId: string }>;
-}
-
-export async function PATCH(req: Request, context: ContextParams) {
-  const rawParams = context.params as Promise<{ id: string; partidaId: string }>;
-  const resolved =
-    typeof (rawParams as Promise<{ id: string; partidaId: string }>).then === "function"
-      ? await rawParams
-      : (context.params as { id: string; partidaId: string });
-
-  const { id, partidaId } = resolved ?? {};
-
-  if (!id || !partidaId) {
-    return NextResponse.json({ error: "Parâmetros inválidos" }, { status: 400 });
-  }
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<{ id: string; partidaId: string }> }
+) {
+  const { id, partidaId } = await context.params;
 
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user?.id) {

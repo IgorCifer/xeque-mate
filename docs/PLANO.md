@@ -274,10 +274,13 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `refactor(achievements): remove duplicated achievements query`
   *O perfil era o único que usava `getAchievements` e sempre passava o `userId`. O ramo sem usuário nunca rodava, e o resto era uma cópia de `getUserAchievements`. O perfil passou a chamar `AchievementService.getUserAchievements`, e `app/data/get-achievements.tsx` foi apagado.*
   *Testado pelo servidor de dev com um usuário novo: perfil com as 8 conquistas bloqueadas; depois de criar um torneio, "Primeiro Torneio" aparece desbloqueada e as outras 7 continuam bloqueadas. `tsc` e `vitest` (57) passando. No teste, o banco local estava sem as migrations do 4.2 e do 4.4, e o perfil dava 500 (`user_activity_day` não existia); `prisma migrate deploy` resolveu.*
-- [ ] **5.3** Usar só o singleton de `lib/prisma.ts`.
+- [x] **5.3** Usar só o singleton de `lib/prisma.ts`.
   `refactor(db): use shared prisma client everywhere`
-- [ ] **5.4** Simplificar `params` para `await context.params`.
+  *Sem mudança de código. As páginas dos desafios deixaram de criar o próprio cliente no 3.1, e `get-weekly-puzzle.ts` saiu no 5.1; o app já usava só o singleton. Os `new PrismaClient()` que sobram estão nos scripts de linha de comando (`prisma/seed.ts`, `prisma/seed/seed-puzzles.ts`, `prisma/seed/clear-puzzles.ts`) e ficam: rodam fora do Next, fecham a conexão com `$disconnect()`, e o singleton registraria cada query no terminal (`log: ["query", ...]` fora de produção), sem ganho do cache em `globalThis`, que só serve ao hot reload. Commitado junto com o 5.4, a pedido.*
+- [x] **5.4** Simplificar `params` para `await context.params`.
   `refactor: simplify route params handling`
+  *Quatro rotas tinham o truque (`convite`, `partidas/[partidaId]`, `rodadas` e `participantes/[pid]`); `[id]/route.ts` já estava certa. Todas passaram a `context: { params: Promise<...> }` e `await context.params`, como a `[id]/route.ts`. O guia do Next 16 sugere `RouteContext<'/rota'>`, mas o tipo só existe depois do `next typegen`/`dev`/`build`, e o `tsc --noEmit` direto num clone novo quebraria. Saíram também os `if (!id)` (o segmento dinâmico sempre vem preenchido; eles só existiam pelo `resolved ?? {}`); a checagem de UUID do `POST` do convite ficou. O `context: any` do `POST` do convite era um dos erros do lint (agora 8).*
+  *Testado pelo servidor de dev com 2 usuários: ver e aceitar convite (200), id inválido (400), aceitar de novo (400), gerar rodada como não criador (403) e como criador (200), `PATCH` de resultado (200, pontos 1 e 0) e de partida inexistente (404), excluir confrontos (200, pontos zerados), remover o líder (400) e sair do torneio (200). `tsc` e `vitest` (57) passando.*
 - [ ] **5.5** Corrigir os erros e warnings do ESLint (um commit por área, se ficar grande).
   `fix: resolve eslint errors`
 - [ ] **5.6** Ajustar metadata e `lang="pt-BR"` em `app/layout.tsx`.

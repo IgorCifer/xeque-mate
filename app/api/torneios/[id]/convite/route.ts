@@ -8,21 +8,9 @@ const UUID_REGEX =
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const rawParams = context?.params as Promise<{ id: string }>;
-  const resolved =
-    typeof rawParams?.then === "function"
-      ? await rawParams
-      : (context.params as { id: string });
-  const { id } = resolved ?? {};
-
-  if (!id) {
-    return NextResponse.json(
-      { error: "ID do torneio não informado" },
-      { status: 400 }
-    );
-  }
+  const { id } = await context.params;
 
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user?.id) {
@@ -68,23 +56,13 @@ export async function GET(
   return NextResponse.json({ torneio });
 }
 
-export async function POST(req: Request, context: any) {
+export async function POST(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    let id;
-    if (context?.params) {
-      const params =
-        typeof context.params.then === "function"
-          ? await context.params
-          : context.params;
-      id = params?.id;
-    }
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID do torneio não informado" },
-        { status: 400 }
-      );
-    }
-    if (!UUID_REGEX.test(String(id))) {
+    const { id } = await context.params;
+    if (!UUID_REGEX.test(id)) {
       return NextResponse.json(
         { error: "ID do torneio inválido" },
         { status: 400 }

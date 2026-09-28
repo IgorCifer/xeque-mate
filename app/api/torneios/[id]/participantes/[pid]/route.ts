@@ -4,15 +4,10 @@ import { auth } from "@/lib/auth";
 
 export async function DELETE(
   req: Request,
-  context: { params: { id: string; pid: string } } | { params: Promise<{ id: string; pid: string }> }
+  context: { params: Promise<{ id: string; pid: string }> }
 ) {
-  const rawParams = (context.params as Promise<{ id: string; pid: string }>);
-  const resolved = typeof rawParams?.then === "function" ? await rawParams : (context.params as { id: string; pid: string });
-  const { id, pid } = resolved ?? {};
+  const { id, pid } = await context.params;
 
-  if (!id || !pid) {
-    return NextResponse.json({ error: "Parâmetros inválidos" }, { status: 400 });
-  }
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -36,7 +31,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Não é possível remover o líder do torneio" }, { status: 400 });
   }
 
-  // Somente o criador pode remover terceiros; o próprio participante pode sair
   if (!isCreatorRequest && !isSelf) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
