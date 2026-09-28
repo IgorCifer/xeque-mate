@@ -270,8 +270,10 @@ Se aparecer "too many clients" no Postgres durante os testes, antecipar o item 5
   `refactor: remove unused modules`
   *`getWeeklyEnd.ts` não estava sem uso: `app/practice/page.tsx` importava dele. A página passou a importar de `dates.ts`, que tem as mesmas funções e ainda `getDailyEndDate`. Com o `GET /api/achievements` apagado, `AchievementService.getUserProgress` (só repassava para `calculateUserProgress`) perdeu o único uso e saiu junto. O `components.json` apontava o shadcn para o `tailwind.config.ts`; ficou `"config": ""`, que é o valor do shadcn para Tailwind 4 (sem `@config` no CSS, o Tailwind 4 nunca leu esse arquivo, então os estilos não mudam). `pg` e `@types/pg` saíram do `package.json`; o `pg` continua citado no lockfile só como peer opcional do better-auth.*
   *Verificado: `tsc`, `vitest` (57) e `npm run build` sem erros; `/ranking` e `/practice/*` seguem ƒ. O lint caiu para 9 erros e 13 warnings (o erro a menos era o `require()` de `scripts/check-participante.js`). O build falhou uma vez por causa de tipos antigos de um `next dev` anterior (`.next/dev/types`, que citavam a rota apagada); apagar essa pasta resolveu, e ela é recriada pelo próximo `next dev`.*
-- [ ] **5.2** Unificar `getAchievements` com `AchievementService.getUserAchievements`.
+- [x] **5.2** Unificar `getAchievements` com `AchievementService.getUserAchievements`.
   `refactor(achievements): remove duplicated achievements query`
+  *O perfil era o único que usava `getAchievements` e sempre passava o `userId`. O ramo sem usuário nunca rodava, e o resto era uma cópia de `getUserAchievements`. O perfil passou a chamar `AchievementService.getUserAchievements`, e `app/data/get-achievements.tsx` foi apagado.*
+  *Testado pelo servidor de dev com um usuário novo: perfil com as 8 conquistas bloqueadas; depois de criar um torneio, "Primeiro Torneio" aparece desbloqueada e as outras 7 continuam bloqueadas. `tsc` e `vitest` (57) passando. No teste, o banco local estava sem as migrations do 4.2 e do 4.4, e o perfil dava 500 (`user_activity_day` não existia); `prisma migrate deploy` resolveu.*
 - [ ] **5.3** Usar só o singleton de `lib/prisma.ts`.
   `refactor(db): use shared prisma client everywhere`
 - [ ] **5.4** Simplificar `params` para `await context.params`.

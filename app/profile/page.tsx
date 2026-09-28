@@ -2,7 +2,6 @@ import { requireSession } from "@/lib/session";
 import { FaUser } from "react-icons/fa";
 import { FlameIcon, Settings, TrophyIcon } from "lucide-react";
 import { getUserPoints } from "../data/get-user-points";
-import { getAchievements } from "../data/get-achievements";
 import DynamicIcon from "../utils/icon-convert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
@@ -20,7 +19,7 @@ export default async function ProfilePage() {
 
   const points = await getUserPoints(session.user.id);
 
-  const achievements = await getAchievements(session.user.id);
+  const achievements = await AchievementService.getUserAchievements(session.user.id);
 
   const { currentStreak } = await AchievementService.calculateStreaks(session.user.id);
 
