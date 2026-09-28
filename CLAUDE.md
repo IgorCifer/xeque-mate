@@ -2,28 +2,33 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, points ranking, achievements). Personal fork of a group project that was never deployed and has no real data, so the database can be recreated freely.
+Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, points ranking, achievements). Fork of a group project that was never deployed and has no real data, so the database can be recreated freely. Two developers work on it in parallel.
 
-**Active plan:** [docs/PLANO.md](docs/PLANO.md) is the source of truth for ongoing work. It holds the diagnosis of known bugs, the pending decisions and the ordered checklist of items.
+**Active plan:** [docs/PLANO.md](docs/PLANO.md) holds the roadmap, the diagnosis and the dated decisions. Tasks live in GitHub issues, and their status in the GitHub Project; the plan only links to the issues. Plan 1 (finished) is archived in [docs/PLANO-1.md](docs/PLANO-1.md).
 
 ## Working rules
 
-- Reply to the user in Portuguese (pt-BR). Keep UI strings and domain names in Portuguese, as the codebase already does. Commit messages are in English.
+- Reply to the user in Portuguese (pt-BR). Keep UI strings and domain names in Portuguese, as the codebase already does. Commit messages and PR titles are in English.
 - Analysis tasks are read-only: do not modify files unless asked.
-- Work on one item of `docs/PLANO.md` at a time. Do not refactor beyond the item.
-- Never bump a major version. Never run `npm audit fix --force`.
-- Never commit, push or create branches; the user does that. When an item is done: summarize what changed, explain how to verify it, suggest a commit message, and tick the item's checkbox in `docs/PLANO.md`.
+- Work on one issue at a time. Do not refactor beyond the issue.
+- Bump a major version only in the task dedicated to it. Never run `npm audit fix --force`.
+- Never commit, push or create branches; the user does that. When a task is done: summarize what changed, explain how to verify it, and suggest the PR title (it becomes the squash commit). If the task settled a decision, record it with the date under "Decisões" in `docs/PLANO.md`.
 - Never stage `.env` or `prisma/seed/*.csv`.
 - Never write code comments (`//`, `/* */`, JSX `{/* */}`), not even to explain a change. When editing a file, remove the comments it already has.
+- Stay inside the task's area. If a change is needed in the other developer's area, suggest opening an issue for them instead of editing it.
 
 ## Git workflow
 
-- `main` always works. One branch per phase: `phase-<n>-<name>` (e.g. `phase-0-setup`). One commit per plan item. Each phase goes into `main` through a pull request, merged with a merge commit (keeps the per-item commits).
-- Commits follow Conventional Commits 1.0: `<type>(<scope>): <subject>`
+- `main` always works. One branch per task, created from an up-to-date `main` and named `<area>/<short-kebab-summary>` (e.g. `torneios/formato-todos-contra-todos`). Never branch off another task branch.
+- One small pull request per task. It needs CI to pass (once CI exists). The author merges their own PR with **squash**, so `main` gets one commit per task. Head branches are deleted automatically after the merge.
+- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`.
+- Migrations: at most one per PR. Rebase on `main` right before generating it with `prisma migrate dev`; if `main` got another migration meanwhile, delete yours and generate it again.
+- Shared files (`components/ui`, `app/globals.css`, the app shell, `lib/achievements.ts`, `package.json`): change them in a small PR of their own and tell the other developer. Keep the `AchievementService.record*` signatures stable; tournaments call them.
+- The PR title is the squash commit message and follows Conventional Commits 1.0: `<type>(<scope>): <subject>`
   - subject: imperative mood, lowercase, no trailing period, at most 72 characters (aim for ~50)
-  - body (optional): what changed and why, wrapped at 72 characters
-- Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` (dependencies use `chore(deps)`).
-- Scopes: `db`, `deps`, `config`, `auth`, `tournaments`, `puzzles`, `points`, `achievements`, `profile`, `ranking`, `ui`.
+  - the PR description (optional body): what changed and why
+- Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci` (dependencies use `chore(deps)`).
+- Scopes: `db`, `deps`, `config`, `auth`, `tournaments`, `puzzles`, `training`, `points`, `achievements`, `profile`, `ranking`, `ui`.
 
 Example:
 
