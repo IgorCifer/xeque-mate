@@ -29,12 +29,12 @@ As regras de trabalho e o fluxo de git estão no [CLAUDE.md](../CLAUDE.md).
 - Torneios presenciais: o organizador cria, pareia e lança os resultados, e os jogadores acompanham. Além do suíço, entram outros formatos, como todos contra todos e eliminatória (28/09/2026).
 - Os majors (Prisma 7, ESLint 10, lucide 1.x) sobem na base comum. O Prisma 7 vem depois dos testes de integração, e o lucide 1.x vai junto da troca do `react-icons`. A exceção é o react-chess-puzzle 2.x, que sobe na área dos desafios: atualizá-lo é reescrever os desafios, e fazer isso na base seria refazer a área duas vezes (28/09/2026).
 - Tarefas em Issues e num Project do GitHub, com uma label por área. Uma issue sai de Backlog para Ready quando as dependências dela estão prontas (28/09/2026).
-- A base comum é dividida entre os dois: um cuida de dados e infra, o outro de interface (28/09/2026).
-- Um PR por tarefa. O próprio autor faz o merge por **squash**, com o título do PR no padrão Conventional Commits, e o PR só entra com o CI passando (28/09/2026).
+- A base comum é dividida entre os dois: a trilha A (dados e infra) fica com o Igor (@IgorCifer) e a trilha B (interface) com o Iago (@IagoFsv). A #8, de arquitetura, é dos dois (28/09/2026).
+- Um PR por tarefa. O próprio autor faz o merge por **squash**, com o título do PR no padrão Conventional Commits, e o PR só entra com o CI passando. O repositório só aceita squash, usa o título do PR como título do commit e apaga a branch depois do merge (28/09/2026).
 
 **Em aberto** (decidir ao chegar na tarefa)
 
-- Quem fica com cada trilha da Etapa 1 e com cada área da Etapa 2.
+- Quem fica com cada área da Etapa 2.
 - Desafios: subir o react-chess-puzzle para 2.x ou montar um tabuleiro próprio com `chess.js` + `react-chessboard`.
 - Torneios: continuar guardando a classificação em `Participante` ou calculá-la das partidas. `rankTournament`, em `lib/tournament-ranking.ts`, já calcula tudo a partir das partidas.
 - Exclusão de conta: anonimizar o jogador ou bloquear a exclusão enquanto houver torneio em andamento.
@@ -104,7 +104,7 @@ Concluída em 28/09/2026.
   - [Project](https://github.com/users/IgorCifer/projects/1) com as colunas *Backlog / Ready / In progress / Done*;
   - labels de área: `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`;
   - issues da Etapa 1 criadas (#8 a #18). As que não dependem de nada estão em Ready; as outras, em Backlog.
-- Falta: deixar só "Allow squash merging" habilitado e ligar "Automatically delete head branches" nas configurações do repositório.
+- Repositório configurado para aceitar só squash (título do commit = título do PR) e apagar a branch depois do merge.
 
 ### Etapa 1: base comum
 
@@ -113,12 +113,12 @@ Começa com uma tarefa conjunta e curta: o `docs/ARQUITETURA.md`. Depois, as dua
 | Tarefa | Trilha | Issue |
 |---|---|---|
 | **Convenções de arquitetura** (`docs/ARQUITETURA.md`): pastas por funcionalidade (`features/<area>/{components,server,schemas,types}`, com as rotas de `app/` finas), primitivos em `components/ui`, *compound components* quando as partes dividem estado, nenhum componente definido dentro de outro, a página de servidor busca os dados e o client só interage, tipos de domínio tirados do zod e do Prisma | as duas | [#8](https://github.com/IgorCifer/xeque-mate/issues/8) |
-| **CI no GitHub Actions:** `tsc`, `eslint`, os testes unitários e `build` em cada PR. Vem antes dos testes de integração para proteger tudo desde já | A: dados e infra | [#9](https://github.com/IgorCifer/xeque-mate/issues/9) |
+| **CI no GitHub Actions:** `tsc`, `eslint`, os testes unitários e `build` em cada PR. Vem antes dos testes de integração para proteger tudo desde já | A: dados e infra (Igor) | [#9](https://github.com/IgorCifer/xeque-mate/issues/9) |
 | **Testes de integração das rotas:** Vitest contra um banco Postgres de teste, com helpers de usuário e sessão. Cobrem convite, rodadas, resultado, finalização concorrente, puzzles e check-login. Acrescenta o serviço Postgres ao CI | A | [#10](https://github.com/IgorCifer/xeque-mate/issues/10) |
 | **Padrão de API:** schema zod na entrada, formato único de erro (`{ error }` com status), helper de sessão e dono, cliente `fetch` tipado. Aplicado em 1 ou 2 rotas como exemplo; as áreas migram as delas | A | [#11](https://github.com/IgorCifer/xeque-mate/issues/11) |
 | **Prisma 7**, com `@prisma/adapter-pg` (ler o guia de migração antes) | A | [#12](https://github.com/IgorCifer/xeque-mate/issues/12) |
 | **ESLint 10** | A | [#13](https://github.com/IgorCifer/xeque-mate/issues/13) |
-| **Tokens:** as cores hex repetidas viram variáveis de tema no `globals.css`, sem mudar nada no visual | B: interface | [#14](https://github.com/IgorCifer/xeque-mate/issues/14) |
+| **Tokens:** as cores hex repetidas viram variáveis de tema no `globals.css`, sem mudar nada no visual | B: interface (Iago) | [#14](https://github.com/IgorCifer/xeque-mate/issues/14) |
 | **Primitivos do shadcn que faltam:** Input, Label, Select, Dialog/AlertDialog, Sonner, Tabs, Table, Badge, Skeleton | B | [#15](https://github.com/IgorCifer/xeque-mate/issues/15) |
 | **Feedback padrão:** toast para avisos e AlertDialog para confirmações, no lugar de `alert`/`confirm`/`prompt`. A trilha entrega os componentes, e cada área troca os seus | B | [#16](https://github.com/IgorCifer/xeque-mate/issues/16) |
 | **Uma biblioteca de ícones:** o `react-icons` sai e o `lucide` sobe para 1.x no mesmo PR, porque as duas mudanças mexem nos mesmos ícones | B | [#17](https://github.com/IgorCifer/xeque-mate/issues/17) |
