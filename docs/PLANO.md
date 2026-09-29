@@ -31,13 +31,26 @@ As regras de trabalho e o fluxo de git estão no [CLAUDE.md](../CLAUDE.md).
 - Tarefas em Issues e num Project do GitHub, com uma label por área. Uma issue sai de Backlog para Ready quando as dependências dela estão prontas (28/09/2026).
 - A base comum é dividida entre os dois: a trilha A (dados e infra) fica com o Igor (@IgorCifer) e a trilha B (interface) com o Iago (@IagoFsv). A #8, de arquitetura, é dos dois (28/09/2026).
 - Um PR por tarefa. O próprio autor faz o merge por **squash**, com o título do PR no padrão Conventional Commits, e o PR só entra com o CI passando. O repositório só aceita squash, usa o título do PR como título do commit e apaga a branch depois do merge (28/09/2026).
+- Arquitetura (#8), registrada em [ARQUITETURA.md](ARQUITETURA.md) (29/09/2026). É provisória até o Iago revisar o PR da #8.
+  - **Dados:** leitura por uma Data Access Layer (DAL). A DAL tem funções públicas (`dal.ts`: recebem o `actor`, checam a permissão, devolvem DTOs) e internas (`internal.ts`: sem `actor`, aceitam um `tx` opcional e só são chamadas por outra DAL). Mutações por Server Actions finas. Rotas de API ficam só para o better-auth. É a abordagem que o guia de segurança de dados do Next 16 recomenda para projetos novos, e ela deixa a DAL testável sem simular requisições.
+  - **Pastas:** código por área em `features/<area>/`, com as rotas de `app/` finas.
+  - **Formulários:** `useActionState` com zod validando na action.
+- Pontos e conquistas (`features/pontos`, `features/conquistas`) têm dono: o Igor, trilha A. As outras áreas chamam as funções internas deles e pedem mudanças por issue (29/09/2026).
+- A #11 fica só com os helpers de DAL e Server Actions. O fluxo de exemplo virou uma issue própria, o **fluxo de referência**, que vem depois da #11, da #15 e da #16. Assim ele mostra a pilha inteira, com primitivos e toast, e é o arquivo que os dois copiam na Etapa 2 (29/09/2026).
+- A classificação do torneio passa a ser **derivada das partidas**, sem os contadores em `Participante`. É o mesmo raciocínio que tirou o `User.wins`: os contadores precisam ser acertados em todo caminho que mexe em partidas, e o `rankTournament` já calcula tudo a partir delas. Saem o `deltaFromResultado` e o crédito do bye na criação da rodada, e o pareamento suíço usa a classificação derivada (29/09/2026).
+- A exclusão de conta **anonimiza em vez de apagar** (29/09/2026):
+  - o nome vira "Jogador removido", o e-mail vira um marcador único (o campo é único e obrigatório no better-auth) e a imagem sai;
+  - sessões e contas são apagadas;
+  - é uma action própria, no lugar do `deleteUser` do better-auth, que apaga a linha;
+  - os resultados de todo mundo ficam preservados, e dado anonimizado fica fora do escopo da LGPD.
+- Na eliminatória, uma partida empatada continua `DRAW`, e o organizador marca quem avançou no desempate jogado fora do app (armageddon, blitz). É um campo opcional na `Partida`, obrigatório só em empate de eliminatória (29/09/2026).
+- Nos torneios, **paridade antes de funcionalidade nova**: primeiro a área migra com o mesmo comportamento, e só depois vêm as regras novas, em passos separados (ver Etapa 2). Se algo quebrar, dá para saber se foi a mudança de estrutura ou a regra nova (29/09/2026).
 
 **Em aberto** (decidir ao chegar na tarefa)
 
 - Quem fica com cada área da Etapa 2.
 - Desafios: subir o react-chess-puzzle para 2.x ou montar um tabuleiro próprio com `chess.js` + `react-chessboard`.
-- Torneios: continuar guardando a classificação em `Participante` ou calculá-la das partidas. `rankTournament`, em `lib/tournament-ranking.ts`, já calcula tudo a partir das partidas.
-- Exclusão de conta: anonimizar o jogador ou bloquear a exclusão enquanto houver torneio em andamento.
+- Anonimização: o que some junto (histórico de pontos, conquistas, puzzles resolvidos) e se a pessoa sai dos rankings.
 
 ---
 
@@ -103,7 +116,7 @@ Concluída em 28/09/2026.
 - GitHub configurado:
   - [Project](https://github.com/users/IgorCifer/projects/1) com as colunas *Backlog / Ready / In progress / Done*;
   - labels de área: `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`;
-  - issues da Etapa 1 criadas (#8 a #18). As que não dependem de nada estão em Ready; as outras, em Backlog.
+  - issues da Etapa 1 criadas (#8 a #18, e depois a #21). As que não dependem de nada estão em Ready; as outras, em Backlog.
 - Repositório configurado para aceitar só squash (título do commit = título do PR) e apagar a branch depois do merge.
 
 ### Etapa 1: base comum
@@ -112,10 +125,11 @@ Começa com uma tarefa conjunta e curta: o `docs/ARQUITETURA.md`. Depois, as dua
 
 | Tarefa | Trilha | Issue |
 |---|---|---|
-| **Convenções de arquitetura** (`docs/ARQUITETURA.md`): pastas por funcionalidade (`features/<area>/{components,server,schemas,types}`, com as rotas de `app/` finas), primitivos em `components/ui`, *compound components* quando as partes dividem estado, nenhum componente definido dentro de outro, a página de servidor busca os dados e o client só interage, tipos de domínio tirados do zod e do Prisma | as duas | [#8](https://github.com/IgorCifer/xeque-mate/issues/8) |
+| **Convenções de arquitetura** (`docs/ARQUITETURA.md`): pastas por área (`features/<area>/{components,actions,dal,internal,schemas,types,domain}`, com as rotas de `app/` finas), DAL pública e interna + Server Actions, formulários com `useActionState` e zod, primitivos em `components/ui`, *compound components* quando as partes dividem estado, nenhum componente definido dentro de outro | as duas | [#8](https://github.com/IgorCifer/xeque-mate/issues/8) |
 | **CI no GitHub Actions:** `tsc`, `eslint`, os testes unitários e `build` em cada PR. Vem antes dos testes de integração para proteger tudo desde já | A: dados e infra (Igor) | [#9](https://github.com/IgorCifer/xeque-mate/issues/9) |
-| **Testes de integração das rotas:** Vitest contra um banco Postgres de teste, com helpers de usuário e sessão. Cobrem convite, rodadas, resultado, finalização concorrente, puzzles e check-login. Acrescenta o serviço Postgres ao CI | A | [#10](https://github.com/IgorCifer/xeque-mate/issues/10) |
-| **Padrão de API:** schema zod na entrada, formato único de erro (`{ error }` com status), helper de sessão e dono, cliente `fetch` tipado. Aplicado em 1 ou 2 rotas como exemplo; as áreas migram as delas | A | [#11](https://github.com/IgorCifer/xeque-mate/issues/11) |
+| **Testes de integração:** Vitest contra um banco Postgres de teste, com helpers de usuário e de `actor` e o alias do `server-only`. Cobrem o comportamento atual das regras críticas (convite, rodadas, resultado, finalização concorrente, puzzles, check-login), chamando as rotas e as funções de `lib/` direto. As asserções olham o estado do banco (pontos concedidos uma vez, placar sem resíduo), e a chamada fica isolada num helper; quando a área migrar, só o helper troca da rota para a DAL. Acrescenta o serviço Postgres ao CI | A | [#10](https://github.com/IgorCifer/xeque-mate/issues/10) |
+| **Padrão de DAL e Server Actions:** `requireActor`/`Actor`, `ActionState`, `toActionError` e os erros de domínio em `lib/errors.ts`, com testes. Só os helpers, sem tela | A | [#11](https://github.com/IgorCifer/xeque-mate/issues/11) |
+| **Fluxo de referência:** um fluxo pequeno de ponta a ponta com a pilha inteira: DAL, Server Action, `useActionState`, `Input`/`Label` (#15), `fieldErrors` e toast (#16). É o arquivo que os dois copiam na Etapa 2. Depende da #11, da #15 e da #16 | A | [#21](https://github.com/IgorCifer/xeque-mate/issues/21) |
 | **Prisma 7**, com `@prisma/adapter-pg` (ler o guia de migração antes) | A | [#12](https://github.com/IgorCifer/xeque-mate/issues/12) |
 | **ESLint 10** | A | [#13](https://github.com/IgorCifer/xeque-mate/issues/13) |
 | **Tokens:** as cores hex repetidas viram variáveis de tema no `globals.css`, sem mudar nada no visual | B: interface (Iago) | [#14](https://github.com/IgorCifer/xeque-mate/issues/14) |
@@ -126,20 +140,20 @@ Começa com uma tarefa conjunta e curta: o `docs/ARQUITETURA.md`. Depois, as dua
 
 ### Etapa 2: áreas em paralelo
 
-Sugestão de divisão: **torneios** com um dev e **desafios, treino, perfil e conta** com o outro. Cada área é refeita já nos padrões da Etapa 1. As issues são criadas ao chegar aqui.
+Sugestão de divisão: **torneios** com um dev e **desafios, treino, perfil e conta** com o outro. Cada área é refeita já nos padrões da Etapa 1. As issues são criadas ao chegar aqui. Torneios é a área maior, então os passos abaixo também servem para redistribuir trabalho se um dos lados terminar antes.
 
-**Torneios**
-- **Formatos:** `Torneio.formato` com suíço rodada a rodada, todos contra todos e eliminatória, cada um com sua função de pareamento, testada.
-- **Classificação e desempate** por formato (ver "Em aberto").
-- **Fluxo do organizador presencial:** criar, inscrever, gerar a próxima rodada, lançar resultados e finalizar.
-- **Telas refeitas** com os componentes e o padrão de API.
-- **Exclusão de conta** que não apaga as partidas de outras pessoas.
+**Torneios**, em passos. Cada passo só começa com o anterior mergeado e os testes passando:
+1. **Paridade:** migrar o suíço atual para `features/torneios` (DAL, actions, telas com os componentes da base e fluxo do organizador presencial), **com o mesmo comportamento**. Os testes de integração da #10 trocam só o helper de chamada e continuam passando.
+2. **Classificação derivada** das partidas: saem os contadores de `Participante`, o `deltaFromResultado` e o crédito do bye na criação da rodada, e o pareamento usa a classificação derivada. A classificação mostrada continua a mesma.
+3. **Suíço rodada a rodada:** gerar uma rodada por vez, a partir dos resultados.
+4. **Formatos novos:** `Torneio.formato` com todos contra todos e, depois, eliminatória, cada um com sua função de pareamento, testada. Na eliminatória entra o campo de quem avançou em caso de empate.
 
 **Desafios, treino, perfil e conta**
 - **Desafios:** biblioteca nova ou tabuleiro próprio, correção dos erros do navegador, troca no fuso de Brasília e regra de dica/reinício no servidor.
 - **Jogo treino:** fim de partida e botão de nova partida.
 - **Perfil e ranking:** abas corretas, empates divididos em todos os rankings e sequência atualizada na primeira visita.
 - **Conta:** telas de login, cadastro e configurações nos componentes novos, e `?next=` depois do login.
+- **Exclusão de conta com anonimização** (ver "Decisões"). É da conta, mas mexe em dados de torneio: combinar com o dono de torneios e fazer depois do passo 1 dele.
 
 ### Etapa 3: design visual
 

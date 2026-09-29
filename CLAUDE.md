@@ -21,7 +21,7 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 
 - `main` always works. One branch per task, created from an up-to-date `main` and named `<area>/<short-kebab-summary>` (e.g. `torneios/formato-todos-contra-todos`). Never branch off another task branch.
 - One small pull request per task. It needs CI to pass (once CI exists). The author merges their own PR with **squash**, so `main` gets one commit per task. Head branches are deleted automatically after the merge.
-- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`.
+- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`. Points and achievements (`features/pontos`, `features/conquistas`) are owned by track A (Igor); other areas call their internal functions and request changes through issues.
 - Migrations: at most one per PR. Rebase on `main` right before generating it with `prisma migrate dev`; if `main` got another migration meanwhile, delete yours and generate it again.
 - Shared files (`components/ui`, `app/globals.css`, the app shell, `lib/achievements.ts`, `package.json`): change them in a small PR of their own and tell the other developer. Keep the `AchievementService.record*` signatures stable; tournaments call them.
 - The PR title is the squash commit message and follows Conventional Commits 1.0: `<type>(<scope>): <subject>`
@@ -62,6 +62,8 @@ Required env vars (`.env`, not committed; copy from `.env.example`): `DATABASE_U
 Tests use Vitest 4 (`vitest.config.mts`: node environment, `@/` alias, files named `*.test.ts`). Vitest 5 would need `@types/node` >= 22, a major bump.
 
 ## Architecture
+
+**New code follows [docs/ARQUITETURA.md](docs/ARQUITETURA.md):** a Data Access Layer with public functions (`features/<area>/dal.ts`, `server-only`, take the `actor`, check permissions, return DTOs) and internal ones (`internal.ts`, no `actor`, optional `tx: Prisma.TransactionClient`, called only by another DAL), thin Server Actions validated with zod, forms with `useActionState`, code grouped by area under `features/`, and shadcn primitives. The rest of this section describes the current code, which is legacy and is migrated area by area; do not extend legacy patterns (API routes plus `fetch` in `useEffect`) in new code.
 
 Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`components/ui`), Prisma 6 + PostgreSQL, better-auth. Path alias `@/*` maps to the repository root.
 
