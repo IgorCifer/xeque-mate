@@ -64,6 +64,8 @@ Tests use Vitest 4 (`vitest.config.mts`: node environment, `@/` alias, files nam
 
 ## Architecture
 
+**New code follows [docs/ARQUITETURA.md](docs/ARQUITETURA.md):** a Data Access Layer with public functions (`features/<area>/dal.ts`, `server-only`, take the `actor`, check permissions, return DTOs) and internal ones (`internal.ts`, no `actor`, optional `tx: Prisma.TransactionClient`, called only by another DAL), thin Server Actions validated with zod, forms with `useActionState`, code grouped by area under `features/`, and shadcn primitives. The rest of this section describes the current code, which is legacy and is migrated area by area; do not extend legacy patterns (API routes plus `fetch` in `useEffect`) in new code.
+
 Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`components/ui`), Prisma 6 + PostgreSQL, better-auth. Path alias `@/*` maps to the repository root.
 
 **Layout.** The app lives at the repository root. `app/` holds pages, `app/api/*` route handlers, `app/data/*` server-side query helpers and `app/components/` (app shell: `LayoutWrapper` adds header and bottom `NavBar` everywhere except `/login` and `/registrar`). Root `components/` holds shadcn primitives and the achievement toast. Business logic shared by routes lives in `lib/`.
