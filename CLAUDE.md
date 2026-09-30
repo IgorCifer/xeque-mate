@@ -20,8 +20,8 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 ## Git workflow
 
 - `main` always works. One branch per task, created from an up-to-date `main` and named `<area>/<short-kebab-summary>` (e.g. `torneios/formato-todos-contra-todos`). Never branch off another task branch.
-- One small pull request per task. It needs CI to pass (once CI exists). The author merges their own PR with **squash**, so `main` gets one commit per task. Head branches are deleted automatically after the merge.
-- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`. Points and achievements (`features/pontos`, `features/conquistas`) are owned by track A (Igor); other areas call their internal functions and request changes through issues.
+- One small pull request per task. `main` is protected: changes only land through a PR, and the CI job **Check** (`.github/workflows/ci.yml`: `prisma generate`, `tsc`, lint, tests, build) must pass with the branch up to date with `main`; this applies to admins too. The author merges their own PR with **squash**, so `main` gets one commit per task. Head branches are deleted automatically after the merge.
+- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`.
 - Migrations: at most one per PR. Rebase on `main` right before generating it with `prisma migrate dev`; if `main` got another migration meanwhile, delete yours and generate it again.
 - Shared files (`components/ui`, `app/globals.css`, the app shell, `lib/achievements.ts`, `package.json`): change them in a small PR of their own and tell the other developer. Keep the `AchievementService.record*` signatures stable; tournaments call them.
 - The PR title is the squash commit message and follows Conventional Commits 1.0: `<type>(<scope>): <subject>`
@@ -42,6 +42,7 @@ tournament was finished, which let points be awarded twice.
 ## Commands
 
 ```bash
+nvm use                      # Node version from .nvmrc (24), same as CI
 npm install
 npx prisma generate          # required before tsc/dev/build; output is gitignored
 npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `npx next dev -H 127.0.0.1` for localhost only
