@@ -21,15 +21,15 @@ type ErrorPanelProps = {
 
 function ErrorPanel({ title, message, onBack, onDismiss }: ErrorPanelProps) {
   return (
-    <div className="w-full max-w-xl bg-gradient-to-br from-[#2a0a0a] via-[#3b1111] to-[#1f0a0a] border border-[#f87171]/40 rounded-2xl p-6 text-white shadow-lg backdrop-blur-md">
+    <div className="w-full max-w-xl bg-gradient-to-br from-alert-900 via-alert-700 to-alert-950 border border-danger-300/40 rounded-2xl p-6 text-white shadow-lg backdrop-blur-md">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f87171]/20 border border-[#f87171]/60 text-[#fecdd3] text-lg font-bold">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-300/20 border border-danger-300/60 text-alert-200 text-lg font-bold">
           !
         </div>
         <div className="flex-1">
-          <p className="text-sm uppercase tracking-wide text-[#fecdd3]/80 font-semibold">Alerta</p>
+          <p className="text-sm uppercase tracking-wide text-alert-200/80 font-semibold">Alerta</p>
           <h2 className="text-lg font-semibold text-white mt-1">{title}</h2>
-          <p className="text-sm text-[#ffe4e6] mt-1 leading-relaxed">{message}</p>
+          <p className="text-sm text-alert-50 mt-1 leading-relaxed">{message}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <button
               onClick={onBack}
@@ -39,7 +39,7 @@ function ErrorPanel({ title, message, onBack, onDismiss }: ErrorPanelProps) {
             </button>
             <button
               onClick={onDismiss}
-              className="px-4 py-2 rounded-lg bg-[#f87171] hover:bg-[#f05252] text-sm font-semibold border border-[#f87171]/60"
+              className="px-4 py-2 rounded-lg bg-danger-300 hover:bg-danger-500 text-sm font-semibold border border-danger-300/60"
             >
               Fechar aviso
             </button>
@@ -92,7 +92,7 @@ export default function ConvitePage() {
       ? {
         label: "Finalizado",
         className:
-          "inline-block text-[11px] px-2 py-0.5 rounded-full bg-[#D9F4EA] text-[#1E8F63] border border-[#A4E2C7]",
+          "inline-block text-[11px] px-2 py-0.5 rounded-full bg-success-100 text-success-700 border border-success-200",
       }
       : temConfrontos
         ? {
@@ -179,8 +179,8 @@ export default function ConvitePage() {
         </p>
 
         {actionError && (
-          <div className="text-left bg-[#2a0a0a]/80 border border-[#f87171]/40 text-[#ffe4e6] rounded-xl p-4 shadow-inner">
-            <p className="text-sm font-semibold text-[#fecdd3]">Não foi possível continuar</p>
+          <div className="text-left bg-alert-900/80 border border-danger-300/40 text-alert-50 rounded-xl p-4 shadow-inner">
+            <p className="text-sm font-semibold text-alert-200">Não foi possível continuar</p>
             <p className="text-sm leading-relaxed mt-1">{actionError}</p>
             <button
               className="mt-3 inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-semibold"
@@ -193,7 +193,7 @@ export default function ConvitePage() {
 
         <button
           onClick={aceitarConvite}
-          className="mt-6 w-full bg-[#4CCB8A] hover:bg-[#3FB479] border border-[#3FB479] px-4 py-2 rounded-lg font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-6 w-full bg-success-400 hover:bg-success-500 border border-success-500 px-4 py-2 rounded-lg font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={!torneio || temConfrontos || torneio.finalizado}
         >
           Aceitar convite
@@ -201,7 +201,7 @@ export default function ConvitePage() {
 
         <button
           onClick={() => router.push("/torneios")}
-          className="mt-3 w-full bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] px-4 py-2 rounded-lg font-semibold text-white"
+          className="mt-3 w-full bg-danger-400 hover:bg-danger-600 border border-danger-600 px-4 py-2 rounded-lg font-semibold text-white"
         >
           Recusar convite
         </button>

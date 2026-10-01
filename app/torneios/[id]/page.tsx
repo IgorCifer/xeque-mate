@@ -330,7 +330,7 @@ export default function TorneioPage() {
   const isCriador = userId === torneio.criadorId;
   const temConfrontos = (torneio.rodadas?.length ?? 0) > 0;
   const status = torneio.finalizado
-    ? { label: "Finalizado", className: "bg-[#D9F4EA] text-[#1E8F63] border border-[#A4E2C7]" }
+    ? { label: "Finalizado", className: "bg-success-100 text-success-700 border border-success-200" }
     : temConfrontos
       ? { label: "Em disputa", className: "bg-blue-600/20 border border-blue-400 text-blue-100" }
       : { label: "Esperando confrontos", className: "bg-gray-500/20 border border-gray-400 text-gray-100" };
@@ -361,7 +361,7 @@ export default function TorneioPage() {
 
         <button
           onClick={() => setShareOpen(true)}
-          className="bg-[#6BAAFD] hover:bg-[#5C9CF0] transition px-4 py-2 rounded-lg font-semibold text-white border border-[#5C9CF0]"
+          className="bg-brand-400 hover:bg-brand-500 transition px-4 py-2 rounded-lg font-semibold text-white border border-brand-500"
           title="Compartilhar link do convite"
         >
           <span className="block">Compartilhar</span>
@@ -414,7 +414,7 @@ export default function TorneioPage() {
       <section className="flex flex-col sm:flex-row gap-3">
         {isCriador && (
           <button
-            className="flex-1 bg-[#4CCB8A] hover:bg-[#3FB479] border border-[#3FB479] transition px-6 py-3 rounded-lg font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-success-400 hover:bg-success-500 border border-success-500 transition px-6 py-3 rounded-lg font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={gerando || torneio.finalizado || temConfrontos}
             onClick={gerarConfrontos}
           >
@@ -429,7 +429,7 @@ export default function TorneioPage() {
         )}
 
         <button
-          className={`${isCriador ? "flex-1" : "w-full"} bg-[#6BAAFD] hover:bg-[#5C9CF0] transition px-6 py-3 rounded-lg font-semibold text-white border border-[#5C9CF0]`}
+          className={`${isCriador ? "flex-1" : "w-full"} bg-brand-400 hover:bg-brand-500 transition px-6 py-3 rounded-lg font-semibold text-white border border-brand-500`}
           onClick={() => setVerTabela(true)}
         >
           Ver Tabela
@@ -439,7 +439,7 @@ export default function TorneioPage() {
       {isCriador && (
         <section className="flex flex-col sm:flex-row gap-3">
           <button
-            className="flex-1 bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] transition px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-white"
+            className="flex-1 bg-danger-400 hover:bg-danger-600 border border-danger-600 transition px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-white"
             onClick={excluirConfrontos}
             disabled={excluindo || gerando || torneio.finalizado || (torneio.rodadas?.length ?? 0) === 0}
           >
@@ -618,7 +618,7 @@ export default function TorneioPage() {
                     <div className="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm break-all">{conviteLink}</div>
                     <button
                       onClick={copyLink}
-                      className="self-start bg-[#6BAAFD] hover:bg-[#5C9CF0] border border-[#5C9CF0] text-white text-sm font-semibold px-4 py-2 rounded-lg"
+                      className="self-start bg-brand-400 hover:bg-brand-500 border border-brand-500 text-white text-sm font-semibold px-4 py-2 rounded-lg"
                     >
                       Copiar link
                     </button>
@@ -653,7 +653,7 @@ export default function TorneioPage() {
                 Cancelar
               </button>
               <button
-                className="px-4 py-2 rounded-lg bg-[#F37272] hover:bg-[#E05F5F] text-sm font-semibold"
+                className="px-4 py-2 rounded-lg bg-danger-400 hover:bg-danger-600 text-sm font-semibold"
                 onClick={async () => {
                   const id = confirmRemocao.participanteId;
                   setConfirmRemocao({ open: false, participanteId: null });
@@ -789,7 +789,7 @@ export default function TorneioPage() {
                     <div className="flex items-center gap-2">
                       {userId === torneio.criadorId && (
                         <button
-                          className="px-2 py-1 bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] text-xs rounded text-white"
+                          className="px-2 py-1 bg-danger-400 hover:bg-danger-600 border border-danger-600 text-xs rounded text-white"
                           onClick={() =>
                             setConfirmRemocao({
                               open: true,

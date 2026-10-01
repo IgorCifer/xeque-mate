@@ -137,7 +137,7 @@ async function handleSubmit(e: React.FormEvent) {
                     disabled={isLoading}
                     className={`
                       w-full mt-1 p-3
-                      bg-[#F5F8FA] border border-neutral-400 rounded-[4px]
+                      bg-surface border border-neutral-400 rounded-[4px]
                       focus:outline-none focus:ring-1
                       text-[10px] text-black
                       pr-10
@@ -146,7 +146,7 @@ async function handleSubmit(e: React.FormEvent) {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-foreground"
                     aria-label={showCurrent ? "ocultar senha" : "mostrar senha"}
                     onClick={() => setShowCurrent((prev) => !prev)}
                   >
@@ -173,7 +173,7 @@ async function handleSubmit(e: React.FormEvent) {
                     disabled={isLoading}
                     className={`
                       w-full mt-1 p-3
-                      bg-[#F5F8FA] border border-neutral-400 rounded-[4px]
+                      bg-surface border border-neutral-400 rounded-[4px]
                       focus:outline-none focus:ring-1
                       text-[10px] text-black
                       pr-10
@@ -182,7 +182,7 @@ async function handleSubmit(e: React.FormEvent) {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-foreground"
                     aria-label={showNew ? "ocultar senha" : "mostrar senha"}
                     onClick={() => setShowNew((prev) => !prev)}
                   >
@@ -210,7 +210,7 @@ async function handleSubmit(e: React.FormEvent) {
                     disabled={isLoading}
                     className={`
                       w-full mt-1 p-3
-                      bg-[#F5F8FA] border border-neutral-400 rounded-[4px]
+                      bg-surface border border-neutral-400 rounded-[4px]
                       focus:outline-none focus:ring-1
                       text-[10px] text-black
                       pr-10
@@ -219,7 +219,7 @@ async function handleSubmit(e: React.FormEvent) {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-foreground"
                     aria-label={showConfirm ? "ocultar senha" : "mostrar senha"}
                     onClick={() => setShowConfirm((prev) => !prev)}
                   >
@@ -239,7 +239,7 @@ async function handleSubmit(e: React.FormEvent) {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full rounded-sm bg-[#6BAAFD] hover:bg-[#1E50A4] hover:border-[#152E59] transition text-white text-xs font-bold py-3 border-b-4 border-[#5C9CF0]"
+                  className="w-full rounded-sm bg-brand-400 hover:bg-brand-600 hover:border-brand-900 transition text-white text-xs font-bold py-3 border-b-4 border-brand-500"
                 >
                   {isLoading ? "Confirmando..." : "Confirmar"}
                 </Button>

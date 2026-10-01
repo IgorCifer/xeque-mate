@@ -39,7 +39,7 @@ export default async function PracticePage() {
           <Button
             asChild
             size="lg"
-            className="h-13 w-full rounded-sm bg-[#6BAAFD] hover:bg-[#1E50A4] hover:border-[#152E59] transition text-white text-xs font-bold py-3 border-b-4 border-[#5C9CF0]"
+            className="h-13 w-full rounded-sm bg-brand-400 hover:bg-brand-600 hover:border-brand-900 transition text-white text-xs font-bold py-3 border-b-4 border-brand-500"
           >
             <Link href="/practice/training-game">
               Jogo Treino
@@ -49,7 +49,7 @@ export default async function PracticePage() {
         <Link href="/practice/daily-challenge">
           <Button
             size="lg"
-            className="h-13 w-full rounded-sm bg-[#133E87] hover:bg-[#1E50A4] hover:border-[#152E59] transition text-white text-xs font-bold py-3 border-b-4 border-[#152E59]"
+            className="h-13 w-full rounded-sm bg-brand-800 hover:bg-brand-600 hover:border-brand-900 transition text-white text-xs font-bold py-3 border-b-4 border-brand-900"
           >
             Desafio Diário
           </Button>

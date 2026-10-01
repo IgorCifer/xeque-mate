@@ -174,7 +174,7 @@ export default function EditarTorneioPage() {
             <button
               type="submit"
               disabled={salvando}
-              className="w-full sm:w-auto px-4 py-3 rounded-lg bg-[#6BAAFD] hover:bg-[#5C9CF0] transition font-semibold disabled:opacity-60 text-white border border-[#5C9CF0]"
+              className="w-full sm:w-auto px-4 py-3 rounded-lg bg-brand-400 hover:bg-brand-500 transition font-semibold disabled:opacity-60 text-white border border-brand-500"
             >
               {salvando ? "Salvando..." : "Salvar Alterações"}
             </button>
