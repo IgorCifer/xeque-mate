@@ -75,8 +75,6 @@ export function ChangeEmailClient() {
     setIsLoading(true);
 
     try {
-        // A senha é conferida no servidor (hook em lib/auth.ts); o método
-        // tipado changeEmail não tem esse campo, por isso o $fetch.
         const { error } = await authClient.$fetch("/change-email", {
         method: "POST",
         body: { newEmail: formData.newEmail, password: formData.password },
@@ -133,7 +131,7 @@ export function ChangeEmailClient() {
                   disabled={isLoading}
                   className={`
                     w-full mt-1 p-3
-                    bg-[#F5F8FA] border border-neutral-400 rounded-lg
+                    bg-surface border border-neutral-400 rounded-lg
                     focus:outline-none focus:ring-1
                     text-[10px] text-black
                     ${errors.newEmail ? "border-red-500" : ""}
@@ -154,7 +152,7 @@ export function ChangeEmailClient() {
                   disabled={isLoading}
                   className={`
                     w-full mt-1 p-3
-                    bg-[#F5F8FA] border border-neutral-400 rounded-lg
+                    bg-surface border border-neutral-400 rounded-lg
                     focus:outline-none focus:ring-1
                     text-[10px] text-black
                     ${errors.confirmEmail ? "border-red-500" : ""}
@@ -178,7 +176,7 @@ export function ChangeEmailClient() {
                     disabled={isLoading}
                     className={`
                       w-full mt-1 p-3
-                      bg-[#F5F8FA] border border-neutral-400 rounded-lg
+                      bg-surface border border-neutral-400 rounded-lg
                       focus:outline-none focus:ring-1
                       text-[10px] text-black
                       pr-10
@@ -187,7 +185,7 @@ export function ChangeEmailClient() {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-foreground"
                     aria-label={showPassword ? "ocultar senha" : "mostrar senha"}
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
@@ -207,7 +205,7 @@ export function ChangeEmailClient() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full rounded-sm bg-[#6BAAFD] hover:bg-[#1E50A4] hover:border-[#152E59] transition text-white text-xs font-bold py-3 border-b-4 border-[#5C9CF0]"
+                  className="w-full rounded-sm bg-brand-400 hover:bg-brand-600 hover:border-brand-900 transition text-white text-xs font-bold py-3 border-b-4 border-brand-500"
                 >
                   {isLoading ? "Confirmando..." : "Confirmar"}
                 </Button>

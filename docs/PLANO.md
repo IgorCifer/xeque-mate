@@ -44,6 +44,7 @@ As regras de trabalho e o fluxo de git estão no [CLAUDE.md](../CLAUDE.md).
   - é uma action própria, no lugar do `deleteUser` do better-auth, que apaga a linha;
   - os resultados de todo mundo ficam preservados, e dado anonimizado fica fora do escopo da LGPD.
 - Na eliminatória, uma partida empatada continua `DRAW`, e o organizador marca quem avançou no desempate jogado fora do app (armageddon, blitz). É um campo opcional na `Partida`, obrigatório só em empate de eliminatória (29/09/2026).
+- Tokens de cor (#14): as cores do app ficam num `@theme` próprio no `globals.css`, separado das variáveis do shadcn, que os componentes de `components/ui` continuam usando. Os nomes são de papel com escala numérica (`brand`, `info`, `success`, `danger`, `alert`), em que o número maior é o tom mais escuro, e de papel simples para cores únicas (`warning`, `surface`, `surface-foreground`, `placeholder`). Os valores são os hex de antes, sem juntar tons parecidos, para o visual não mudar. Juntar tons e definir a paleta final fica para a Etapa 3. Cor nova entra como token, nunca como `[#...]` na classe (01/10/2026).
 - Nos torneios, **paridade antes de funcionalidade nova**: primeiro a área migra com o mesmo comportamento, e só depois vêm as regras novas, em passos separados (ver Etapa 2). Se algo quebrar, dá para saber se foi a mudança de estrutura ou a regra nova (29/09/2026).
 
 **Em aberto** (decidir ao chegar na tarefa)

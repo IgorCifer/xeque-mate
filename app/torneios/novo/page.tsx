@@ -132,7 +132,7 @@ export default function NovoTorneioPage() {
           </div>
 
           {erro && (
-            <p className="text-[#FCE2E2] text-sm bg-[#3C0D0D]/70 p-2 rounded">
+            <p className="text-alert-100 text-sm bg-alert-800/70 p-2 rounded">
               {erro}
             </p>
           )}
@@ -148,7 +148,7 @@ export default function NovoTorneioPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto px-4 py-3 rounded-lg bg-[#6BAAFD] hover:bg-[#5C9CF0] transition font-semibold disabled:opacity-60 text-white border border-[#5C9CF0]"
+              className="w-full sm:w-auto px-4 py-3 rounded-lg bg-brand-400 hover:bg-brand-500 transition font-semibold disabled:opacity-60 text-white border border-brand-500"
             >
               {loading ? "Criando..." : "Criar Torneio"}
             </button>

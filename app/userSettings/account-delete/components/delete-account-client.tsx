@@ -67,7 +67,7 @@ async function handleSubmit(e: React.FormEvent) {
       <main className="flex-1 px-5 pb-6 space-y-4">
         <div className="mt-1">
           <h1 className="text-2xl font-bold">Apagar Conta</h1>
-          <p className="mt-2 text-base font-semibold text-[#FFE47A]">
+          <p className="mt-2 text-base font-semibold text-warning">
             Informações Importantes
           </p>
         </div>
@@ -123,7 +123,7 @@ async function handleSubmit(e: React.FormEvent) {
                 w-4 h-4 rounded-[3px] border
                 ${
                   isChecked
-                    ? "bg-[#6BAAFD] border-[#6BAAFD]"
+                    ? "bg-brand-400 border-brand-400"
                     : "bg-transparent border-white"
                 }
                 `}
@@ -146,14 +146,14 @@ async function handleSubmit(e: React.FormEvent) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
-            className="w-full mt-2 p-3 bg-[#F5F8FA] border border-neutral-400 rounded-lg focus:outline-none focus:ring-1 text-[10px] text-black"
+            className="w-full mt-2 p-3 bg-surface border border-neutral-400 rounded-lg focus:outline-none focus:ring-1 text-[10px] text-black"
           />
 
           <div className="mt-6">
             <Button
               type="submit"
               disabled={!isChecked || !password || isLoading}
-              className="w-full rounded-sm bg-[#F87171] hover:bg-[#DC2626] text-white text-xs font-bold py-3 border-b-4 border-[#B91C1C] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-sm bg-danger-300 hover:bg-danger-700 text-white text-xs font-bold py-3 border-b-4 border-danger-800 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? "Excluindo..." : "Excluir Conta"}
             </Button>

@@ -129,7 +129,7 @@ export function ChangeProfileClient() {
 
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
-                <div className="w-28 h-28 rounded-2xl bg-[#B3B6BF] overflow-hidden flex items-center justify-center">
+                <div className="w-28 h-28 rounded-2xl bg-placeholder overflow-hidden flex items-center justify-center">
                   {previewUrl ? (
 
                     <Image
@@ -145,7 +145,7 @@ export function ChangeProfileClient() {
                   )}
                 </div>
 
-                <label className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#6BAAFD] flex items-center justify-center cursor-pointer border border-white/70">
+                <label className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-brand-400 flex items-center justify-center cursor-pointer border border-white/70">
                   <Pencil className="w-4 h-4 text-white" />
                   <input
                     type="file"
@@ -174,14 +174,14 @@ export function ChangeProfileClient() {
                     disabled={isLoading}
                     className={`
                       w-full mt-1 p-3
-                      bg-[#F5F8FA] border border-neutral-400 rounded-[999px]
+                      bg-surface border border-neutral-400 rounded-[999px]
                       focus:outline-none focus:ring-1
                       text-[10px] text-black
                       pr-10
                       ${errors.name ? "border-red-500" : ""}
                     `}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280]">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-foreground">
                     <Pencil className="w-3 h-3" />
                   </span>
                 </div>
@@ -194,7 +194,7 @@ export function ChangeProfileClient() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full rounded-sm bg-[#6BAAFD] hover:bg-[#1E50A4] hover:border-[#152E59] transition text-white text-xs font-bold py-3 border-b-4 border-[#5C9CF0]"
+                  className="w-full rounded-sm bg-brand-400 hover:bg-brand-600 hover:border-brand-900 transition text-white text-xs font-bold py-3 border-b-4 border-brand-500"
                 >
                   {isLoading ? "Confirmando..." : "Confirmar"}
                 </Button>

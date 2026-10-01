@@ -98,7 +98,7 @@ export default function TorneiosPage() {
       return {
         label: "Finalizado",
         className:
-          "inline-block mt-2 text-[11px] px-2 py-0.5 rounded-full bg-[#D9F4EA] text-[#1E8F63] border border-[#A4E2C7]",
+          "inline-block mt-2 text-[11px] px-2 py-0.5 rounded-full bg-success-100 text-success-700 border border-success-200",
       };
     }
     if (temConfrontos) {
@@ -214,7 +214,7 @@ export default function TorneiosPage() {
               alert("Limite de 5 torneios em andamento atingido. Finalize ou exclua um para criar outro.");
             }
           }}
-          className="w-full sm:w-auto text-center bg-[#6BAAFD] hover:bg-[#5C9CF0] transition px-4 py-3 rounded-lg text-white font-medium border border-[#5C9CF0]"
+          className="w-full sm:w-auto text-center bg-brand-400 hover:bg-brand-500 transition px-4 py-3 rounded-lg text-white font-medium border border-brand-500"
         >
           Criar Torneio
         </Link>
@@ -249,14 +249,14 @@ export default function TorneiosPage() {
               <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:justify-end sm:items-center">
                 <Link
                   href={`/torneios/${t.id}`}
-                  className="w-full sm:w-auto text-center bg-[#4CCB8A] hover:bg-[#3FB479] border border-[#3FB479] px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                  className="w-full sm:w-auto text-center bg-success-400 hover:bg-success-500 border border-success-500 px-4 py-2 rounded-lg text-sm font-semibold text-white"
                 >
                   Acessar
                 </Link>
 
                 <Link
                   href={`/torneios/${t.id}/editar`}
-                  className="w-full sm:w-auto text-center bg-[#6BAAFD] hover:bg-[#5C9CF0] px-4 py-2 rounded-lg text-sm font-semibold text-white border border-[#5C9CF0]"
+                  className="w-full sm:w-auto text-center bg-brand-400 hover:bg-brand-500 px-4 py-2 rounded-lg text-sm font-semibold text-white border border-brand-500"
                 >
                   Editar
                 </Link>
@@ -271,7 +271,7 @@ export default function TorneiosPage() {
                       t.finalizado ? "Excluir torneio" : "Excluir"
                     )
                   }
-                  className="w-full sm:w-auto text-center bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                  className="w-full sm:w-auto text-center bg-danger-400 hover:bg-danger-600 border border-danger-600 px-4 py-2 rounded-lg text-sm font-semibold text-white"
                 >
                   {t.finalizado ? "Excluir torneio" : "Excluir"}
                 </button>
@@ -310,7 +310,7 @@ export default function TorneiosPage() {
               <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:justify-end sm:items-center">
                 <Link
                   href={`/torneios/${t.id}`}
-                  className="w-full sm:w-auto text-center bg-[#4CCB8A] hover:bg-[#3FB479] border border-[#3FB479] px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                  className="w-full sm:w-auto text-center bg-success-400 hover:bg-success-500 border border-success-500 px-4 py-2 rounded-lg text-sm font-semibold text-white"
                 >
                   Acessar
                 </Link>
@@ -325,7 +325,7 @@ export default function TorneiosPage() {
                         t.finalizado ? "Excluir" : "Sair"
                       )
                     }
-                    className="w-full sm:w-auto text-center bg-[#F37272] hover:bg-[#E05F5F] border border-[#E05F5F] px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto text-center bg-danger-400 hover:bg-danger-600 border border-danger-600 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={((t._count?.partidas ?? 0) > 0) && !t.finalizado}
                   >
                     {t.finalizado ? "Excluir torneio" : "Sair"}
@@ -358,7 +358,7 @@ export default function TorneiosPage() {
                 Cancelar
               </button>
               <button
-                className="px-4 py-2 rounded-lg bg-[#F37272] hover:bg-[#E05F5F] text-sm font-semibold"
+                className="px-4 py-2 rounded-lg bg-danger-400 hover:bg-danger-600 text-sm font-semibold"
                 onClick={async () => {
                   const fn = confirmModal.onConfirm;
                   setConfirmModal((prev) => ({ ...prev, open: false }));

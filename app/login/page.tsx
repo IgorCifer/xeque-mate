@@ -87,7 +87,7 @@ export default function LoginPage() {
               name="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full mt-1 p-3 bg-[#F5F8FA] border border-neutral-400 rounded-[4px] focus:outline-none focus:ring-1 text-[10px]"
+              className="w-full mt-1 p-3 bg-surface border border-neutral-400 rounded-[4px] focus:outline-none focus:ring-1 text-[10px]"
               placeholder="Email"
               disabled={isLoading}
             />
@@ -99,7 +99,7 @@ export default function LoginPage() {
               name="password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full mt-1 p-3 bg-[#F5F8FA] border border-neutral-400 rounded-[4px] focus:outline-none focus:ring-1 text-[10px]"
+              className="w-full mt-1 p-3 bg-surface border border-neutral-400 rounded-[4px] focus:outline-none focus:ring-1 text-[10px]"
               placeholder="Senha"
               disabled={isLoading}
             />
@@ -111,7 +111,7 @@ export default function LoginPage() {
           <div className="mt-12 space-y-4">
             <button
               type="submit"
-              className="w-full p-3 bg-[#6BAAFD] text-white rounded-sm border-b-4 border-[#5C9CF0] text-xs font-bold hover:bg-[#1E50A4] hover:border-[#152E59] transition"
+              className="w-full p-3 bg-brand-400 text-white rounded-sm border-b-4 border-brand-500 text-xs font-bold hover:bg-brand-600 hover:border-brand-900 transition"
               disabled={isLoading}
             >
               {isLoading ? "Entrando..." : "Entrar"}
@@ -121,7 +121,7 @@ export default function LoginPage() {
             </label>
             <Link
               href="/registrar"
-              className="w-full p-3 block text-center bg-[#5AC0CB] text-white rounded-sm border-b-4 border-[#348C95] text-xs font-bold hover:bg-[#49a9b2] transition"
+              className="w-full p-3 block text-center bg-info-400 text-white rounded-sm border-b-4 border-info-600 text-xs font-bold hover:bg-info-500 transition"
             >
               Cadastrar
             </Link>

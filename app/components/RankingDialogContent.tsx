@@ -100,7 +100,7 @@ function TabButton({
       onClick={onClick}
       className={`px-4 py-1.5 rounded-full text-xs font-semibold ${
         active
-          ? "bg-white text-[#344272]"
+          ? "bg-white text-brand-700"
           : "bg-transparent border border-white/40 text-white/80"
       }`}
     >
