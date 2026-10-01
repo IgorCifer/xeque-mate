@@ -75,7 +75,9 @@ O script lê o arquivo aos poucos, sem carregá-lo inteiro na memória, e import
 | `npm run dev` | Servidor de desenvolvimento |
 | `npm run build` | Build de produção |
 | `npm start` | Serve o build de produção |
-| `npm test` | Roda os testes (Vitest) |
+| `npm test` | Roda todos os testes (Vitest). Os de integração precisam do Postgres do Docker no ar |
+| `npm run test:unit` | Só os testes unitários, sem banco |
+| `npm run test:int` | Só os testes de integração, num banco `xequemate_test` criado e migrado automaticamente |
 | `npm run lint` | Roda o ESLint |
 | `npx tsc --noEmit` | Checa os tipos |
 | `npm run db:seed` | Cadastra as conquistas |
