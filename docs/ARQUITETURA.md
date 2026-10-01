@@ -61,7 +61,11 @@ A DAL é o único lugar que fala com o Prisma.
 - **A DAL pública recebe quem está agindo (`actor`) como primeiro argumento** e faz a checagem de permissão ali dentro. Nunca confia que a página ou o layout checou: Server Actions são endpoints públicos, e qualquer um pode chamá-las com qualquer argumento. Quem lê a sessão são as páginas e as actions, com `requireActor()`, e a DAL não depende de cookies. Por isso ela é testada chamando as funções direto.
 - A DAL devolve **DTOs**: objetos só com os campos que a tela usa. Nada de devolver a linha inteira do Prisma nem o e-mail de outras pessoas.
 - Operações que precisam ser atômicas (ex.: finalizar e conceder pontos) usam `prisma.$transaction` dentro da DAL.
-- Erros esperados (não encontrado, sem permissão, regra violada) viram erros de domínio tipados. A action transforma esses erros em mensagem; um erro inesperado sobe para o `error.tsx`.
+- Erros esperados viram erros de domínio de `lib/errors.ts`, todos derivados de `DomainError`. A action transforma esses erros em mensagem; um erro inesperado sobe para o `error.tsx`. A mensagem é mostrada ao usuário, então vai em português.
+  - `NotFoundError`: não encontrado;
+  - `ForbiddenError`: sem permissão;
+  - `ConflictError`: estado mudou ou já foi feito (ex.: torneio já finalizado);
+  - `RuleViolationError`: regra de negócio violada (ex.: limite de torneios).
 
 ```ts
 import "server-only";
@@ -150,7 +154,10 @@ Toda Server Action segue os mesmos passos:
 
 A action fica fina: regra de negócio mora na DAL ou em `domain/`.
 
-- **Retorno:** sempre um `ActionState`: `{ ok: true }` ou `{ ok: false, error?, fieldErrors? }`. Nunca lança erro esperado para o cliente.
+- **Retorno:** sempre um `ActionState` (`lib/actions.ts`). Nunca lança erro esperado para o cliente.
+  - `ActionResult` é `{ ok: true, message? }` ou `{ ok: false, error?, fieldErrors? }`.
+  - `ActionState` é `ActionResult | null`. O `null` é o estado inicial do `useActionState` (`useActionState(action, null)`), para a tela distinguir "nada enviado ainda" de "deu certo".
+  - Os helpers são `toFieldErrors(zodError)` para entrada inválida e `toActionError(error)` para erro de domínio; qualquer outro erro é lançado de novo.
 - **Atualizar a tela:** `refresh()` quando só a página atual muda; `revalidatePath(...)` quando outra rota também mostra o dado; `redirect(...)` quando a ação leva a outra página.
 - **Paralelismo:** o Next executa as actions de um mesmo cliente uma de cada vez. Se precisar de trabalho em paralelo, faça dentro de uma action só.
 
@@ -158,9 +165,8 @@ A action fica fina: regra de negócio mora na DAL ou em `domain/`.
 "use server";
 
 import { refresh } from "next/cache";
-import { z } from "zod";
 import { requireActor } from "@/lib/session";
-import { toActionError, type ActionState } from "@/lib/actions";
+import { toActionError, toFieldErrors, type ActionState } from "@/lib/actions";
 import { renameTorneioSchema } from "./schemas";
 import { renameTorneio } from "./dal";
 
@@ -170,9 +176,7 @@ export async function renameTorneioAction(
 ): Promise<ActionState> {
   const actor = await requireActor();
   const parsed = renameTorneioSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) {
-    return { ok: false, fieldErrors: z.flattenError(parsed.error).fieldErrors };
-  }
+  if (!parsed.success) return toFieldErrors(parsed.error);
   try {
     await renameTorneio(actor, parsed.data.torneioId, parsed.data.nome);
   } catch (error) {
@@ -183,13 +187,16 @@ export async function renameTorneioAction(
 }
 ```
 
-`requireActor`, `Actor`, `ActionState`, `toActionError` e os erros de `lib/errors.ts` são criados na issue #11. `requireActor` nasce do `requireSession` que já existe em `lib/session.ts`.
+Os helpers estão em `lib/session.ts` (`requireActor`, `Actor`), `lib/errors.ts` (erros de domínio) e `lib/actions.ts` (`ActionState`, `ActionResult`, `toActionError`, `toFieldErrors`). O `requireActor` usa o `requireSession`, que guarda a sessão em cache durante a requisição e redireciona para `/login` sem sessão. As páginas que precisam do nome ou do e-mail continuam usando o `requireSession`.
 
 ## Formulários e validação
 
-- **Formulário com Server Action:** `<form action={formAction}>` num componente client, com `useActionState`. O `pending` desabilita o botão, e `state.fieldErrors` mostra o erro de cada campo.
+- **Formulário com Server Action:** `<form action={formAction}>` num componente client, com `const [state, formAction, pending] = useActionState(action, null)`.
+  - O `pending` desabilita o botão.
+  - Com `state?.ok === false`, `state.fieldErrors` mostra o erro de cada campo e `state.error` o erro geral.
+  - `state?.ok === true` é a hora do toast de sucesso.
 - **Schemas no `schemas.ts` da área:** a action valida sempre. O cliente pode reusar o mesmo schema, ou atributos HTML como `required`, só para dar retorno mais cedo; nunca como a única validação.
-- **zod 4:** erros por campo com `z.flattenError(error).fieldErrors`. O `error.flatten()` dos exemplos antigos não existe mais.
+- **zod 4:** erros por campo com `z.flattenError(error).fieldErrors`, que é o que o `toFieldErrors` faz. O `error.flatten()` dos exemplos antigos não existe mais.
 - **Botões fora de formulário** (ex.: lançar o resultado num seletor): chamar a action dentro de `startTransition`, ou com `useActionState` e `formAction` num `<form>` pequeno.
 
 ## Componentes
