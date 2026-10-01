@@ -55,6 +55,7 @@ npm run lint                 # eslint . (clean; keep it at zero problems)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
 npx prisma migrate deploy    # apply migrations (0_init baseline + later ones)
+npx prisma migrate dev       # create a migration; in Prisma 7 it no longer runs generate or the seed, run them after
 npm run db:seed              # seeds the Achievement rows (prisma/seed.ts)
 npx tsx prisma/seed/seed-puzzles.ts   # imports 12k puzzles from prisma/seed/lichess_db_puzzle.csv (rating 1200-2000, popularity >= 90, plays >= 1000); idempotent
 npx tsx prisma/seed/clear-puzzles.ts
@@ -68,13 +69,13 @@ Tests use Vitest 4 with two projects in `vitest.config.mts`. `unit` runs `*.test
 
 **New code follows [docs/ARQUITETURA.md](docs/ARQUITETURA.md):** a Data Access Layer with public functions (`features/<area>/dal.ts`, `server-only`, take the `actor`, check permissions, return DTOs) and internal ones (`internal.ts`, no `actor`, optional `tx: Prisma.TransactionClient`, called only by another DAL), thin Server Actions validated with zod, forms with `useActionState`, code grouped by area under `features/`, and shadcn primitives. The rest of this section describes the current code, which is legacy and is migrated area by area; do not extend legacy patterns (API routes plus `fetch` in `useEffect`) in new code.
 
-Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`components/ui`), Prisma 6 + PostgreSQL, better-auth. Path alias `@/*` maps to the repository root.
+Stack: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui (`components/ui`), Prisma 7 + PostgreSQL, better-auth. Path alias `@/*` maps to the repository root.
 
 **Layout.** The app lives at the repository root. `app/` holds pages, `app/api/*` route handlers, `app/data/*` server-side query helpers and `app/components/` (app shell: `LayoutWrapper` adds header and bottom `NavBar` everywhere except `/login` and `/registrar`). Root `components/` holds shadcn primitives and the achievement toast. Business logic shared by routes lives in `lib/`.
 
 **Data flow.** Server components read data directly (via `app/data/*` or Prisma). Client components mutate through `fetch` to `app/api/*` route handlers, which authorize with `auth.api.getSession({ headers: req.headers })` and check ownership (e.g. `torneio.criadorId`). In Next 16 route/page `params` is a Promise and must be awaited. Protected pages call `requireSession()` (`lib/session.ts`, redirects to `/login`) themselves, since a layout does not stop its page from rendering; `app/torneios/layout.tsx` and `app/practice/layout.tsx` also call it to cover client-component pages, whose data comes from the API.
 
-**Prisma.** The schema uses the new `prisma-client` generator with output `app/generated/prisma2`; import types/enums from `@/app/generated/prisma2/client` and the shared client as the default export of `lib/prisma.ts`. `prisma.config.ts` loads `.env` via dotenv. The `user`, `session`, `account` and `verification` models belong to better-auth's schema; do not rename their fields.
+**Prisma.** Prisma 7 (`^7.10.0`; the npm `latest` tag points at an 8.x release candidate, so never install `prisma@latest`). The schema uses the `prisma-client` generator with output `app/generated/prisma2`; import types/enums from `@/app/generated/prisma2/client` and the shared client as the default export of `lib/prisma.ts`. Every client needs the `@prisma/adapter-pg` driver adapter: `lib/prisma.ts` for the app, `createScriptClient()` from `prisma/script-client.ts` for seeds and scripts. The database URL lives only in `prisma.config.ts` (not in `schema.prisma`), which loads `.env` via dotenv; the seed command is configured there too. `npm audit` reports high vulnerabilities only in the Prisma CLI's dev dependency chain (`@prisma/config` → `deepmerge-ts`, and `mysql2`, which is never loaded with Postgres); do not try to fix them with `--force`. The `user`, `session`, `account` and `verification` models belong to better-auth's schema; do not rename their fields.
 
 **Auth.** `lib/auth.ts` (server, email/password only, mounted at `app/api/auth/[...all]`) and `lib/auth-client.ts` (browser `authClient`, uses `NEXT_PUBLIC_AUTH_URL`). No email is ever sent, so email change is immediate (`updateEmailWithoutVerification`). A `hooks.before` middleware requires and checks the current `password` in the body of `/change-email` and `/delete-user`, and rejects an email already in use; the client sends it (`authClient.$fetch` for change-email, whose typed method has no password field). Deleting a user cascades to everything they own, including tournaments they created and matches they played in others' tournaments.
 
