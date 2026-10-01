@@ -48,7 +48,9 @@ npx prisma generate          # required before tsc/dev/build; output is gitignor
 npm run dev                  # dev server on 0.0.0.0 (reachable from the LAN); `npx next dev -H 127.0.0.1` for localhost only
 npm run build
 npx tsc --noEmit             # type check
-npm test                     # vitest run (npx vitest for watch mode; npx vitest run path/to/file.test.ts for one file)
+npm test                     # unit + integration (integration needs the docker postgres up)
+npm run test:unit            # unit tests only, no database
+npm run test:int             # integration tests only (database xequemate_test, created and migrated automatically)
 npm run lint                 # eslint . (clean; keep it at zero problems)
 
 docker compose up -d --wait  # local postgres 16 on 127.0.0.1:5432 (URL in .env.example)
@@ -60,7 +62,7 @@ npx tsx prisma/seed/clear-puzzles.ts
 
 Required env vars (`.env`, not committed; copy from `.env.example`): `DATABASE_URL`, `NEXT_PUBLIC_AUTH_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`.
 
-Tests use Vitest 4 (`vitest.config.mts`: node environment, `@/` alias, files named `*.test.ts`). Vitest 5 would need `@types/node` >= 22, a major bump.
+Tests use Vitest 4 with two projects in `vitest.config.mts`. `unit` runs `*.test.ts`. `integration` runs `*.int.test.ts` sequentially against `TEST_DATABASE_URL` (default `postgresql://xequemate:xequemate@localhost:5432/xequemate_test`; the config refuses any database whose name does not end in `_test`, because every test truncates all tables except `Achievement` and `_prisma_migrations`). Its global setup runs `prisma migrate deploy` and the achievements seed. Helpers live in `test/integration/`: `createUser` (real better-auth session cookie), `callRoute` (calls a route handler directly), and one helper per operation in `test/integration/ops/` (e.g. `finalizar`). Tests assert database state; when an area moves to the DAL, only the operation helper changes. `server-only` is aliased to an empty module. Logs show only for failing tests (`silent: "passed-only"`). Vitest 5 would need `@types/node` >= 22, a major bump.
 
 ## Architecture
 

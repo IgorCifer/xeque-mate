@@ -31,7 +31,7 @@ As regras de trabalho e o fluxo de git estão no [CLAUDE.md](../CLAUDE.md).
 - Tarefas em Issues e num Project do GitHub, com uma label por área. Uma issue sai de Backlog para Ready quando as dependências dela estão prontas (28/09/2026).
 - A base comum é dividida entre os dois: a trilha A (dados e infra) fica com o Igor (@IgorCifer) e a trilha B (interface) com o Iago (@IagoFsv). A #8, de arquitetura, é dos dois (28/09/2026).
 - Um PR por tarefa. O próprio autor faz o merge por **squash**, com o título do PR no padrão Conventional Commits, e o PR só entra com o CI passando. O repositório só aceita squash, usa o título do PR como título do commit e apaga a branch depois do merge (28/09/2026).
-- Arquitetura (#8), registrada em [ARQUITETURA.md](ARQUITETURA.md) (29/09/2026). É provisória até o Iago revisar o PR da #8.
+- Arquitetura (#8), registrada em [ARQUITETURA.md](ARQUITETURA.md) (29/09/2026). Revisada pelo Iago e mergeada no PR #22, sem alterações (01/10/2026).
   - **Dados:** leitura por uma Data Access Layer (DAL). A DAL tem funções públicas (`dal.ts`: recebem o `actor`, checam a permissão, devolvem DTOs) e internas (`internal.ts`: sem `actor`, aceitam um `tx` opcional e só são chamadas por outra DAL). Mutações por Server Actions finas. Rotas de API ficam só para o better-auth. É a abordagem que o guia de segurança de dados do Next 16 recomenda para projetos novos, e ela deixa a DAL testável sem simular requisições.
   - **Pastas:** código por área em `features/<area>/`, com as rotas de `app/` finas.
   - **Formulários:** `useActionState` com zod validando na action.

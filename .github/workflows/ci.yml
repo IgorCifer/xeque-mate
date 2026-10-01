@@ -18,8 +18,23 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: xequemate
+          POSTGRES_PASSWORD: xequemate
+          POSTGRES_DB: xequemate_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U xequemate -d xequemate_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      TEST_DATABASE_URL: postgresql://xequemate:xequemate@localhost:5432/xequemate_test
       BETTER_AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
       BETTER_AUTH_URL: http://localhost:3000
       NEXT_PUBLIC_AUTH_URL: http://localhost:3000
@@ -44,7 +59,7 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
+      - name: Tests (unit and integration)
         run: npm test
 
       - name: Build

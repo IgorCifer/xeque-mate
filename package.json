@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
     "db:seed": "prisma db seed"
   },
   "prisma": {

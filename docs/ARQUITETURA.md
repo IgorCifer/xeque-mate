@@ -282,7 +282,15 @@ it("concede os pontos uma vez só, mesmo com pedidos simultâneos", async () => 
 
 Depois da migração, `finalizar` vira `() => finalizeTorneio(actor, torneioId)`, e o teste não muda.
 
-- **`server-only` no Vitest:** o pacote não está instalado; o Next resolve o import sozinho no build. No Vitest, ele é apontado para um módulo vazio por `resolve.alias` no `vitest.config.mts` (issue #10).
+- **`server-only` no Vitest:** o pacote não está instalado; o Next resolve o import sozinho no build. No Vitest, ele é apontado para um módulo vazio por `resolve.alias` no `vitest.config.mts`.
+- **Onde ficam:** os helpers comuns estão em `test/integration/`:
+  - `createUser`, que cria o usuário com sessão real do better-auth;
+  - `callRoute`, que chama um route handler direto;
+  - `resetDatabase`, que limpa as tabelas antes de cada teste;
+  - em `ops/`, um helper por operação de cada área.
+
+  Os testes das áreas que ainda são legado ficam em `test/integration/<area>.int.test.ts`. Quando a área migra, os testes dela vão para o lado da DAL, e o helper de operação passa a chamar a DAL.
+- **Banco de teste:** `xequemate_test`, criado e migrado sozinho na primeira execução. A configuração recusa qualquer banco cujo nome não termine em `_test`.
 - **E2E com Playwright** fica para quando as telas pararem de mudar ("Depois" no plano).
 
 ## Transição
