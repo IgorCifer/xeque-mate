@@ -1,10 +1,10 @@
-import "dotenv/config";
-import { PrismaClient, Prisma } from "../../app/generated/prisma2/client";
+import type { Prisma } from "../../app/generated/prisma2/client";
 import fs from "fs";
 import path from "path";
 import readline from "readline";
+import { createScriptClient } from "../script-client";
 
-const prisma = new PrismaClient();
+const prisma = createScriptClient();
 
 async function main() {
   const filePath = path.join(__dirname, "lichess_db_puzzle.csv");
@@ -24,11 +24,8 @@ async function main() {
   let totalCreated = 0;
   const maxPuzzles = 12000;
 
-  // Faixas do desafio diário (1200-1699) e semanal (1700-2000).
   const minRating = 1200;
   const maxRating = 2000;
-  // Popularidade vai de -100 a 100; abaixo disso costumam ser puzzles
-  // mal avaliados ou ambíguos pelos jogadores do Lichess.
   const minPopularity = 90;
   const minPlays = 1000;
 
@@ -36,7 +33,7 @@ async function main() {
     if (totalInserted >= maxPuzzles) break;
 
     lineNumber++;
-    if (lineNumber === 1) continue; // cabeçalho
+    if (lineNumber === 1) continue;
 
     const parts = line.split(",");
 
@@ -58,7 +55,6 @@ async function main() {
     const popularityInt = parseInt(popularity, 10);
     const nbPlaysInt = parseInt(nbPlays, 10);
 
-    // Linha malformada: NaN passaria pelas comparações abaixo.
     if (
       [ratingInt, ratingDeviationInt, popularityInt, nbPlaysInt].some(
         Number.isNaN
@@ -105,7 +101,6 @@ async function main() {
     }
   }
 
-  // Inserir resto se ainda tiver e não atingiu o máximo
   if (batch.length > 0 && totalInserted < maxPuzzles) {
     const remaining = maxPuzzles - totalInserted;
     const toInsert =
@@ -120,7 +115,6 @@ async function main() {
     totalCreated += count;
   }
 
-  // Duplicados (reexecução) contam como processados, mas não como novos.
   console.log(
     `Seed de puzzles concluído: ${totalInserted} processados, ${totalCreated} novos.`
   );

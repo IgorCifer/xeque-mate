@@ -14,7 +14,7 @@ Aplicativo web para clubes de xadrez: torneios no sistema suíço, desafios de p
 
 - [Next.js 16](https://nextjs.org) (App Router) com React 19 e TypeScript
 - Tailwind CSS 4 e [shadcn/ui](https://ui.shadcn.com)
-- [Prisma 6](https://www.prisma.io) com PostgreSQL 16
+- [Prisma 7](https://www.prisma.io) com PostgreSQL 16
 - [better-auth](https://www.better-auth.com), com login por e-mail e senha
 - [chess.js](https://github.com/jhlywa/chess.js), [react-chessboard](https://github.com/Clariity/react-chessboard) e [tournament-pairings](https://github.com/slashinfty/tournament-pairings)
 - [Vitest](https://vitest.dev) para os testes

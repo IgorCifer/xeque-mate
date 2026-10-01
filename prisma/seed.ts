@@ -1,5 +1,6 @@
-import { PrismaClient } from "../app/generated/prisma2/client";
-const prisma = new PrismaClient();
+import { createScriptClient } from "./script-client";
+
+const prisma = createScriptClient();
 
 const achievements = [
   {
