@@ -1,6 +1,5 @@
 import { requireSession } from "@/lib/session";
-import { FaUser } from "react-icons/fa";
-import { FlameIcon, Settings, TrophyIcon } from "lucide-react";
+import { FlameIcon, Settings, TrophyIcon, User } from "lucide-react";
 import { getUserPoints } from "../data/get-user-points";
 import DynamicIcon from "../utils/icon-convert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -31,7 +30,7 @@ export default async function ProfilePage() {
       <div className="text-white py-10 px-3 gap-5 flex flex-col items-center">
         <div className="w-full gap-4 flex flex-col items-center">
           <div className="inline-block bg-white w-20 h-20 rounded-lg overflow-hidden">
-            <FaUser size={"full"} className="p-2" color="gray" />
+            <User className="size-full p-2" color="gray" />
           </div>
           <h3 className="w-[70%] text-center rounded-xl font-bold bg-white/20 backdrop-blur-md">
             {session.user.name}
