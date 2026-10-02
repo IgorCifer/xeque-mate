@@ -252,8 +252,8 @@ export const Rodadas = { Root, Tab, Panel };
 | `Input` + `Label` | Todo campo de texto, número, data ou senha. O `Label` aponta para o campo com `htmlFor`. Com erro, o campo recebe `aria-invalid` (o estilo de erro já vem dele) e a mensagem do `fieldErrors` fica logo abaixo. |
 | `Select` | Escolher uma opção de uma lista fixa e curta (modo do torneio, resultado da partida). Num formulário, passe `name` no `Select` para o valor ir no `FormData`. Lista longa ou com busca não é `Select`. |
 | `Dialog` | Conteúdo ou formulário curto que abre por cima da tela, sem trocar de página (ex.: ranking, editar um campo). Sempre com `DialogTitle`. Fluxo longo ganha página própria. |
-| `AlertDialog` | Só confirmação de ação destrutiva ou que não volta atrás: finalizar torneio, apagar rodadas, excluir conta. Não fecha clicando fora, e a ação de confirmar usa `variant="destructive"` quando apaga algo. |
-| Sonner (`toast`) | Resultado de uma ação: sucesso, ou erro geral (`state.error`). Erro de campo não vira toast. A tela chama `toast` de `sonner`, e o `Toaster` de `components/ui/sonner` é montado uma vez só, na casca do app (#16). |
+| `AlertDialog` | Só confirmação de ação destrutiva ou que não volta atrás: finalizar torneio, apagar rodadas, excluir conta. Não fecha clicando fora, e a ação de confirmar usa `variant="destructive"` quando apaga algo. Na tela, use o `useConfirm()` (ver "Feedback e erros") em vez de montar o diálogo à mão. |
+| Sonner (`toast`) | Resultado de uma ação: sucesso, ou erro geral (`state.error`). Erro de campo não vira toast. A tela chama `toast` de `sonner`; o `Toaster` já está montado no `app/layout.tsx`. |
 | `Tabs` | Alternar entre visões da mesma página sem sair dela (rodadas, classificação e partidas). Se cada visão precisa de link próprio, use rotas. |
 | `Table` | Dados em linhas e colunas que a pessoa compara (classificação, histórico de pontos). A tabela já rola na horizontal, mas no celular mostre só as colunas essenciais e esconda o resto com `hidden md:table-cell`. Lista de itens sem colunas é lista, não tabela. |
 | `Badge` | Rótulo curto de estado ou categoria ao lado de outro conteúdo: "Finalizado", "Em andamento", "Bye", o modo do torneio. Não é botão. |
@@ -269,7 +269,47 @@ export const Rodadas = { Root, Tab, Panel };
 
 ## Feedback e erros
 
-- **Nunca `alert`, `confirm` nem `prompt`.** Resultado de ação vira toast (sonner). Confirmação de ação destrutiva usa o AlertDialog padrão (issue #16).
+- **Nunca `alert`, `confirm` nem `prompt`.** Resultado de ação vira toast (sonner), e confirmação de ação destrutiva usa o `useConfirm()`. O legado troca os seus quando a área for refeita. O exemplo em uso é a tela de excluir conta (`app/userSettings/account-delete`).
+- **Aviso:** `toast.success(...)` e `toast.error(...)` de `sonner`, chamados de qualquer componente client. O `Toaster` fica no `app/layout.tsx`, então o toast continua visível depois de um `router.push` ou `redirect`.
+- **Confirmação:** `useConfirm()` de `components/confirm-provider.tsx` devolve uma função que abre o AlertDialog padrão e devolve `Promise<boolean>`: `true` em confirmar; `false` em cancelar ou `Esc`. O `ConfirmProvider` também fica no `app/layout.tsx`. A `description` é obrigatória e diz o que se perde; `destructive: true` deixa o botão vermelho.
+
+```tsx
+"use client";
+
+import { useTransition } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-provider";
+import { deleteRodadasAction } from "../actions";
+
+export function DeleteRodadasButton({ torneioId }: { torneioId: string }) {
+  const confirm = useConfirm();
+  const [pending, startTransition] = useTransition();
+
+  async function handleClick() {
+    const confirmed = await confirm({
+      title: "Excluir os confrontos?",
+      description: "Todas as partidas e resultados deste torneio serão apagados.",
+      confirmLabel: "Excluir",
+      destructive: true,
+    });
+    if (!confirmed) return;
+    startTransition(async () => {
+      const result = await deleteRodadasAction(torneioId);
+      if (result?.ok) toast.success("Confrontos excluídos");
+      else toast.error(result?.error ?? "Não foi possível excluir os confrontos");
+    });
+  }
+
+  return (
+    <Button variant="destructive" disabled={pending} onClick={handleClick}>
+      Excluir confrontos
+    </Button>
+  );
+}
+```
+
+- **Conquista desbloqueada:** `showAchievement(achievement)` de `components/achievement-toast.tsx`, para cada item de `unlockedAchievements`. É um toast do sonner com o visual próprio da conquista. O `useAchievements()` de `components/achievement-provider.tsx` só repassa essa função e fica até as telas de torneios migrarem.
 - **Erro de campo** aparece junto do campo, vindo de `fieldErrors`.
 - **Erro inesperado** sobe para o `error.tsx` do segmento, e **carregamento** usa `loading.tsx` ou `Suspense` com `Skeleton`.
 

@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { useConfirm } from "@/components/confirm-provider";
 
 
 export function DeleteAccountClient() {
   const router = useRouter();
+  const confirm = useConfirm();
 
   const [isChecked, setIsChecked] = useState(false);
   const [password, setPassword] = useState("");
@@ -18,16 +21,25 @@ async function handleSubmit(e: React.FormEvent) {
   e.preventDefault();
 
   if (!isChecked) {
-    alert(
+    toast.error(
       "Você precisa marcar a opção de confirmação antes de excluir sua conta."
     );
     return;
   }
 
   if (!password) {
-    alert("Digite sua senha para confirmar a exclusão.");
+    toast.error("Digite sua senha para confirmar a exclusão.");
     return;
   }
+
+  const confirmed = await confirm({
+    title: "Excluir sua conta?",
+    description:
+      "Seu progresso, conquistas, pontos e histórico serão apagados. Essa ação não pode ser desfeita.",
+    confirmLabel: "Excluir conta",
+    destructive: true,
+  });
+  if (!confirmed) return;
 
   setIsLoading(true);
 
@@ -35,16 +47,16 @@ async function handleSubmit(e: React.FormEvent) {
     const { error } = await authClient.deleteUser({ password });
 
     if (error) {
-      alert(error.message || "Erro ao excluir conta.");
+      toast.error(error.message || "Erro ao excluir conta.");
       setIsLoading(false);
       return;
     }
 
-    alert("Sua conta foi excluída com sucesso.");
+    toast.success("Sua conta foi excluída com sucesso.");
     router.replace("/login");
   } catch (err) {
     console.error(err);
-    alert("Erro inesperado ao excluir conta.");
+    toast.error("Erro inesperado ao excluir conta.");
   } finally {
     setIsLoading(false);
   }
