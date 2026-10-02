@@ -3,6 +3,8 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "./components/LayoutWrapper";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+import { ConfirmProvider } from "@/components/confirm-provider";
 
 const montserrat = Montserrat({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -26,7 +28,10 @@ export default function RootLayout({
         <body
           className={`${montserrat.className} bg-[url("../assets/background-image.png")] antialiased min-h-screen`}
         >
-          <LayoutWrapper>{children}</LayoutWrapper>
+          <ConfirmProvider>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </ConfirmProvider>
+          <Toaster position="top-center" theme="light" />
         </body>
       </TooltipProvider>
     </html>

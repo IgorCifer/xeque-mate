@@ -1,100 +1,53 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy, X } from "lucide-react";
+import { toast } from "sonner";
 import DynamicIcon from "@/app/utils/icon-convert";
 
-interface Achievement {
+export interface UnlockedAchievement {
     id: string;
     title: string;
     description: string;
     icon: string;
 }
 
-interface AchievementToastProps {
-    achievement: Achievement | null;
+function AchievementToast({
+    achievement,
+    onClose,
+}: {
+    achievement: UnlockedAchievement;
     onClose: () => void;
-}
-
-export function AchievementToast({ achievement, onClose }: AchievementToastProps) {
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        if (achievement) {
-            const frame = requestAnimationFrame(() => setIsVisible(true));
-            const timer = setTimeout(() => {
-                setIsVisible(false);
-                setTimeout(onClose, 300);
-            }, 5000);
-
-            return () => {
-                cancelAnimationFrame(frame);
-                clearTimeout(timer);
-            };
-        }
-    }, [achievement, onClose]);
-
-    if (!achievement) return null;
-
+}) {
     return (
-        <div
-            className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ease-in-out ${isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-                }`}
-        >
-            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-2xl p-4 min-w-[320px] max-w-md border-2 border-yellow-400">
-                <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        <DynamicIcon iconName={achievement.icon} />
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Trophy size={16} className="text-yellow-200" />
-                            <h3 className="font-bold text-sm">Conquista Desbloqueada!</h3>
-                        </div>
-                        <p className="font-semibold text-base mb-1">{achievement.title}</p>
-                        <p className="text-sm text-yellow-100">{achievement.description}</p>
-                    </div>
-                    <button
-                        onClick={() => {
-                            setIsVisible(false);
-                            setTimeout(onClose, 300);
-                        }}
-                        className="text-white/80 hover:text-white transition-colors"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
+        <div className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-2xl p-4 border-2 border-yellow-400">
+            <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                    <DynamicIcon iconName={achievement.icon} />
                 </div>
+                <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Trophy size={16} className="text-yellow-200" />
+                        <h3 className="font-bold text-sm">Conquista Desbloqueada!</h3>
+                    </div>
+                    <p className="font-semibold text-base mb-1">{achievement.title}</p>
+                    <p className="text-sm text-yellow-100">{achievement.description}</p>
+                </div>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Fechar"
+                    className="text-white/80 hover:text-white transition-colors"
+                >
+                    <X className="w-5 h-5" />
+                </button>
             </div>
         </div>
     );
 }
 
-export function useAchievementToast() {
-    const [queue, setQueue] = useState<Achievement[]>([]);
-
-    const showAchievement = useCallback((newAchievement: Achievement) => {
-        setQueue((prev) => [...prev, newAchievement]);
-    }, []);
-
-    const handleClose = useCallback(() => {
-        setQueue((prev) => prev.slice(1));
-    }, []);
-
-    return {
-        achievement: queue[0] ?? null,
-        showAchievement,
-        handleClose,
-    };
+export function showAchievement(achievement: UnlockedAchievement) {
+    toast.custom(
+        (id) => <AchievementToast achievement={achievement} onClose={() => toast.dismiss(id)} />,
+        { id: `achievement-${achievement.id}`, duration: 5000 },
+    );
 }
