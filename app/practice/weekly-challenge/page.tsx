@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IoArrowBack } from "react-icons/io5";
+import { ArrowLeft } from "lucide-react";
 import { getWeeklyPuzzle } from "@/app/data/get-challenge-puzzle";
 import { WeeklyPuzzleClient } from "./WeeklyPuzzleClient";
 import { requireSession } from "@/lib/session";
@@ -8,16 +8,15 @@ async function getWeeklyPuzzleAuto() {
   const puzzle = await getWeeklyPuzzle();
   if (!puzzle) return null;
 
-  // próxima mudança de semana — aqui simplificado como próximo domingo 00:00
   const today = new Date();
   const nextWeek = new Date(today);
-  const day = today.getDay(); // 0..6
+  const day = today.getDay();
   const daysUntilNextWeek = (7 - day) % 7 || 7;
   nextWeek.setDate(today.getDate() + daysUntilNextWeek);
   nextWeek.setHours(0, 0, 0, 0);
 
   return {
-    id: puzzle.id, // NOVO: retorna o ID
+    id: puzzle.id,
     fen: puzzle.fen,
     moves: puzzle.moves.split(" "),
     rating: puzzle.rating,
@@ -37,7 +36,7 @@ export default async function WeeklyChallengePage() {
           href="/practice"
           className="flex items-center gap-2 text-white hover:text-blue-200 transition-colors"
         >
-          <IoArrowBack className="w-6 h-6" />
+          <ArrowLeft className="w-6 h-6" />
           <span className="text-lg font-semibold">voltar</span>
         </Link>
       </header>
@@ -55,8 +54,8 @@ export default async function WeeklyChallengePage() {
             rating={puzzle.rating}
             themes={puzzle.themes}
             nextChange={puzzle.nextChange}
-            puzzleId={puzzle.id} // NOVO
-            type="weekly" // NOVO
+            puzzleId={puzzle.id}
+            type="weekly"
           />
         )}
       </main>

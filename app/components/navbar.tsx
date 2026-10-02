@@ -1,17 +1,14 @@
 "use client";
 
-import { IoHome } from "react-icons/io5";
-import { FaUser } from "react-icons/fa";
-import { FaTrophy } from "react-icons/fa6";
-import { GoGoal } from "react-icons/go";
+import { Goal, House, Trophy, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
-  { href: "/home", icon: IoHome },
-  { href: "/torneios", icon: FaTrophy },
-  { href: "/practice", icon: GoGoal },
-  { href: "/profile", icon: FaUser },
+  { href: "/home", icon: House },
+  { href: "/torneios", icon: Trophy },
+  { href: "/practice", icon: Goal },
+  { href: "/profile", icon: User },
 ];
 
 export default function NavBar() {

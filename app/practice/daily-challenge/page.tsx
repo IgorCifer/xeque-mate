@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IoArrowBack } from "react-icons/io5";
+import { ArrowLeft } from "lucide-react";
 import { getDailyPuzzle } from "@/app/data/get-challenge-puzzle";
 import { WeeklyPuzzleClient } from "../weekly-challenge/WeeklyPuzzleClient";
 import { getDailyEndDate, formatDateBR } from "../utils/dates";
@@ -12,7 +12,7 @@ async function getDailyPuzzleAuto() {
   const endDate = getDailyEndDate();
 
   return {
-    id: puzzle.id, // NOVO: retorna o ID
+    id: puzzle.id,
     fen: puzzle.fen,
     moves: puzzle.moves.split(" "),
     rating: puzzle.rating,
@@ -32,7 +32,7 @@ export default async function DailyChallengePage() {
           href="/practice"
           className="flex items-center gap-2 text-white hover:text-blue-200 transition-colors"
         >
-          <IoArrowBack className="w-6 h-6" />
+          <ArrowLeft className="w-6 h-6" />
           <span className="text-lg font-semibold">voltar</span>
         </Link>
       </header>
@@ -50,8 +50,8 @@ export default async function DailyChallengePage() {
               moves={puzzle.moves}
               rating={puzzle.rating}
               themes={puzzle.themes}
-              puzzleId={puzzle.id} // NOVO
-              type="daily" // NOVO
+              puzzleId={puzzle.id}
+              type="daily"
             />
             <p className="text-[11px] text-blue-100 text-center mt-2">
               Disponível até {puzzle.availableUntil}

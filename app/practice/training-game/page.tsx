@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import Link from "next/link";
-import { IoArrowBack } from "react-icons/io5";
+import { ArrowLeft } from "lucide-react";
 
 interface PieceDropHandlerArgs {
   sourceSquare: string;
@@ -60,7 +60,7 @@ export default function TrainingGamePage() {
           href="/practice"
           className="flex items-center gap-2 text-white hover:text-blue-200 transition-colors"
         >
-          <IoArrowBack className="w-6 h-6" />
+          <ArrowLeft className="w-6 h-6" />
           <span className="text-lg font-semibold">voltar</span>
         </Link>
       </header>
