@@ -241,8 +241,31 @@ function Panel({ rodada, children }: { rodada: number; children: ReactNode }) {
 export const Rodadas = { Root, Tab, Panel };
 ```
 
-- **Primitivos** vêm de `components/ui` (shadcn): `Button`, `Input`, `Select`, `Dialog` etc. Nada de `<button>`, `<input>` ou `<select>` crus em tela nova. Se falta um primitivo, ele entra por `npx shadcn@latest add` num PR próprio.
+- **Primitivos** vêm de `components/ui` (shadcn). Nada de `<button>`, `<input>` ou `<select>` crus em tela nova. A próxima seção diz quando usar cada um.
 - **Ícones:** só `lucide-react`.
+
+### Primitivos
+
+| Primitivo | Quando usar |
+|---|---|
+| `Button` | Toda ação clicável: enviar formulário, abrir diálogo, navegar com `asChild` + `Link`. A variante diz o peso: `default` para a ação principal da tela, `outline`/`secondary` para as outras, `ghost` em barra e lista, `destructive` para apagar, `link` para ação que parece link. |
+| `Input` + `Label` | Todo campo de texto, número, data ou senha. O `Label` aponta para o campo com `htmlFor`. Com erro, o campo recebe `aria-invalid` (o estilo de erro já vem dele) e a mensagem do `fieldErrors` fica logo abaixo. |
+| `Select` | Escolher uma opção de uma lista fixa e curta (modo do torneio, resultado da partida). Num formulário, passe `name` no `Select` para o valor ir no `FormData`. Lista longa ou com busca não é `Select`. |
+| `Dialog` | Conteúdo ou formulário curto que abre por cima da tela, sem trocar de página (ex.: ranking, editar um campo). Sempre com `DialogTitle`. Fluxo longo ganha página própria. |
+| `AlertDialog` | Só confirmação de ação destrutiva ou que não volta atrás: finalizar torneio, apagar rodadas, excluir conta. Não fecha clicando fora, e a ação de confirmar usa `variant="destructive"` quando apaga algo. |
+| Sonner (`toast`) | Resultado de uma ação: sucesso, ou erro geral (`state.error`). Erro de campo não vira toast. A tela chama `toast` de `sonner`, e o `Toaster` de `components/ui/sonner` é montado uma vez só, na casca do app (#16). |
+| `Tabs` | Alternar entre visões da mesma página sem sair dela (rodadas, classificação e partidas). Se cada visão precisa de link próprio, use rotas. |
+| `Table` | Dados em linhas e colunas que a pessoa compara (classificação, histórico de pontos). A tabela já rola na horizontal, mas no celular mostre só as colunas essenciais e esconda o resto com `hidden md:table-cell`. Lista de itens sem colunas é lista, não tabela. |
+| `Badge` | Rótulo curto de estado ou categoria ao lado de outro conteúdo: "Finalizado", "Em andamento", "Bye", o modo do torneio. Não é botão. |
+| `Skeleton` | Espaço reservado enquanto carrega, no `loading.tsx` ou no `fallback` do `Suspense`, com o formato do conteúdo que vem. Nada de spinner no lugar de conteúdo. |
+| `Card` | Bloco que agrupa um assunto na tela (um torneio na lista, um desafio). |
+| `Tooltip` | Informação extra e dispensável num ícone ou botão. Não funciona no toque, então nada importante fica só nele. |
+| `Carousel` | Itens em sequência que passam para o lado. Hoje só a home usa. |
+
+**Primitivo novo** entra por `npx shadcn@latest add <nome>` num PR próprio. Duas coisas a conferir depois:
+
+- o registry atual importa o `cn` do pacote `cn`: troque para `@/lib/utils` e não instale o pacote;
+- o comando pergunta se sobrescreve primitivos que já existem (ex.: `button`): responda que não, porque eles podem ter ajustes nossos.
 
 ## Feedback e erros
 
