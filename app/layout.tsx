@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import LayoutWrapper from "./components/LayoutWrapper";
+import { AppShell } from "@/components/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/confirm-provider";
@@ -29,7 +29,7 @@ export default function RootLayout({
           className={`${montserrat.className} bg-[url("../assets/background-image.png")] antialiased min-h-screen`}
         >
           <ConfirmProvider>
-            <LayoutWrapper>{children}</LayoutWrapper>
+            <AppShell>{children}</AppShell>
           </ConfirmProvider>
           <Toaster position="top-center" theme="light" />
         </body>
