@@ -48,11 +48,12 @@ As regras de trabalho e o fluxo de git estão no [CLAUDE.md](../CLAUDE.md).
 - Primitivos do shadcn (#15): os componentes novos usam o `cn` de `lib/utils.ts`, e não o pacote `cn` que o registry atual instala, para existir um `cn` só no projeto. Os primitivos que já existiam não são sobrescritos pelo `shadcn add`. O `ARQUITETURA.md` tem a tabela de quando usar cada um (01/10/2026).
 - Feedback padrão (#16): o `Toaster` do sonner e o `ConfirmProvider` ficam no `app/layout.tsx`. Confirmação de ação destrutiva usa o `useConfirm()`, que abre o AlertDialog padrão e devolve `Promise<boolean>`, para a tela confirmar com um `await` sem montar o diálogo à mão. O **toast de conquista passa para o sonner** (`toast.custom`), com o mesmo visual: uma fila só de avisos, sem dois sistemas disputando o topo da tela, e o `AchievementProvider` sai da casca. O `useAchievements()` continua com a mesma assinatura, então as telas de torneios não mudam. A tela de excluir conta é o exemplo em uso; as outras trocam `alert`/`confirm`/`prompt` quando a área delas for refeita (01/10/2026).
 - Casca responsiva (#18): o `AppShell` fica em `components/app-shell.tsx` e monta o `DailyActivityCheck`; o `Toaster` e o `ConfirmProvider` continuam no `app/layout.tsx`, como decidido na #16, e o `AchievementProvider` já tinha saído. A navegação tem os mesmos quatro itens de antes (Início, Torneios, Prática, Perfil): só ícones na barra de baixo do celular e ícone com nome na lateral a partir de `md`. Um item fica ativo na rota dele e nas subrotas (`/torneios/[id]` marca Torneios), e `/userSettings` marca Perfil; o `/ranking` não tem item e não marca nenhum. O conteúdo fica num container `max-w-5xl` centralizado. O cabeçalho mantém a altura de antes no desktop, porque a engrenagem do perfil é posicionada com `absolute` a partir do topo da página (03/10/2026).
+- Donos da Etapa 2: **torneios com o Iago**; **desafios, treino, perfil, ranking e conta com o Igor**, que já é o dono de pontos e conquistas. A exclusão de conta com anonimização fica com o Igor, combinada com o Iago, porque mexe em dados de torneio (03/10/2026).
+- Fluxo de referência (#21): **alterar perfil** (`/userSettings/change-profile`), na área do Igor, para o exemplo não entrar na área de torneios. A página de servidor lê pela DAL de `features/perfil`, a action valida com zod e revalida o `/profile`, e o formulário usa `Input`/`Label`/`Button`, `fieldErrors` e toast. A **troca de foto saiu**: só mostrava uma prévia e nunca salvava; upload de verdade entra na área de conta da Etapa 2 (03/10/2026).
 - Nos torneios, **paridade antes de funcionalidade nova**: primeiro a área migra com o mesmo comportamento, e só depois vêm as regras novas, em passos separados (ver Etapa 2). Se algo quebrar, dá para saber se foi a mudança de estrutura ou a regra nova (29/09/2026).
 
 **Em aberto** (decidir ao chegar na tarefa)
 
-- Quem fica com cada área da Etapa 2.
 - Desafios: subir o react-chess-puzzle para 2.x ou montar um tabuleiro próprio com `chess.js` + `react-chessboard`.
 - Anonimização: o que some junto (histórico de pontos, conquistas, puzzles resolvidos) e se a pessoa sai dos rankings.
 
@@ -144,7 +145,7 @@ Começa com uma tarefa conjunta e curta: o `docs/ARQUITETURA.md`. Depois, as dua
 
 ### Etapa 2: áreas em paralelo
 
-Sugestão de divisão: **torneios** com um dev e **desafios, treino, perfil e conta** com o outro. Cada área é refeita já nos padrões da Etapa 1. As issues são criadas ao chegar aqui. Torneios é a área maior, então os passos abaixo também servem para redistribuir trabalho se um dos lados terminar antes.
+Divisão: **torneios** com o Iago e **desafios, treino, perfil e conta** com o Igor. Cada área é refeita já nos padrões da Etapa 1. As issues são criadas ao chegar aqui. Torneios é a área maior, então os passos abaixo também servem para redistribuir trabalho se um dos lados terminar antes.
 
 **Torneios**, em passos. Cada passo só começa com o anterior mergeado e os testes passando:
 1. **Paridade:** migrar o suíço atual para `features/torneios` (DAL, actions, telas com os componentes da base e fluxo do organizador presencial), **com o mesmo comportamento**. Os testes de integração da #10 trocam só o helper de chamada e continuam passando.
@@ -156,8 +157,8 @@ Sugestão de divisão: **torneios** com um dev e **desafios, treino, perfil e co
 - **Desafios:** biblioteca nova ou tabuleiro próprio, correção dos erros do navegador, troca no fuso de Brasília e regra de dica/reinício no servidor.
 - **Jogo treino:** fim de partida e botão de nova partida.
 - **Perfil e ranking:** abas corretas, empates divididos em todos os rankings e sequência atualizada na primeira visita.
-- **Conta:** telas de login, cadastro e configurações nos componentes novos, e `?next=` depois do login.
-- **Exclusão de conta com anonimização** (ver "Decisões"). É da conta, mas mexe em dados de torneio: combinar com o dono de torneios e fazer depois do passo 1 dele.
+- **Conta:** telas de login, cadastro e configurações nos componentes novos, e `?next=` depois do login. Upload de foto de perfil de verdade (decidir onde guardar a imagem).
+- **Exclusão de conta com anonimização** (ver "Decisões"). É da conta, mas mexe em dados de torneio: combinar com o Iago e fazer depois do passo 1 dele.
 
 ### Etapa 3: design visual
 
