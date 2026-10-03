@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { awardTournamentPoints } from "@/lib/points";
-import { AchievementService } from "@/lib/achievements";
+import { awardTournamentPoints } from "@/features/pontos/internal";
+import { recordTournamentFinished } from "@/features/conquistas/internal";
 import { rankTournament } from "@/lib/tournament-ranking";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
 
@@ -191,7 +191,7 @@ export async function PUT(
       });
       if (count !== 1) return null;
 
-      const awards = await awardTournamentPoints(tx, id);
+      const awards = await awardTournamentPoints(id, tx);
       console.log(`Pontos distribuídos no torneio ${id}:`, awards);
       return awards ?? [];
     });
@@ -206,7 +206,7 @@ export async function PUT(
     const desbloqueadas = await Promise.all(
       awards.map(async ({ userId }) => ({
         userId,
-        unlocked: await AchievementService.recordTournamentFinished(userId),
+        unlocked: await recordTournamentFinished(userId),
       }))
     );
     const unlockedAchievements =

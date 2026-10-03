@@ -105,24 +105,25 @@ Nem toda operação tem alguém agindo. Conceder pontos ao finalizar um torneio 
 |---|---|---|
 | Primeiro argumento | `actor` | os dados da operação |
 | Checa permissão | sim | não: quem chama já checou |
-| Transação | abre a sua, se precisar | aceita `tx` opcional (padrão: `prisma`) |
+| Transação | abre a sua, se precisar | aceita `tx` opcional (tipo `Db`, de `lib/prisma.ts`) |
 | Quem chama | páginas e actions | só outra DAL, da mesma área ou de outra |
+
+**Uma função interna que grava várias linhas usa `withTransaction(tx, fn)`** (`lib/prisma.ts`): roda na transação de quem chamou, se houver, ou abre uma própria. Assim ela é atômica nos dois casos. Uma função interna que só lê, ou que grava de forma idempotente (como as conquistas, com `skipDuplicates`), recebe `db: Db = prisma` e não abre transação.
 
 ```ts
 import "server-only";
-import prisma from "@/lib/prisma";
-import type { Prisma } from "@/app/generated/prisma2/client";
+import { withTransaction, type Db } from "@/lib/prisma";
+import { tournamentPrize } from "./domain/rules";
 
-export async function awardTournamentPoints(
-  torneioId: string,
-  tx: Prisma.TransactionClient = prisma,
-) {
-  const participantes = await tx.participante.findMany({ where: { torneioId } });
-  for (const p of participantes) {
-    await tx.pointsHistory.create({
-      data: { userId: p.userId, points: 10, reason: "tournament_other", referenceId: torneioId },
-    });
-  }
+export async function awardTournamentPoints(torneioId: string, tx?: Db) {
+  return withTransaction(tx, async (db) => {
+    const participantes = await db.participante.findMany({ where: { torneioId } });
+    for (const p of participantes) {
+      const { points, reason } = tournamentPrize(1);
+      await db.user.update({ where: { id: p.userId }, data: { points: { increment: points } } });
+      await db.pointsHistory.create({ data: { userId: p.userId, points, reason, referenceId: torneioId } });
+    }
+  });
 }
 ```
 
@@ -153,7 +154,7 @@ export async function finalizeTorneio(actor: Actor, torneioId: string) {
 }
 ```
 
-O primeiro exemplo simplifica a regra de pontos; a regra real de colocação está em `lib/points.ts`.
+O primeiro exemplo simplifica a regra de pontos. As funções reais estão em `features/pontos/internal.ts` (`awardTournamentPoints`, `completePuzzle`) e `features/conquistas/internal.ts` (`recordTournamentJoined`, `recordTournamentFinished`, `recordDailyLogin`), e o teste `features/pontos/internal.int.test.ts` prova que uma transação desfeita não deixa ponto nenhum.
 
 ## Mutações: Server Actions
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { AchievementService } from "@/lib/achievements";
+import { recordTournamentJoined } from "@/features/conquistas/internal";
 
 export async function GET(req: Request) {
   try {
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
     });
 
     const unlockedAchievements =
-      await AchievementService.recordTournamentJoined(session.user.id);
+      await recordTournamentJoined(session.user.id);
 
     return NextResponse.json(
       { ...torneio, unlockedAchievements },
