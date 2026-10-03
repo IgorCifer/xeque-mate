@@ -1,11 +1,7 @@
 import { auth } from "@/lib/auth";
-import { AchievementService } from "@/lib/achievements";
+import { recordDailyLogin } from "@/features/conquistas/internal";
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * POST /api/achievements/check-login
- * Registra o login diário e retorna conquistas desbloqueadas
- */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
@@ -16,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const unlockedAchievements = await AchievementService.recordDailyLogin(
+    const unlockedAchievements = await recordDailyLogin(
       session.user.id
     );
 

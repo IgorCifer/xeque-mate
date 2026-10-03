@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/session";
+import { getAchievements, getStreaks } from "@/features/conquistas/dal";
 import { FlameIcon, Settings, TrophyIcon, User } from "lucide-react";
 import { getUserPoints } from "../data/get-user-points";
 import DynamicIcon from "../utils/icon-convert";
@@ -7,20 +8,16 @@ import Link from "next/link";
 import { getWeeklyPosition } from "../data/get-weekly-position";
 import { ProfileClient } from "./ProfileClient";
 import { getWeeklyRanking } from "../data/get-alltime-ranking";
-import { AchievementService } from "@/lib/achievements";
-
-
-
 
 export default async function ProfilePage() {
-
   const session = await requireSession();
+  const actor = { userId: session.user.id };
 
   const points = await getUserPoints(session.user.id);
 
-  const achievements = await AchievementService.getUserAchievements(session.user.id);
+  const achievements = await getAchievements(actor);
 
-  const { currentStreak } = await AchievementService.calculateStreaks(session.user.id);
+  const { currentStreak } = await getStreaks(actor);
 
   const weeklyPosition = await getWeeklyPosition(session.user.id);
   const weeklyRanking = await getWeeklyRanking();

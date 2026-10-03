@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { completePuzzle } from "@/lib/points";
+import { completePuzzle } from "@/features/pontos/internal";
 import { getDailyPuzzle, getWeeklyPuzzle } from "@/app/data/get-challenge-puzzle";
 
 export async function POST(req: Request) {
   try {
-    // Verifica autenticação
     const session = await auth.api.getSession({ headers: req.headers });
 
     if (!session) {
@@ -18,7 +17,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { puzzleId, type } = body;
 
-    // Validações
     if (!puzzleId || typeof puzzleId !== "string") {
       return NextResponse.json(
         { error: "puzzleId é obrigatório" },
@@ -33,7 +31,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Só vale o puzzle atual do desafio, calculado no servidor
     const current =
       type === "daily" ? await getDailyPuzzle() : await getWeeklyPuzzle();
 
@@ -47,7 +44,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Registra conclusão e atribui pontos
     const result = await completePuzzle(
       session.user.id,
       puzzleId,
@@ -61,7 +57,7 @@ export async function POST(req: Request) {
           message: result.message,
           alreadyCompleted: result.alreadyCompleted,
         },
-        { status: 200 } // 200 porque não é erro de servidor
+        { status: 200 }
       );
     }
 
