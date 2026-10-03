@@ -4,7 +4,18 @@ Convenções que todo código novo segue. Vale para as duas trilhas da base comu
 
 O código que ainda não segue estas regras é legado: ele fica como está até a área dele ser refeita, e então sai. Código novo não se apoia em código legado quando existe o equivalente no padrão novo.
 
-Os exemplos daqui são ilustrativos. O exemplo real, com a pilha inteira funcionando, é o fluxo de referência ([#21](https://github.com/IgorCifer/xeque-mate/issues/21)), linkado aqui quando ficar pronto.
+Os exemplos daqui são ilustrativos. **O exemplo real, com a pilha inteira funcionando, é o fluxo de referência "alterar perfil" ([#21](https://github.com/IgorCifer/xeque-mate/issues/21)):** copie dele ao começar uma área.
+
+| Peça | Arquivo |
+|---|---|
+| Página de servidor | `app/userSettings/change-profile/page.tsx` |
+| DAL pública | `features/perfil/dal.ts` |
+| Server Action | `features/perfil/actions.ts` |
+| Schema | `features/perfil/schemas.ts` |
+| DTO | `features/perfil/types.ts` |
+| Formulário client | `features/perfil/components/profile-form.tsx` |
+| Teste de integração da DAL | `features/perfil/dal.int.test.ts` |
+| Teste do schema | `features/perfil/schemas.test.ts` |
 
 As escolhas seguem os guias do Next 16 que vêm no pacote (`node_modules/next/dist/docs/`): em especial *Data Security*, *Mutating Data*, *Forms* e *Server Actions*.
 
@@ -194,7 +205,9 @@ Os helpers estão em `lib/session.ts` (`requireActor`, `Actor`), `lib/errors.ts`
 - **Formulário com Server Action:** `<form action={formAction}>` num componente client, com `const [state, formAction, pending] = useActionState(action, null)`.
   - O `pending` desabilita o botão.
   - Com `state?.ok === false`, `state.fieldErrors` mostra o erro de cada campo e `state.error` o erro geral.
-  - `state?.ok === true` é a hora do toast de sucesso.
+  - O toast sai **dentro da função passada ao `useActionState`**, logo depois do `await` da action: `toast.success` quando `ok`, `toast.error` com o `error` geral. Assim não é preciso um `useEffect` olhando o `state`, e o toast aparece uma vez por envio. Erro de campo não vira toast.
+  - **Campos controlados** (`value` + `onChange` com `useState`). Depois de toda action de formulário, o React chama o `form.reset()` nativo, que devolve os campos não controlados ao valor inicial: um envio recusado apagaria o que a pessoa digitou. Num campo controlado, o React mantém o valor.
+  - Depois de salvar, a action chama `revalidatePath` nas rotas que mostram o dado. A página atual também é renderizada de novo na mesma resposta.
 - **Schemas no `schemas.ts` da área:** a action valida sempre. O cliente pode reusar o mesmo schema, ou atributos HTML como `required`, só para dar retorno mais cedo; nunca como a única validação.
 - **zod 4:** erros por campo com `z.flattenError(error).fieldErrors`, que é o que o `toFieldErrors` faz. O `error.flatten()` dos exemplos antigos não existe mais.
 - **Botões fora de formulário** (ex.: lançar o resultado num seletor): chamar a action dentro de `startTransition`, ou com `useActionState` e `formAction` num `<form>` pequeno.

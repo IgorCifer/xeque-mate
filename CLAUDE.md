@@ -21,7 +21,7 @@ Xeque-Mate is a chess club web app (tournaments, daily/weekly Lichess puzzles, p
 
 - `main` always works. One branch per task, created from an up-to-date `main` and named `<area>/<short-kebab-summary>` (e.g. `torneios/formato-todos-contra-todos`). Never branch off another task branch.
 - One small pull request per task. `main` is protected: changes only land through a PR, and the CI job **Check** (`.github/workflows/ci.yml`: `prisma generate`, `tsc`, lint, tests, build) must pass with the branch up to date with `main`; this applies to admins too. The author merges their own PR with **squash**, so `main` gets one commit per task. Head branches are deleted automatically after the merge.
-- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`.
+- Areas (issue labels and branch prefixes): `base-dados`, `base-ui`, `torneios`, `desafios`, `perfil-conta`, `design`. Stage 2 owners: tournaments → Iago (@IagoFsv); challenges, training game, profile, ranking and account → Igor (@IgorCifer). Points and achievements (`features/pontos`, `features/conquistas`) are owned by Igor; other areas call their internal functions and request changes through issues.
 - Migrations: at most one per PR. Rebase on `main` right before generating it with `prisma migrate dev`; if `main` got another migration meanwhile, delete yours and generate it again.
 - Shared files (`components/ui`, `app/globals.css`, the app shell, `lib/achievements.ts`, `package.json`): change them in a small PR of their own and tell the other developer. Keep the `AchievementService.record*` signatures stable; tournaments call them.
 - The PR title is the squash commit message and follows Conventional Commits 1.0: `<type>(<scope>): <subject>`
