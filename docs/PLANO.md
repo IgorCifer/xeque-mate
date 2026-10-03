@@ -50,6 +50,7 @@ As regras de trabalho e o fluxo de git estão no [CLAUDE.md](../CLAUDE.md).
 - Casca responsiva (#18): o `AppShell` fica em `components/app-shell.tsx` e monta o `DailyActivityCheck`; o `Toaster` e o `ConfirmProvider` continuam no `app/layout.tsx`, como decidido na #16, e o `AchievementProvider` já tinha saído. A navegação tem os mesmos quatro itens de antes (Início, Torneios, Prática, Perfil): só ícones na barra de baixo do celular e ícone com nome na lateral a partir de `md`. Um item fica ativo na rota dele e nas subrotas (`/torneios/[id]` marca Torneios), e `/userSettings` marca Perfil; o `/ranking` não tem item e não marca nenhum. O conteúdo fica num container `max-w-5xl` centralizado. O cabeçalho mantém a altura de antes no desktop, porque a engrenagem do perfil é posicionada com `absolute` a partir do topo da página (03/10/2026).
 - Donos da Etapa 2: **torneios com o Iago**; **desafios, treino, perfil, ranking e conta com o Igor**, que já é o dono de pontos e conquistas. A exclusão de conta com anonimização fica com o Igor, combinada com o Iago, porque mexe em dados de torneio (03/10/2026).
 - Fluxo de referência (#21): **alterar perfil** (`/userSettings/change-profile`), na área do Igor, para o exemplo não entrar na área de torneios. A página de servidor lê pela DAL de `features/perfil`, a action valida com zod e revalida o `/profile`, e o formulário usa `Input`/`Label`/`Button`, `fieldErrors` e toast. A **troca de foto saiu**: só mostrava uma prévia e nunca salvava; upload de verdade entra na área de conta da Etapa 2 (03/10/2026).
+- ESLint 10 (#13) adiado: o `eslint-plugin-react`, trazido pelo `eslint-config-next` 16, usa `context.getFilename()`, que o ESLint 10 removeu, e o lint quebra. Retomar quando o plugin declarar suporte a `^10` (03/10/2026).
 - Nos torneios, **paridade antes de funcionalidade nova**: primeiro a área migra com o mesmo comportamento, e só depois vêm as regras novas, em passos separados (ver Etapa 2). Se algo quebrar, dá para saber se foi a mudança de estrutura ou a regra nova (29/09/2026).
 
 **Em aberto** (decidir ao chegar na tarefa)
@@ -145,20 +146,41 @@ Começa com uma tarefa conjunta e curta: o `docs/ARQUITETURA.md`. Depois, as dua
 
 ### Etapa 2: áreas em paralelo
 
-Divisão: **torneios** com o Iago e **desafios, treino, perfil e conta** com o Igor. Cada área é refeita já nos padrões da Etapa 1. As issues são criadas ao chegar aqui. Torneios é a área maior, então os passos abaixo também servem para redistribuir trabalho se um dos lados terminar antes.
+Divisão: **torneios** com o Iago e **desafios, treino, perfil e conta** com o Igor, que também é o dono de pontos e conquistas. Cada área é refeita já nos padrões da Etapa 1, copiando do fluxo de referência (#21). Em cada área, primeiro vem a **paridade** (migrar com o mesmo comportamento) e só depois as regras novas, em issues separadas.
 
-**Torneios**, em passos. Cada passo só começa com o anterior mergeado e os testes passando:
-1. **Paridade:** migrar o suíço atual para `features/torneios` (DAL, actions, telas com os componentes da base e fluxo do organizador presencial), **com o mesmo comportamento**. Os testes de integração da #10 trocam só o helper de chamada e continuam passando.
-2. **Classificação derivada** das partidas: saem os contadores de `Participante`, o `deltaFromResultado` e o crédito do bye na criação da rodada, e o pareamento usa a classificação derivada. A classificação mostrada continua a mesma.
-3. **Suíço rodada a rodada:** gerar uma rodada por vez, a partir dos resultados.
-4. **Formatos novos:** `Torneio.formato` com todos contra todos e, depois, eliminatória, cada um com sua função de pareamento, testada. Na eliminatória entra o campo de quem avançou em caso de empate.
+**A [#33](https://github.com/IgorCifer/xeque-mate/issues/33) (pontos e conquistas) vem primeiro:** a lista, o convite e a finalização de torneios dependem dela, assim como os desafios e o perfil.
 
-**Desafios, treino, perfil e conta**
-- **Desafios:** biblioteca nova ou tabuleiro próprio, correção dos erros do navegador, troca no fuso de Brasília e regra de dica/reinício no servidor.
-- **Jogo treino:** fim de partida e botão de nova partida.
-- **Perfil e ranking:** abas corretas, empates divididos em todos os rankings e sequência atualizada na primeira visita.
-- **Conta:** telas de login, cadastro e configurações nos componentes novos, e `?next=` depois do login. Upload de foto de perfil de verdade (decidir onde guardar a imagem).
-- **Exclusão de conta com anonimização** (ver "Decisões"). É da conta, mas mexe em dados de torneio: combinar com o Iago e fazer depois do passo 1 dele.
+**Igor: pontos, conquistas, desafios, treino, perfil e conta**
+
+| Issue | Tarefa | Depende de |
+|---|---|---|
+| [#33](https://github.com/IgorCifer/xeque-mate/issues/33) | Pontos e conquistas em `features/pontos` e `features/conquistas` | — |
+| [#47](https://github.com/IgorCifer/xeque-mate/issues/47) | Jogo treino: fim de partida e nova partida | — |
+| [#51](https://github.com/IgorCifer/xeque-mate/issues/51) | Conta (paridade): login, cadastro e configurações nos componentes novos | — |
+| [#43](https://github.com/IgorCifer/xeque-mate/issues/43) | Desafios (paridade): diário e semanal | #33 |
+| [#44](https://github.com/IgorCifer/xeque-mate/issues/44) | Desafios: tabuleiro novo e erros do navegador | #43 |
+| [#45](https://github.com/IgorCifer/xeque-mate/issues/45) | Desafios: troca do puzzle no fuso de Brasília | #43 |
+| [#46](https://github.com/IgorCifer/xeque-mate/issues/46) | Desafios: perda de pontos por dica ou reinício no servidor | #44 |
+| [#48](https://github.com/IgorCifer/xeque-mate/issues/48) | Perfil e ranking (paridade) | #33 |
+| [#49](https://github.com/IgorCifer/xeque-mate/issues/49) | Ranking: abas certas e empates divididos | #48 |
+| [#50](https://github.com/IgorCifer/xeque-mate/issues/50) | Perfil: sequência atualizada na primeira visita do dia | #48 |
+| [#52](https://github.com/IgorCifer/xeque-mate/issues/52) | Conta: voltar à página de origem depois do login | #51 |
+| [#53](https://github.com/IgorCifer/xeque-mate/issues/53) | Conta: exclusão com anonimização (combinar com o Iago) | #51, #38 |
+| [#54](https://github.com/IgorCifer/xeque-mate/issues/54) | Conta: upload de foto de perfil | #51 |
+
+**Iago: torneios**, em passos. Cada passo só começa com o anterior mergeado e os testes passando.
+
+| Issue | Tarefa | Depende de |
+|---|---|---|
+| [#34](https://github.com/IgorCifer/xeque-mate/issues/34) | Paridade: página do torneio e edição | — |
+| [#35](https://github.com/IgorCifer/xeque-mate/issues/35) | Paridade: lista e criação | #33 |
+| [#36](https://github.com/IgorCifer/xeque-mate/issues/36) | Paridade: convite | #33 |
+| [#37](https://github.com/IgorCifer/xeque-mate/issues/37) | Paridade: rodadas, resultados e participantes | #34 |
+| [#38](https://github.com/IgorCifer/xeque-mate/issues/38) | Paridade: finalizar torneio (fim da paridade; `app/api/torneios` sai inteiro) | #33, #37 |
+| [#39](https://github.com/IgorCifer/xeque-mate/issues/39) | Classificação derivada das partidas | #38 |
+| [#40](https://github.com/IgorCifer/xeque-mate/issues/40) | Suíço rodada a rodada | #39 |
+| [#41](https://github.com/IgorCifer/xeque-mate/issues/41) | Formato todos contra todos | #40 |
+| [#42](https://github.com/IgorCifer/xeque-mate/issues/42) | Formato eliminatória (com o campo de quem avançou em caso de empate) | #41 |
 
 ### Etapa 3: design visual
 
