@@ -108,7 +108,7 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
         </div>
       )}
 
-      <ChessPuzzle.Root puzzle={puzzle} onSolve={handlePuzzleSolved}>
+      <ChessPuzzle.Root puzzle={puzzle} onSolve={handlePuzzleSolved} solveOnCheckmate>
         <ChessPuzzle.Board />
 
         <div className="flex items-center justify-center gap-10 mt-6">
@@ -116,12 +116,13 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
             <ChessPuzzle.Reset
               asChild
               showOn={["not-started", "in-progress", "solved", "failed"]}
+              onReset={() => markAsIneligible("Puzzle resetado")}
             >
               <Button
                 variant="outline"
                 size="icon"
+                aria-label="Reiniciar"
                 className="rounded-full bg-white/10 border-white/40 text-white hover:bg-white/20"
-                onPointerDown={() => markAsIneligible("Puzzle resetado")}
               >
                 <FlagIcon className="w-5 h-5" />
               </Button>
@@ -134,8 +135,9 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
               <Button
                 variant="outline"
                 size="icon"
+                aria-label="Dica"
                 className="rounded-full bg-white/10 border-white/40 text-white hover:bg-white/20"
-                onPointerDown={() => markAsIneligible("Dica usada")}
+                onClick={() => markAsIneligible("Dica usada")}
               >
                 <HelpCircleIcon className="w-5 h-5" />
               </Button>
