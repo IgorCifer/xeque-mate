@@ -1,5 +1,6 @@
-const TIME_ZONE = "America/Sao_Paulo";
+export const TIME_ZONE = "America/Sao_Paulo";
 const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
 
 const dayFormat = new Intl.DateTimeFormat("en-CA", {
   timeZone: TIME_ZONE,
@@ -25,10 +26,29 @@ function offsetMs(date: Date): number {
   return sign * (Number(match[2]) * 60 + Number(match[3])) * 60 * 1000;
 }
 
-export function weekStart(now: Date): Date {
+function midnight(day: number): Date {
+  return new Date(day - offsetMs(new Date(day)));
+}
+
+function sunday(now: Date): number {
   const today = Date.parse(activityDay(now));
-  const sunday = today - new Date(today).getUTCDay() * DAY_MS;
-  return new Date(sunday - offsetMs(new Date(sunday)));
+  return today - new Date(today).getUTCDay() * DAY_MS;
+}
+
+export function dayStart(now: Date): Date {
+  return midnight(Date.parse(activityDay(now)));
+}
+
+export function nextDayStart(now: Date): Date {
+  return midnight(Date.parse(activityDay(now)) + DAY_MS);
+}
+
+export function weekStart(now: Date): Date {
+  return midnight(sunday(now));
+}
+
+export function nextWeekStart(now: Date): Date {
+  return midnight(sunday(now) + WEEK_MS);
 }
 
 function daysBetween(earlier: string, later: string): number {
