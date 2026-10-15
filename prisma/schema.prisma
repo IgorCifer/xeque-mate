@@ -23,6 +23,7 @@ model User {
   participacoes  Participante[]
   userAchievements UserAchievement[]
   puzzleCompletions PuzzleCompletion[]
+  puzzleForfeits    PuzzleForfeit[]
   pointsHistory     PointsHistory[]
   activityDays      UserActivityDay[]
 
@@ -193,6 +194,7 @@ model Puzzle {
   createdAt       DateTime @default(now())
   
   completions     PuzzleCompletion[]
+  forfeits        PuzzleForfeit[]
 }
 
 model PuzzleCompletion {
@@ -210,6 +212,19 @@ model PuzzleCompletion {
   @@index([userId])
   @@index([completedAt])
   @@map("puzzle_completion")
+}
+
+model PuzzleForfeit {
+  userId    String
+  puzzleId  String
+  type      String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, puzzleId, type])
+  @@map("puzzle_forfeit")
 }
 
 model PointsHistory {

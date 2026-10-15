@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { ChessPuzzle } from "@react-chess-tools/react-chess-puzzle";
 import { FlagIcon, HelpCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { completeChallengeAction } from "../actions";
+import { completeChallengeAction, forfeitChallengeAction } from "../actions";
 import type { ChallengeDTO } from "../types";
 
 type ChallengeBoardProps = {
@@ -35,9 +35,9 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
 
   const [remaining, setRemaining] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [isEligibleForPoints, setIsEligibleForPoints] = useState(true);
+  const [isEligibleForPoints, setIsEligibleForPoints] = useState(!challenge.forfeited);
   const [pending, startTransition] = useTransition();
-  const hasShownWarning = useRef(false);
+  const forfeitSent = useRef(challenge.forfeited);
 
   useEffect(() => {
     if (!showCountdown) return;
@@ -57,9 +57,10 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
   };
 
   const markAsIneligible = (reason: string) => {
+    if (forfeitSent.current) return;
+    forfeitSent.current = true;
     setIsEligibleForPoints(false);
-    if (hasShownWarning.current) return;
-    hasShownWarning.current = true;
+    forfeitChallengeAction({ puzzleId: challenge.id, type: challenge.type }).catch(() => {});
     showMessage(`⚠️ ${reason} - você não receberá pontos neste desafio`, 3000);
   };
 
@@ -71,6 +72,7 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
       return;
     }
 
+    forfeitSent.current = true;
     startTransition(async () => {
       try {
         const result = await completeChallengeAction({
@@ -99,6 +101,12 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
         </p>
       )}
 
+      {!isEligibleForPoints && (
+        <p className="text-[11px] text-blue-100 text-center mb-3">
+          Sem pontos neste desafio: houve dica, reinício ou lance errado
+        </p>
+      )}
+
       {message && (
         <div
           role="status"
@@ -108,7 +116,12 @@ export function ChallengeBoard({ challenge, title, showCountdown = false }: Chal
         </div>
       )}
 
-      <ChessPuzzle.Root puzzle={puzzle} onSolve={handlePuzzleSolved} solveOnCheckmate>
+      <ChessPuzzle.Root
+        puzzle={puzzle}
+        onSolve={handlePuzzleSolved}
+        onFail={() => markAsIneligible("Lance errado")}
+        solveOnCheckmate
+      >
         <ChessPuzzle.Board />
 
         <div className="flex items-center justify-center gap-10 mt-6">

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import prisma from "@/lib/prisma";
 import { ConflictError } from "@/lib/errors";
 import { createUser, type TestUser } from "@/test/integration/users";
-import { completeChallenge, getChallenge } from "./dal";
+import { completeChallenge, forfeitChallenge, getChallenge } from "./dal";
 import type { ChallengeType } from "./types";
 
 let diarioId: string;
@@ -25,6 +25,10 @@ async function seedPuzzle(externalId: string, rating: number) {
 
 function resolverPuzzle(user: TestUser, puzzleId: string, type: ChallengeType) {
   return completeChallenge({ userId: user.id }, { puzzleId, type });
+}
+
+function perderPontos(user: TestUser, puzzleId: string, type: ChallengeType) {
+  return forfeitChallenge({ userId: user.id }, { puzzleId, type });
 }
 
 async function pontosDe(userId: string) {
@@ -83,5 +87,67 @@ describe("desafios", () => {
 
     expect(await prisma.puzzleCompletion.count({ where: { userId: jogador.id } })).toBe(0);
     expect(await pontosDe(jogador.id)).toBe(0);
+  });
+});
+
+describe("perda de pontos por dica, reinício ou lance errado", () => {
+  it("depois da perda, resolver o puzzle não dá pontos", async () => {
+    const jogador = await createUser();
+
+    await perderPontos(jogador, diarioId, "daily");
+    const resultado = await resolverPuzzle(jogador, diarioId, "daily");
+
+    expect(resultado).toMatchObject({ success: false, forfeited: true });
+    expect(await prisma.puzzleCompletion.count({ where: { userId: jogador.id } })).toBe(0);
+    expect(await pontosDe(jogador.id)).toBe(0);
+    expect(await prisma.pointsHistory.count({ where: { userId: jogador.id } })).toBe(0);
+  });
+
+  it("a perda vale depois de recarregar a página", async () => {
+    const jogador = await createUser();
+
+    expect(await getChallenge({ userId: jogador.id }, "daily")).toMatchObject({ forfeited: false });
+    await perderPontos(jogador, diarioId, "daily");
+
+    expect(await getChallenge({ userId: jogador.id }, "daily")).toMatchObject({ forfeited: true });
+  });
+
+  it("registrar a perda várias vezes, inclusive ao mesmo tempo, grava uma vez só", async () => {
+    const jogador = await createUser();
+
+    await Promise.all([1, 2, 3].map(() => perderPontos(jogador, diarioId, "daily")));
+    await perderPontos(jogador, diarioId, "daily");
+
+    expect(await prisma.puzzleForfeit.count({ where: { userId: jogador.id } })).toBe(1);
+  });
+
+  it("a perda vale só para quem perdeu e só para aquele desafio", async () => {
+    const jogador = await createUser();
+    const outro = await createUser();
+
+    await perderPontos(jogador, diarioId, "daily");
+
+    expect(await resolverPuzzle(outro, diarioId, "daily")).toMatchObject({ success: true, points: 15 });
+    expect(await resolverPuzzle(jogador, semanalId, "weekly")).toMatchObject({ success: true, points: 50 });
+    expect(await pontosDe(jogador.id)).toBe(50);
+  });
+
+  it("reiniciar depois de resolver com pontos não marca perda", async () => {
+    const jogador = await createUser();
+
+    await resolverPuzzle(jogador, diarioId, "daily");
+    await perderPontos(jogador, diarioId, "daily");
+
+    expect(await prisma.puzzleForfeit.count({ where: { userId: jogador.id } })).toBe(0);
+    expect(await getChallenge({ userId: jogador.id }, "daily")).toMatchObject({ forfeited: false });
+    expect(await pontosDe(jogador.id)).toBe(15);
+  });
+
+  it("recusa registrar perda de um puzzle que não é o desafio atual", async () => {
+    const jogador = await createUser();
+
+    await expect(perderPontos(jogador, semanalId, "daily")).rejects.toBeInstanceOf(ConflictError);
+
+    expect(await prisma.puzzleForfeit.count({ where: { userId: jogador.id } })).toBe(0);
   });
 });
