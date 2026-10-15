@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { activityDay, computeStreaks, weekStart } from "./activity";
+import {
+  activityDay,
+  computeStreaks,
+  dayStart,
+  nextDayStart,
+  nextWeekStart,
+  weekStart,
+} from "./activity";
 
 describe("activityDay", () => {
   it("usa o dia de Brasília, não o UTC", () => {
@@ -34,6 +41,25 @@ describe("weekStart", () => {
   it("atravessa a virada de ano", () => {
     expect(weekStart(new Date("2026-01-02T12:00:00Z")).toISOString()).toBe(
       "2025-12-28T03:00:00.000Z"
+    );
+  });
+});
+
+describe("dayStart e nextDayStart", () => {
+  it("são a meia-noite de Brasília de hoje e de amanhã", () => {
+    const agora = new Date("2026-09-28T02:30:00Z");
+    expect(dayStart(agora).toISOString()).toBe("2026-09-27T03:00:00.000Z");
+    expect(nextDayStart(agora).toISOString()).toBe("2026-09-28T03:00:00.000Z");
+  });
+});
+
+describe("nextWeekStart", () => {
+  it("é o domingo seguinte à meia-noite de Brasília", () => {
+    expect(nextWeekStart(new Date("2026-09-27T02:59:00Z")).toISOString()).toBe(
+      "2026-09-27T03:00:00.000Z"
+    );
+    expect(nextWeekStart(new Date("2026-09-27T03:00:00Z")).toISOString()).toBe(
+      "2026-10-04T03:00:00.000Z"
     );
   });
 });

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { formatDateBR, nextWeeklyChange } from "@/features/desafios/domain/schedule";
+import { formatDateBR, nextChallengeChange } from "@/features/desafios/domain/schedule";
 import { requireSession } from "@/lib/session";
 
 export default async function PracticePage() {
   await requireSession();
-  const weeklyEnd = nextWeeklyChange(new Date());
+  const weeklyEnd = nextChallengeChange("weekly", new Date());
   const weeklyEndLabel = formatDateBR(weeklyEnd);
 
   return (
