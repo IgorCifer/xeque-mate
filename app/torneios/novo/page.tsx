@@ -65,7 +65,7 @@ export default function NovoTorneioPage() {
   return (
     <main className="min-h-screen text-white px-4 py-6 flex flex-col items-center">
       <section className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600/70 via-purple-600/60 to-slate-900/80 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="bg-brand-800/80 border-b border-white/10 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3">
             <Image src="/black-king.png" alt="Imagem" width={48} height={48} className="w-12 h-12" />
             <div>
@@ -84,7 +84,7 @@ export default function NovoTorneioPage() {
               <label className="text-sm text-white/80">Nome do Torneio</label>
               <input
                 type="text"
-                className="p-3 rounded-lg bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-3 rounded-lg bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-400"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
@@ -95,7 +95,7 @@ export default function NovoTorneioPage() {
               <label className="text-sm text-white/80">Data</label>
               <input
                 type="date"
-                className="p-3 rounded-lg bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-3 rounded-lg bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-400"
                 value={data}
                 min={minDate}
                 onChange={(e) => setData(e.target.value)}
@@ -106,7 +106,7 @@ export default function NovoTorneioPage() {
             <div className="flex flex-col gap-1">
               <label className="text-sm text-white/80">Modo</label>
               <select
-                className="p-3 rounded-xl bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-sm"
+                className="p-3 rounded-xl bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none shadow-sm"
                 style={{ borderRadius: "14px" }}
                 value={modo}
                 onChange={(e) => setModo(e.target.value)}
@@ -123,7 +123,7 @@ export default function NovoTorneioPage() {
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className="text-sm text-white/80">Descrição (opcional)</label>
               <textarea
-                className="p-3 rounded-lg bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[96px]"
+                className="p-3 rounded-lg bg-white/90 text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none min-h-[96px]"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 placeholder="Detalhes do torneio, tempo de partida, regras, etc."
