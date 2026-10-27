@@ -99,7 +99,7 @@ export default function EditarTorneioPage() {
   if (loading) return <p className="p-5 text-white">Carregando...</p>;
 
   return (
-    <main className="min-h-screen text-white px-4 py-6 flex flex-col items-center">
+    <main className="text-white px-4 py-6 flex flex-col items-center">
       <section className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl shadow-xl overflow-hidden">
         <div className="bg-brand-800/80 border-b border-white/10 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3">

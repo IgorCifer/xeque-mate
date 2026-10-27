@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (routesWithoutShell.includes(pathname)) return <>{children}</>;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <header className="text-white flex items-center justify-center gap-4 p-4 bg-blue-950/50 backdrop-blur-md">
         <div className="relative w-10 h-10">
           <Image
@@ -73,8 +73,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 pb-24 md:pb-0">
-          <div className="mx-auto w-full max-w-5xl">{children}</div>
+        <main className="flex min-w-0 flex-1 flex-col pb-24 md:pb-0">
+          <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">{children}</div>
         </main>
       </div>
 

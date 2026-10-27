@@ -54,7 +54,7 @@ export default function TrainingGamePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       <header className="p-4 flex items-center gap-3">
         <Link
           href="/practice"
@@ -65,7 +65,7 @@ export default function TrainingGamePage() {
         </Link>
       </header>
 
-      <main className="flex-1 flex flex-col items-center pt-32 pb-38 px-4">
+      <main className="flex-1 flex flex-col items-center pt-32 pb-6 px-4">
         <div className="w-full max-w-2xl">
           <div className="bg-linear-to-br backdrop-blur-md bg-white/20 rounded-3xl shadow-2xl p-6 border border-white/30">
             <h1 className="text-2xl font-bold text-white text-center mb-2">

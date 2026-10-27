@@ -25,7 +25,7 @@ export function ProfileForm({ profile }: { profile: ProfileDTO }) {
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nome</Label>
+        <Label htmlFor="name" className="text-white">Nome</Label>
         <Input
           id="name"
           name="name"

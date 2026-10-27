@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -104,14 +105,10 @@ async function handleSubmit(e: React.FormEvent) {
   return (
     <div className=" text-white">
       <header className="pt-6 px-5 pb-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex items-center text-base mb-4"
-        >
+        <Link href="/userSettings" className="flex items-center text-base mb-4">
           <ChevronLeft className="w-5 h-5 mr-1" />
           Voltar
-        </button>
+        </Link>
       </header>
 
       <main className="flex-1 px-5 pb-6">

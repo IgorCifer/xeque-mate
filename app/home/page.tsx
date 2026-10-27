@@ -16,7 +16,7 @@ if(!session){
 }
 
   return (
-    <div className="min-h-screen overflow-hidden relative">
+    <div className="overflow-hidden relative">
         <main className="flex-1 px-4 py-10 flex flex-col gap-9">
           <ImagesCarousel 
             title="Bem-vindo ao Clube Xeque Mate de Iguatu"
