@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[url('/background-image.png')]">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="w-full max-w-md p-12">
         <div className="flex justify-center mb-4">
           <Image
