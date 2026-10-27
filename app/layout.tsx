@@ -6,6 +6,8 @@ import { AppShell } from "@/components/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/confirm-provider";
+import { SIDEBAR_COOKIE, isSidebarCollapsed } from "@/components/sidebar-mode";
+import { cookies } from "next/headers";
 
 const montserrat = Montserrat({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -18,11 +20,13 @@ export const metadata: Metadata = {
     "Clube de xadrez com torneios, desafios diários e semanais, ranking de pontos e conquistas.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const sidebarCollapsed = isSidebarCollapsed((await cookies()).get(SIDEBAR_COOKIE)?.value);
+
   return (
     <html lang="pt-BR">
       <TooltipProvider>
@@ -31,7 +35,7 @@ export default function RootLayout({
         >
           <AppBackground />
           <ConfirmProvider>
-            <AppShell>{children}</AppShell>
+            <AppShell sidebarCollapsed={sidebarCollapsed}>{children}</AppShell>
           </ConfirmProvider>
           <Toaster position="top-center" theme="light" />
         </body>
