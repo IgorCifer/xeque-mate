@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import { AppBackground } from "@/components/app-background";
 import { AppShell } from "@/components/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,8 +27,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <TooltipProvider>
         <body
-          className={`${montserrat.className} bg-[url("../assets/background-image.png")] antialiased min-h-screen`}
+          className={`${montserrat.className} antialiased min-h-screen`}
         >
+          <AppBackground />
           <ConfirmProvider>
             <AppShell>{children}</AppShell>
           </ConfirmProvider>
