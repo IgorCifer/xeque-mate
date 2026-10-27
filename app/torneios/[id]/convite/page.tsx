@@ -142,7 +142,7 @@ export default function ConvitePage() {
 
   if (error) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="flex-1 flex items-center justify-center px-4">
         <ErrorPanel
           title="Não foi possível acessar o convite"
           message={error}
@@ -155,7 +155,7 @@ export default function ConvitePage() {
 
   if (!torneio) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="flex-1 flex items-center justify-center px-4">
         <ErrorPanel
           title="Convite não disponível"
           message="Este convite pode ter expirado ou sido removido."
@@ -167,7 +167,7 @@ export default function ConvitePage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center">
+    <main className="flex-1 flex items-center justify-center">
       <div className="bg-white/10 border border-white/20 p-8 rounded-xl text-white w-[90%] max-w-md text-center backdrop-blur-lg space-y-4">
         <h1 className="text-2xl font-bold mb-2">Convite para torneio</h1>
         <p className="opacity-80">{torneio.nome}</p>

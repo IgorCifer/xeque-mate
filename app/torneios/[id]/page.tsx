@@ -313,7 +313,7 @@ export default function TorneioPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen text-white p-5 flex items-center justify-center">
+      <main className="flex-1 text-white p-5 flex items-center justify-center">
         <p>Carregando...</p>
       </main>
     );
@@ -321,7 +321,7 @@ export default function TorneioPage() {
 
   if (!torneio) {
     return (
-      <main className="min-h-screen text-white p-5 flex items-center justify-center">
+      <main className="flex-1 text-white p-5 flex items-center justify-center">
         <p>Torneio não encontrado</p>
       </main>
     );
@@ -336,7 +336,7 @@ export default function TorneioPage() {
       : { label: "Esperando confrontos", className: "bg-gray-500/20 border border-gray-400 text-gray-100" };
 
   return (
-    <main className="min-h-screen text-white p-5 flex flex-col gap-6">
+    <main className="text-white p-5 flex flex-col gap-6">
       <header className="flex items-center justify-between">
         <button
           onClick={() => router.back()}

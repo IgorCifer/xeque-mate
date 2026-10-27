@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
 ChevronRight,
@@ -35,13 +36,10 @@ const router = useRouter();
 return (
 <div className="text-white">
 <header className="pt-6 px-5 pb-3">
-<button
-onClick={() => router.back()}
-className="flex items-center text-base mb-4"
->
+<Link href="/profile" className="flex items-center text-base mb-4">
 <ChevronLeft className="w-5 h-5 mr-1" />
 <span>Voltar</span>
-</button>
+</Link>
 </header>
 
   <div 

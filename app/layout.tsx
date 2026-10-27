@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <TooltipProvider>
         <body
-          className={`${montserrat.className} antialiased min-h-screen`}
+          className={`${montserrat.className} antialiased min-h-dvh`}
         >
           <AppBackground />
           <ConfirmProvider>

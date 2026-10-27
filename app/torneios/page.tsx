@@ -185,13 +185,17 @@ export default function TorneiosPage() {
   const atingiuLimiteCriados = criadosAtivos >= 5;
 
   return (
-    <main className="min-h-screen text-white p-5 flex flex-col gap-6">
-      <header className="flex items-center justify-between">
+    <main className="text-white p-5 flex flex-col gap-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">Torneios</h1>
 
-        <div className="flex flex-col items-end gap-1 text-sm opacity-80">
-          <span>{criadosAtivos}/5 Torneios criados em andamento</span>
-          <span>{participandoAtivos}/5 Torneios em disputa</span>
+        <div className="flex flex-wrap gap-2 text-xs sm:justify-end">
+          <span className="whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-3 py-1">
+            <strong>{criadosAtivos}/5</strong> criados em andamento
+          </span>
+          <span className="whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-3 py-1">
+            <strong>{participandoAtivos}/5</strong> em disputa
+          </span>
         </div>
       </header>
 

@@ -9,7 +9,7 @@ export default async function PracticePage() {
   const weeklyEndLabel = formatDateBR(weeklyEnd);
 
   return (
-    <div className="min-h-screen flex flex-col pb-20">
+    <div className="flex flex-col">
       <main className="flex-1 flex flex-col px-4 gap-6">
         <div className="w-full">
           <h1 className="text-white text-3xl font-bold text-center m-6">

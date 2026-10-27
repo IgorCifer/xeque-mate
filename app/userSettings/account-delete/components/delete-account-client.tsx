@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronLeft } from "lucide-react";
@@ -64,16 +65,12 @@ async function handleSubmit(e: React.FormEvent) {
 
 
   return (
-    <div className=" text-white">
+    <div className="text-white">
       <header className="px-4 pt-6 pb-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex items-center text-base mb-4"
-        >
+        <Link href="/userSettings" className="flex items-center text-base mb-4">
           <ChevronLeft className="w-5 h-5 mr-1" />
           Voltar
-        </button>
+        </Link>
       </header>
 
       <main className="flex-1 px-5 pb-6 space-y-4">
@@ -86,9 +83,9 @@ async function handleSubmit(e: React.FormEvent) {
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 text-[11px] leading-relaxed"
+          className="flex flex-col gap-4 text-sm leading-relaxed"
         >
-          <section className="space-y-2">
+          <section className="space-y-3">
             <div>
               <p className="font-semibold">
                 1. O que significa excluir sua conta no Clube Xeque Mate?
@@ -126,13 +123,15 @@ async function handleSubmit(e: React.FormEvent) {
             </div>
           </section>
 
-          <div className="mt-2 flex items-center gap-2">
+          <label className="mt-2 flex items-start gap-3 cursor-pointer">
             <button
               type="button"
+              role="checkbox"
+              aria-checked={isChecked}
               onClick={() => setIsChecked((prev) => !prev)}
               className={`
-                self-start flex items-center justify-center
-                w-4 h-4 rounded-[3px] border
+                mt-0.5 flex shrink-0 items-center justify-center
+                size-5 rounded-[4px] border-2
                 ${
                   isChecked
                     ? "bg-brand-400 border-brand-400"
@@ -141,16 +140,16 @@ async function handleSubmit(e: React.FormEvent) {
                 `}
             >
               {isChecked && (
-                <span className="block w-2 h-2 bg-white rounded-[2px]" />
+                <span className="block size-2.5 bg-white rounded-[2px]" />
               )}
             </button>
 
-            <p className="text-[11px] text-white/85">
+            <span className="text-white/85">
               Confirmo que li, estou de acordo com as informações acima e
               entendo que a exclusão da minha conta é definitiva e não poderá
               ser desfeita.
-            </p>
-          </div>
+            </span>
+          </label>
 
           <input
             type="password"
@@ -158,14 +157,14 @@ async function handleSubmit(e: React.FormEvent) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
-            className="w-full mt-2 p-3 bg-surface border border-neutral-400 rounded-lg focus:outline-none focus:ring-1 text-[10px] text-black"
+            className="w-full mt-2 p-3 bg-surface border border-neutral-400 rounded-lg focus:outline-none focus:ring-1 text-sm text-black"
           />
 
           <div className="mt-6">
             <Button
               type="submit"
               disabled={!isChecked || !password || isLoading}
-              className="w-full rounded-sm bg-danger-300 hover:bg-danger-700 text-white text-xs font-bold py-3 border-b-4 border-danger-800 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-sm bg-danger-300 hover:bg-danger-700 text-white text-sm font-bold py-3 border-b-4 border-danger-800 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? "Excluindo..." : "Excluir Conta"}
             </Button>
