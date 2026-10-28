@@ -1,20 +1,10 @@
-import { getAllTimeRanking, getWeeklyRanking, getMonthlyRanking } from "../data/get-alltime-ranking";
-import RankingPageClient from "./ranking-page-client";
-import { requireSession } from "@/lib/session";
+import { requireActor } from "@/lib/session";
+import { getRankings } from "@/features/ranking/dal";
+import { RankingPageDialog } from "@/features/ranking/components/ranking-page-dialog";
 
 export default async function RankingPage() {
-  await requireSession();
+  const actor = await requireActor();
+  const { weekly, monthly, allTime } = await getRankings(actor);
 
-  // MUDANÇA: busca os 3 rankings reais
-  const weekly = await getWeeklyRanking();
-  const monthly = await getMonthlyRanking();
-  const allTime = await getAllTimeRanking();
-
-  return (
-    <RankingPageClient
-      weekly={weekly}
-      monthly={monthly}
-      allTime={allTime}
-    />
-  );
+  return <RankingPageDialog rankings={{ weekly, monthly, allTime }} />;
 }

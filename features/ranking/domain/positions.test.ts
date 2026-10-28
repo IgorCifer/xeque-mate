@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withTiedPositions } from "./ranking";
+import { withTiedPositions } from "./positions";
 
 const positions = (points: number[]) =>
   withTiedPositions(points.map((p) => ({ points: p }))).map((r) => r.position);

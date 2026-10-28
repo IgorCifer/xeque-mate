@@ -14,6 +14,15 @@ export async function getProfile(actor: Actor): Promise<ProfileDTO> {
   return { name: user.name };
 }
 
+export async function getPoints(actor: Actor): Promise<number> {
+  const user = await prisma.user.findUnique({
+    where: { id: actor.userId },
+    select: { points: true },
+  });
+  if (!user) throw new NotFoundError("Usuário não encontrado");
+  return user.points;
+}
+
 export async function updateProfile(actor: Actor, input: UpdateProfileInput): Promise<ProfileDTO> {
   const { count } = await prisma.user.updateMany({
     where: { id: actor.userId },

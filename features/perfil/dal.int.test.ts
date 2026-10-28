@@ -2,13 +2,22 @@ import { describe, expect, it } from "vitest";
 import prisma from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
 import { createUser } from "@/test/integration/users";
-import { getProfile, updateProfile } from "./dal";
+import { getPoints, getProfile, updateProfile } from "./dal";
 
 describe("perfil", () => {
   it("devolve só o nome de quem está agindo", async () => {
     const jogador = await createUser("Ana Souza");
 
     expect(await getProfile({ userId: jogador.id })).toEqual({ name: "Ana Souza" });
+  });
+
+  it("devolve os pontos de quem está agindo", async () => {
+    const jogador = await createUser("Ana Souza");
+    const outro = await createUser("Bruno Lima");
+    await prisma.user.update({ where: { id: jogador.id }, data: { points: 42 } });
+    await prisma.user.update({ where: { id: outro.id }, data: { points: 7 } });
+
+    expect(await getPoints({ userId: jogador.id })).toBe(42);
   });
 
   it("muda o nome só de quem está agindo", async () => {
@@ -33,6 +42,7 @@ describe("perfil", () => {
     const actor = { userId: "usuario-removido" };
 
     await expect(getProfile(actor)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(getPoints(actor)).rejects.toBeInstanceOf(NotFoundError);
     await expect(updateProfile(actor, { name: "Fantasma" })).rejects.toBeInstanceOf(NotFoundError);
   });
 });
