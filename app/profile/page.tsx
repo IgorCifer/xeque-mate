@@ -50,7 +50,11 @@ export default async function ProfilePage() {
         />
         <WeeklyRankingCard
           weeklyPosition={rankings.weeklyPosition}
-          weeklyRanking={rankings.weekly}
+          rankings={{
+            weekly: rankings.weekly,
+            monthly: rankings.monthly,
+            allTime: rankings.allTime,
+          }}
         />
         <StatCard
           icon={<Medal className="size-5 text-emerald-300" />}

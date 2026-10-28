@@ -17,15 +17,23 @@ async function namesById(userIds: string[]) {
 
 async function allTimeRanking(): Promise<RankItemDTO[]> {
   const users = await prisma.user.findMany({
-    orderBy: { points: "desc" },
+    orderBy: [{ points: "desc" }, { id: "asc" }],
     take: RANKING_LIMIT,
     select: { name: true, points: true },
   });
-  return users.map((user, index) => ({
-    position: index + 1,
-    name: user.name,
-    points: user.points,
-  }));
+  return withTiedPositions(users);
+}
+
+type PointsSum = { userId: string; _sum: { points: number | null } };
+
+async function withNames(sums: PointsSum[]): Promise<RankItemDTO[]> {
+  const names = await namesById(sums.map((sum) => sum.userId));
+  return withTiedPositions(
+    sums.map((sum) => ({
+      name: names.get(sum.userId) ?? "Usuário",
+      points: sum._sum.points ?? 0,
+    })),
+  );
 }
 
 async function weeklyRanking(since: Date): Promise<RankItemDTO[]> {
@@ -37,13 +45,7 @@ async function weeklyRanking(since: Date): Promise<RankItemDTO[]> {
     orderBy: [{ _sum: { points: "desc" } }, { userId: "asc" }],
     take: RANKING_LIMIT,
   });
-  const names = await namesById(sums.map((sum) => sum.userId));
-  return withTiedPositions(
-    sums.map((sum) => ({
-      name: names.get(sum.userId) ?? "Usuário",
-      points: sum._sum.points ?? 0,
-    })),
-  );
+  return withNames(sums);
 }
 
 async function monthlyRanking(since: Date): Promise<RankItemDTO[]> {
@@ -51,16 +53,10 @@ async function monthlyRanking(since: Date): Promise<RankItemDTO[]> {
     by: ["userId"],
     where: { createdAt: { gte: since } },
     _sum: { points: true },
+    orderBy: [{ _sum: { points: "desc" } }, { userId: "asc" }],
+    take: RANKING_LIMIT,
   });
-  const names = await namesById(sums.map((sum) => sum.userId));
-  return sums
-    .map((sum) => ({
-      name: names.get(sum.userId) ?? "Usuário",
-      points: sum._sum.points ?? 0,
-    }))
-    .sort((a, b) => b.points - a.points)
-    .slice(0, RANKING_LIMIT)
-    .map((item, index) => ({ position: index + 1, ...item }));
+  return withNames(sums);
 }
 
 async function weeklyPosition(userId: string, since: Date): Promise<number | null> {
