@@ -1,10 +1,9 @@
+import Link from "next/link";
+import { FlameIcon, Medal, Settings, TrophyIcon, User } from "lucide-react";
 import { requireSession } from "@/lib/session";
 import { getAchievements, getStreaks } from "@/features/conquistas/dal";
-import { FlameIcon, Medal, Settings, TrophyIcon, User } from "lucide-react";
-import { getUserPoints } from "../data/get-user-points";
-import Link from "next/link";
-import { getWeeklyPosition } from "../data/get-weekly-position";
-import { getWeeklyRanking } from "../data/get-alltime-ranking";
+import { getPoints } from "@/features/perfil/dal";
+import { getRankings } from "@/features/ranking/dal";
 import { StatCard } from "./stat-card";
 import { WeeklyRankingCard } from "./weekly-ranking-card";
 import { AchievementGallery } from "./achievement-gallery";
@@ -13,14 +12,12 @@ export default async function ProfilePage() {
   const session = await requireSession();
   const actor = { userId: session.user.id };
 
-  const points = await getUserPoints(session.user.id);
-
-  const achievements = await getAchievements(actor);
-
-  const { currentStreak } = await getStreaks(actor);
-
-  const weeklyPosition = await getWeeklyPosition(session.user.id);
-  const weeklyRanking = await getWeeklyRanking();
+  const [points, achievements, { currentStreak }, rankings] = await Promise.all([
+    getPoints(actor),
+    getAchievements(actor),
+    getStreaks(actor),
+    getRankings(actor),
+  ]);
 
   const unlockedCount = achievements.filter((achievement) => achievement.unlocked).length;
 
@@ -48,10 +45,13 @@ export default async function ProfilePage() {
         />
         <StatCard
           icon={<TrophyIcon className="size-5 text-yellow-300" />}
-          value={points?.points ?? 0}
+          value={points}
           label="pontos"
         />
-        <WeeklyRankingCard weeklyPosition={weeklyPosition} weeklyRanking={weeklyRanking} />
+        <WeeklyRankingCard
+          weeklyPosition={rankings.weeklyPosition}
+          weeklyRanking={rankings.weekly}
+        />
         <StatCard
           icon={<Medal className="size-5 text-emerald-300" />}
           value={`${unlockedCount}/${achievements.length}`}
