@@ -1,19 +1,19 @@
 import { ChevronRight, LayoutPanelLeft } from "lucide-react";
 import { RankingDialog } from "@/features/ranking/components/ranking-dialog";
-import type { RankItemDTO } from "@/features/ranking/types";
+import type { RankingLists } from "@/features/ranking/types";
 import { cn } from "@/lib/utils";
 import { StatCardContent, statCardClassName } from "./stat-card";
 
 export function WeeklyRankingCard({
   weeklyPosition,
-  weeklyRanking,
+  rankings,
 }: {
   weeklyPosition: number | null;
-  weeklyRanking: RankItemDTO[];
+  rankings: RankingLists;
 }) {
   return (
     <RankingDialog
-      rankings={{ weekly: weeklyRanking, monthly: weeklyRanking, allTime: weeklyRanking }}
+      rankings={rankings}
       trigger={
         <button
           type="button"

@@ -71,6 +71,23 @@ describe("ranking mensal", () => {
       { position: 2, name: "Bruno", points: 4 },
     ]);
   });
+
+  it("divide a posição no empate", async () => {
+    const ana = await createUser("Ana");
+    const bruno = await createUser("Bruno");
+    const caio = await createUser("Caio");
+    await pontuar(ana.id, 10);
+    await pontuar(bruno.id, 10);
+    await pontuar(caio.id, 4);
+
+    const { monthly } = await getRankings({ userId: ana.id });
+
+    expect(monthly.map(({ position, points }) => [position, points])).toEqual([
+      [1, 10],
+      [1, 10],
+      [3, 4],
+    ]);
+  });
 });
 
 describe("ranking de todos os tempos", () => {
@@ -87,6 +104,23 @@ describe("ranking de todos os tempos", () => {
       { position: 1, name: "Bruno", points: 80 },
       { position: 2, name: "Ana", points: 50 },
       { position: 3, name: "Caio", points: 0 },
+    ]);
+  });
+
+  it("divide a posição no empate", async () => {
+    const ana = await createUser("Ana");
+    const bruno = await createUser("Bruno");
+    const caio = await createUser("Caio");
+    await prisma.user.update({ where: { id: ana.id }, data: { points: 30 } });
+    await prisma.user.update({ where: { id: bruno.id }, data: { points: 30 } });
+    await prisma.user.update({ where: { id: caio.id }, data: { points: 12 } });
+
+    const { allTime } = await getRankings({ userId: ana.id });
+
+    expect(allTime.map(({ position, points }) => [position, points])).toEqual([
+      [1, 30],
+      [1, 30],
+      [3, 12],
     ]);
   });
 });
