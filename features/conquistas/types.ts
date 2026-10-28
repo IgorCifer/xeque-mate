@@ -14,3 +14,8 @@ export type Streaks = {
   currentStreak: number;
   longestStreak: number;
 };
+
+export type DailyActivityResult = {
+  newDay: boolean;
+  unlockedAchievements: UnlockedAchievement[];
+};

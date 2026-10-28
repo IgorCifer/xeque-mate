@@ -4,7 +4,7 @@ import { ResultadoPartida } from "@/app/generated/prisma2/enums";
 import { activityDay, computeStreaks } from "@/lib/activity";
 import { rankTournament } from "@/lib/tournament-ranking";
 import { achievementsDue, type UserProgress } from "./domain/rules";
-import type { Streaks, UnlockedAchievement } from "./types";
+import type { DailyActivityResult, Streaks, UnlockedAchievement } from "./types";
 
 export async function calculateStreaks(userId: string, db: Db = prisma): Promise<Streaks> {
   const activity = await db.userActivityDay.findMany({
@@ -90,10 +90,14 @@ export async function recordTournamentFinished(userId: string, db: Db = prisma) 
   return unlockDueAchievements(userId, db);
 }
 
-export async function recordDailyLogin(userId: string, db: Db = prisma) {
-  await db.userActivityDay.createMany({
+export async function recordDailyLogin(
+  userId: string,
+  db: Db = prisma,
+): Promise<DailyActivityResult> {
+  const { count } = await db.userActivityDay.createMany({
     data: [{ userId, day: new Date(`${activityDay(new Date())}T00:00:00Z`) }],
     skipDuplicates: true,
   });
-  return unlockDueAchievements(userId, db);
+  const unlockedAchievements = await unlockDueAchievements(userId, db);
+  return { newDay: count > 0, unlockedAchievements };
 }

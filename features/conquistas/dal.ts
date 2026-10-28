@@ -1,8 +1,8 @@
 import "server-only";
 import prisma from "@/lib/prisma";
 import type { Actor } from "@/lib/session";
-import { calculateStreaks } from "./internal";
-import type { AchievementDTO, Streaks } from "./types";
+import { calculateStreaks, recordDailyLogin } from "./internal";
+import type { AchievementDTO, DailyActivityResult, Streaks } from "./types";
 
 export async function getAchievements(actor: Actor): Promise<AchievementDTO[]> {
   const [all, owned] = await Promise.all([
@@ -25,4 +25,8 @@ export async function getAchievements(actor: Actor): Promise<AchievementDTO[]> {
 
 export async function getStreaks(actor: Actor): Promise<Streaks> {
   return calculateStreaks(actor.userId);
+}
+
+export async function recordDailyActivity(actor: Actor): Promise<DailyActivityResult> {
+  return recordDailyLogin(actor.userId);
 }

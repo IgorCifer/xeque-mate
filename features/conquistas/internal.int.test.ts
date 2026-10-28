@@ -34,9 +34,9 @@ describe("conquistas", () => {
       data: [{ userId: jogador.id, day: dia(1) }, { userId: jogador.id, day: dia(2) }],
     });
 
-    const desbloqueadas = await recordDailyLogin(jogador.id);
+    const { unlockedAchievements } = await recordDailyLogin(jogador.id);
 
-    expect(desbloqueadas.map((a) => a.id)).toContain(ACHIEVEMENT_IDS.JOURNEY_START);
+    expect(unlockedAchievements.map((a) => a.id)).toContain(ACHIEVEMENT_IDS.JOURNEY_START);
     expect(await calculateStreaks(jogador.id)).toEqual({ currentStreak: 3, longestStreak: 3 });
   });
 });
