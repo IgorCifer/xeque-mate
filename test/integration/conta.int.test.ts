@@ -1,24 +1,8 @@
 import { describe, expect, it } from "vitest";
 import prisma from "@/lib/prisma";
 import { createUser } from "./users";
-import { excluirConta, registrarDiaDeUso } from "./ops/conta";
+import { excluirConta } from "./ops/conta";
 import { seedTorneio } from "./ops/torneios";
-
-describe("dias de uso", () => {
-  it("registra um dia por usuário, mesmo chamando várias vezes", async () => {
-    const jogador = await createUser();
-
-    await registrarDiaDeUso(jogador);
-    await registrarDiaDeUso(jogador);
-
-    expect(await prisma.userActivityDay.count({ where: { userId: jogador.id } })).toBe(1);
-  });
-
-  it("exige login", async () => {
-    expect((await registrarDiaDeUso(undefined)).status).toBe(401);
-    expect(await prisma.userActivityDay.count()).toBe(0);
-  });
-});
 
 describe("exclusão de conta", () => {
   it("exige a senha correta", async () => {

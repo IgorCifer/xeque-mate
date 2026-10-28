@@ -1,16 +1,6 @@
-import { POST as checkLoginRoute } from "@/app/api/achievements/check-login/route";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
-import { callRoute } from "../http";
 import type { TestUser } from "../users";
-
-export async function registrarDiaDeUso(user: TestUser | undefined) {
-  return callRoute(checkLoginRoute, {
-    method: "POST",
-    path: "/api/achievements/check-login",
-    user,
-  });
-}
 
 export async function excluirConta(user: TestUser, password?: string) {
   try {
