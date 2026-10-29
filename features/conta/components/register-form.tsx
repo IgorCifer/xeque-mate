@@ -7,14 +7,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { toFieldErrors, type ActionState } from "@/lib/actions";
+import { authPagePath } from "@/lib/next-path";
 import { authRequestError } from "../auth-request";
 import { registerSchema } from "../schemas";
 import { TextField } from "./fields";
 
 const REGISTER_ERROR = "Não foi possível cadastrar. Tente novamente.";
 
-export function RegisterForm() {
+export function RegisterForm({ next }: { next: string | null }) {
   const router = useRouter();
+  const destination = next ?? "/home";
   const [values, setValues] = useState({
     name: "",
     email: "",
@@ -27,14 +29,14 @@ export function RegisterForm() {
       if (!parsed.success) return toFieldErrors(parsed.error);
       const { name, email, password } = parsed.data;
       const error = await authRequestError(
-        () => authClient.signUp.email({ name, email, password, callbackURL: "/home" }),
+        () => authClient.signUp.email({ name, email, password, callbackURL: destination }),
         REGISTER_ERROR,
       );
       if (error) {
         toast.error(REGISTER_ERROR);
         return { ok: false, error };
       }
-      router.push("/home");
+      router.push(destination);
       return { ok: true };
     },
     null,
@@ -103,7 +105,7 @@ export function RegisterForm() {
           asChild
           className="h-auto w-full rounded-sm border-b-4 border-info-600 bg-info-400 p-3 text-xs font-bold text-white transition hover:bg-info-500"
         >
-          <Link href="/login">Entrar</Link>
+          <Link href={authPagePath("/login", next)}>Entrar</Link>
         </Button>
       </div>
     </form>
