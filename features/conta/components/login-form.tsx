@@ -7,26 +7,28 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { toFieldErrors, type ActionState } from "@/lib/actions";
+import { authPagePath } from "@/lib/next-path";
 import { authRequestError } from "../auth-request";
 import { loginSchema } from "../schemas";
 import { TextField } from "./fields";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next: string | null }) {
   const router = useRouter();
+  const destination = next ?? "/home";
   const [values, setValues] = useState({ email: "", password: "" });
   const [state, formAction, pending] = useActionState(
     async (_prev: ActionState, formData: FormData): Promise<ActionState> => {
       const parsed = loginSchema.safeParse(Object.fromEntries(formData));
       if (!parsed.success) return toFieldErrors(parsed.error);
       const error = await authRequestError(
-        () => authClient.signIn.email({ ...parsed.data, callbackURL: "/home" }),
+        () => authClient.signIn.email({ ...parsed.data, callbackURL: destination }),
         "E-mail ou senha inválidos.",
       );
       if (error) {
         toast.error("E-mail ou senha inválidos.");
         return { ok: false, error };
       }
-      router.push("/home");
+      router.push(destination);
       return { ok: true };
     },
     null,
@@ -74,7 +76,7 @@ export function LoginForm() {
           asChild
           className="h-auto w-full rounded-sm border-b-4 border-info-600 bg-info-400 p-3 text-xs font-bold text-white transition hover:bg-info-500"
         >
-          <Link href="/registrar">Cadastrar</Link>
+          <Link href={authPagePath("/registrar", next)}>Cadastrar</Link>
         </Button>
       </div>
     </form>
