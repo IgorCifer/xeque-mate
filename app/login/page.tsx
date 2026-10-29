@@ -2,7 +2,9 @@ import { safeNextPath } from "@/lib/next-path";
 import { AuthScreen } from "@/features/conta/components/auth-screen";
 import { LoginForm } from "@/features/conta/components/login-form";
 
-export default async function LoginPage(props: PageProps<"/login">) {
+export default async function LoginPage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { next } = await props.searchParams;
 
   return (
