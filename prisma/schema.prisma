@@ -26,6 +26,7 @@ model User {
   puzzleForfeits    PuzzleForfeit[]
   pointsHistory     PointsHistory[]
   activityDays      UserActivityDay[]
+  avatar            UserAvatar?
 
   @@unique([email])
   @@map("user")
@@ -240,4 +241,15 @@ model PointsHistory {
   @@index([userId])
   @@index([createdAt])
   @@map("points_history")
+}
+
+model UserAvatar {
+  userId      String   @id
+  data        Bytes
+  contentType String
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_avatar")
 }

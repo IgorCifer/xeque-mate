@@ -36,7 +36,7 @@ DAL pública (dal.ts) ──► DAL interna de outra área (internal.ts), dentro
 ```
 
 - **Nada de `fetch` para as nossas próprias rotas nem de `fetch` dentro de `useEffect`.** A página de servidor lê os dados, e a action atualiza a tela na mesma resposta.
-- **Rotas de API (`app/api/*`) só quando algo de fora do React precisa chamar o servidor.** Hoje é só o better-auth (`app/api/auth/[...all]`). As rotas atuais são legado e saem quando a área delas for refeita.
+- **Rotas de API (`app/api/*`) só quando algo de fora do React precisa chamar o servidor.** Hoje são o better-auth (`app/api/auth/[...all]`) e a foto de perfil (`app/api/avatar/[userId]`, que o `<img>` do navegador busca). As rotas atuais são legado e saem quando a área delas for refeita.
 
 ## Pastas
 

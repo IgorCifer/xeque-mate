@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { FlameIcon, Medal, Settings, TrophyIcon, User } from "lucide-react";
+import { FlameIcon, Medal, Settings, TrophyIcon } from "lucide-react";
 import { requireSession } from "@/lib/session";
 import { getAchievements, getStreaks } from "@/features/conquistas/dal";
 import { getPoints } from "@/features/perfil/dal";
+import { UserAvatar } from "@/features/perfil/components/user-avatar";
 import { getRankings } from "@/features/ranking/dal";
 import { StatCard } from "./stat-card";
 import { WeeklyRankingCard } from "./weekly-ranking-card";
@@ -31,9 +32,7 @@ export default async function ProfilePage() {
         >
           <Settings className="size-5" />
         </Link>
-        <div className="size-20 overflow-hidden rounded-2xl bg-white">
-          <User className="size-full p-2" color="gray" />
-        </div>
+        <UserAvatar image={session.user.image} name={session.user.name} className="size-20 rounded-2xl" />
         <h1 className="text-center text-xl font-bold">{session.user.name}</h1>
       </section>
 
