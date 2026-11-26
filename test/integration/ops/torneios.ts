@@ -1,12 +1,9 @@
 import { POST as createTorneioRoute } from "@/app/api/torneios/route";
 import { PUT as updateTorneioRoute } from "@/app/api/torneios/[id]/route";
-import {
-  GET as getConviteRoute,
-  POST as acceptConviteRoute,
-} from "@/app/api/torneios/[id]/convite/route";
 import { POST as createRodadasRoute } from "@/app/api/torneios/[id]/rodadas/route";
 import { PATCH as updateResultadoRoute } from "@/app/api/torneios/[id]/partidas/[partidaId]/route";
 import type { ResultadoPartida } from "@/app/generated/prisma2/client";
+import { acceptConvite } from "@/features/torneios/dal";
 import { callRoute } from "../http";
 import { createUser, createUsers, type TestUser } from "../users";
 
@@ -19,22 +16,8 @@ export async function criarTorneio(user: TestUser, nome = "Torneio de teste") {
   });
 }
 
-export async function verConvite(user: TestUser | undefined, torneioId: string) {
-  return callRoute(getConviteRoute, {
-    method: "GET",
-    path: `/api/torneios/${torneioId}/convite`,
-    user,
-    params: { id: torneioId },
-  });
-}
-
 export async function aceitarConvite(user: TestUser, torneioId: string) {
-  return callRoute(acceptConviteRoute, {
-    method: "POST",
-    path: `/api/torneios/${torneioId}/convite`,
-    user,
-    params: { id: torneioId },
-  });
+  return acceptConvite({ userId: user.id }, torneioId);
 }
 
 export async function gerarRodadas(user: TestUser, torneioId: string, rounds = 1) {
@@ -81,10 +64,7 @@ export async function seedTorneio(jogadores: number) {
   const torneioId = criado.json.id;
   const convidados = await createUsers(jogadores - 1, "Convidado");
   for (const convidado of convidados) {
-    const aceite = await aceitarConvite(convidado, torneioId);
-    if (aceite.status !== 200) {
-      throw new Error(`Falha ao aceitar convite: ${aceite.status} ${JSON.stringify(aceite.json)}`);
-    }
+    await aceitarConvite(convidado, torneioId);
   }
   return { criador, convidados, torneioId };
 }

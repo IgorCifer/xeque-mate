@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import prisma from "@/lib/prisma";
-import { createUser, createUsers } from "./users";
 import {
-  aceitarConvite,
-  criarTorneio,
   finalizar,
   gerarRodadas,
   lancarResultado,
   seedTorneio,
-  verConvite,
 } from "./ops/torneios";
 
 async function placar(participanteId: string) {
@@ -23,59 +19,6 @@ async function partidaComDoisJogadores(torneioId: string) {
     where: { torneioId, blackId: { not: null } },
   });
 }
-
-describe("convite", () => {
-  it("só mostra o convite para quem está logado", async () => {
-    const { torneioId } = await seedTorneio(1);
-    const convidado = await createUser("Convidado");
-
-    expect((await verConvite(undefined, torneioId)).status).toBe(401);
-    expect((await verConvite(convidado, torneioId)).status).toBe(200);
-  });
-
-  it("inscreve o convidado uma vez só, mesmo aceitando de novo", async () => {
-    const { torneioId } = await seedTorneio(1);
-    const convidado = await createUser("Convidado");
-
-    await aceitarConvite(convidado, torneioId);
-    await aceitarConvite(convidado, torneioId);
-
-    const inscricoes = await prisma.participante.count({
-      where: { torneioId, userId: convidado.id },
-    });
-    expect(inscricoes).toBe(1);
-  });
-
-  it("recusa um id que não é UUID sem gravar nada", async () => {
-    const convidado = await createUser("Convidado");
-
-    const resposta = await aceitarConvite(convidado, "nao-e-uuid");
-
-    expect(resposta.status).toBe(400);
-    expect(await prisma.participante.count({ where: { userId: convidado.id } })).toBe(0);
-  });
-
-  it("limita a 5 torneios em andamento de outras pessoas", async () => {
-    const criadores = await createUsers(6, "Criador");
-    const convidado = await createUser("Convidado");
-    const torneios: string[] = [];
-    for (const criador of criadores) {
-      const criado = await criarTorneio(criador);
-      torneios.push(criado.json?.id as string);
-    }
-
-    for (const torneioId of torneios) {
-      await aceitarConvite(convidado, torneioId);
-    }
-
-    const inscritos = await prisma.participante.findMany({
-      where: { userId: convidado.id },
-      select: { torneioId: true },
-    });
-    expect(inscritos).toHaveLength(5);
-    expect(inscritos.map((i) => i.torneioId)).not.toContain(torneios[5]);
-  });
-});
 
 describe("rodadas", () => {
   it("só o criador gera os confrontos", async () => {

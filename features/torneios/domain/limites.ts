@@ -1,0 +1,1 @@
+export const LIMITE_TORNEIOS_PARTICIPANDO = 5;
